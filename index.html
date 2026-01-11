@@ -2,34 +2,110 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>GAS JSON Viewer</title>
+  <title>GAS JSON Table View</title>
   <style>
-    body { font-family: monospace; padding: 20px; }
-    .json-box {
-      white-space: pre;
-      background: #f5f5f5;
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 20px; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 600px;
+    }
+    th, td {
       border: 1px solid #ccc;
-      padding: 15px;
-      border-radius: 5px;
+      padding: 8px 10px;
+      text-align: left;
+    }
+    th {
+      background: #f0f0f0;
+    }
+    caption {
+      text-align: left;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    #meta {
+      margin-bottom: 16px;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    #error {
+      color: #c00;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h2>GAS JSON Output</h2>
-  <div id="output" class="json-box">Loading...</div>
+  <h2>GAS JSON Table</h2>
+  <div id="meta">Loading...</div>
+  <table id="items-table">
+    <caption>Items</caption>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>名前</th>
+        <th>価格</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- ここに JS で行を追加 -->
+    </tbody>
+  </table>
+  <div id="error"></div>
 
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"; // ← あなたのGAS WebアプリURL
 
+    const metaEl = document.getElementById("meta");
+    const tbody = document.querySelector("#items-table tbody");
+    const errorEl = document.getElementById("error");
+
     fetch(GAS_URL)
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("HTTP status " + response.status);
+        }
+        return response.json();
+      })
       .then(data => {
-        document.getElementById("output").textContent =
-          JSON.stringify(data, null, 2);
+        // メタ情報表示
+        metaEl.textContent = `status: ${data.status}, timestamp: ${data.timestamp}`;
+
+        // items が配列である前提
+        if (!Array.isArray(data.items)) {
+          tbody.innerHTML = "<tr><td colspan='3'>items が配列ではありません</td></tr>";
+          return;
+        }
+
+        // テーブル行を生成
+        if (data.items.length === 0) {
+          tbody.innerHTML = "<tr><td colspan='3'>データがありません</td></tr>";
+          return;
+        }
+
+        // 一旦空にしてから追加
+        tbody.innerHTML = "";
+
+        data.items.forEach(item => {
+          const tr = document.createElement("tr");
+
+          const tdId = document.createElement("td");
+          tdId.textContent = item.id ?? "";
+          tr.appendChild(tdId);
+
+          const tdName = document.createElement("td");
+          tdName.textContent = item.name ?? "";
+          tr.appendChild(tdName);
+
+          const tdPrice = document.createElement("td");
+          tdPrice.textContent = item.price ?? "";
+          tr.appendChild(tdPrice);
+
+          tbody.appendChild(tr);
+        });
       })
       .catch(err => {
-        document.getElementById("output").textContent =
-          "Error: " + err;
+        metaEl.textContent = "データ取得に失敗しました。";
+        errorEl.textContent = "Error: " + err.message;
       });
   </script>
 </body>
