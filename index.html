@@ -1,21 +1,36 @@
-<script>
-async function callGAS() {
-  const url = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>GAS JSON Viewer</title>
+  <style>
+    body { font-family: monospace; padding: 20px; }
+    .json-box {
+      white-space: pre;
+      background: #f5f5f5;
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>GAS JSON Output</h2>
+  <div id="output" class="json-box">Loading...</div>
 
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      mode: "cors",
-      cache: "no-cache"
-    });
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"; // ← あなたのGAS WebアプリURL
 
-    const data = await response.json();
-    console.log("GAS response:", data);
-
-  } catch (err) {
-    console.error("Error:", err);
-  }
-}
-
-callGAS();
-</script>
+    fetch(GAS_URL)
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("output").textContent =
+          JSON.stringify(data, null, 2);
+      })
+      .catch(err => {
+        document.getElementById("output").textContent =
+          "Error: " + err;
+      });
+  </script>
+</body>
+</html>
