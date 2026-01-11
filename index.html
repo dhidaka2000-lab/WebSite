@@ -1,150 +1,24 @@
-<!DOCTYPE html>
-<html>
-<head>
-   <title>実行可能APIクイックスタート</title>
-   <meta charset="utf-8" />
-   <style>
-      body {
-         background-color: black;
-         color: white;
-      }
-   </style>
-</head>
-<body>
-   <h1>実行可能APIテスト</h1>
+<script>
+async function callGAS() {
+  const url = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
 
-   <button id="run_button" onclick="handleRunClick()" hidden>実行</button>
-   <button id="reset_button" onclick="handleResetClick()" hidden>リセット</button>
+  const body = new URLSearchParams();
+  body.append("name", "Daisuke");
+  body.append("count", "3");
 
-   <ol id="content"></ol>
+  const res = await fetch(url, {
+    method: "POST",
+    mode: "cors",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body
+  });
 
-   <script type="text/javascript">
+  const data = await res.json();
+  console.log(data);
+}
 
-      const CLIENT_ID = "378524394608-kojoc5uo2gfda0a5h9f7cc96dctv6f8k.apps.googleusercontent.com"; // TODO: GCPで取得したクライアントIDを貼付
-      const API_KEY = "AIzaSyAX4zzEjbriqwzFW0wD7-qvS8VJiV6CggE"; // TODO: GCPで取得したAPIキーを貼付
-      const SCRIPT_ID = 'AKfycbwLD_eLghu7bheGDFjblK4eFuXyU8cdHzKf5m7g5uOU6RJUx0bH-ovd2SelW6Pi21daDg'; // TODO: GASで取得したデプロイIDを張付
-      const FOLDER_ID = "1dOs8RpthR6qxS36JWRC6fU9DNSL3a-9J"; // TODO: GoogleドライブのフォルダIDを貼付
-      const SCOPES = "https://www.googleapis.com/auth/drive";
-
-      let tokenClient;
-      let gapiInited = false;
-      let gisInited = false;
-
-      // Google APIクライアントライブラリの初期化
-      function gapiLoaded() {
-         gapi.load("client", async () => {
-            await gapi.client.init({
-               apiKey: API_KEY,
-               discoveryDocs: ["https://script.googleapis.com/$discovery/rest?version=v1"],
-            });
-            gapiInited = true;
-            maybeEnableButtons();
-         });
-      }
-      
-      // Google Identity Serviceクライアントライブラリの初期化
-      function gisLoaded() {
-         tokenClient = google.accounts.oauth2.initTokenClient({
-               client_id: CLIENT_ID,
-               scope: SCOPES,
-               callback: "",
-         });
-         gisInited = true;
-         maybeEnableButtons();
-      }
-
-      // Google APIライブラリとGISライブラリの初期化が両方完了したら認証ボタンを表示
-      function maybeEnableButtons() {
-         if (gapiInited && gisInited) {
-               document.getElementById("run_button").hidden = false;
-         }
-      }
-
-      // 実行ボタンがクリックされた時の処理
-      function handleRunClick() {
-         if (gapi.client.getToken() === null) {
-            // トークンを取得していない場合の処理
-            tokenClient.callback = async (resp) => {
-                  if (resp.error !== undefined) throw (resp);
-                  document.getElementById("reset_button").hidden = false;
-                  document.getElementById("run_button").innerText = "更新";
-                  await callScriptFunction();
-            };
-            tokenClient.requestAccessToken({
-               prompt: "consent"
-            });
-         } else {
-            // トークを取得している場合の処理
-            tokenClient.callback = async (resp) => {
-                  if (resp.error !== undefined) throw (resp);
-                  document.getElementById("content").innerHTML = "";
-                  await callScriptFunction();
-            };
-            tokenClient.requestAccessToken({
-               prompt: ""
-            });
-         }
-      }
-
-      // リセットボタンがクリックされた時の処理
-      function handleResetClick() {
-         const token = gapi.client.getToken();
-         if (token !== null) {
-            google.accounts.oauth2.revoke(token.access_token);
-            gapi.client.setToken("");
-            document.getElementById("content").innerHTML = "";
-            document.getElementById("run_button").innerText = "実行";
-            document.getElementById("reset_button").hidden = true;
-         }
-      }
-
-      // 実行可能APIを呼び出す処理
-      async function callScriptFunction() {
-         try {
-            gapi.client.script.scripts.run({
-               'scriptId': SCRIPT_ID,
-               'resource': {
-                  'function': 'getFilesInFolder',
-                  'parameters': [FOLDER_ID],
-               },
-            }).then(function(resp) {
-               const result = resp.result;
-               if (result.error && result.error.status) {
-                  // API実行前にエラーになった場合の処理
-                  console.error('Error calling API:');
-                  console.error(JSON.stringify(result, null, 2));
-               } else if (result.error) {
-                  // API実行中にエラーになった場合の処理
-                  const error = result.error.details[0];
-                  console.error('Script error message: ' + error.errorMessage);
-                  if (error.scriptStackTraceElements) {
-                     console.error('Script error stacktrace:');
-                     for (let i = 0; i < error.scriptStackTraceElements.length; i++) {
-                        const trace = error.scriptStackTraceElements[i];
-                        console.error('\t' + trace.function + ':' + trace.lineNumber);
-                     }
-                  }
-               } else {
-                  // 実行可能APIからのレスポンスを処理
-                  const fileList = result.response.result;
-                  if (fileList.length == 0) {
-                     console.warn('ファイルが見つかりませんでした');
-                  } else {
-                     fileList.forEach((file) => {
-                        li = document.createElement("li");
-                        li.textContent = file;
-                        document.getElementById('content').appendChild(li);
-                     });
-                  }
-               }
-            });
-         } catch (err) {
-            document.getElementById('content').innerText = err.message;
-            return;
-         }
-      }
-   </script>
-   <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-   <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-</body>
-</html>
+callGAS();
+</script>
