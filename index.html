@@ -2,22 +2,19 @@
 async function callGAS() {
   const url = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
 
-  const body = new URLSearchParams();
-  body.append("name", "Daisuke");
-  body.append("count", "3");
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      mode: "cors",
+      cache: "no-cache"
+    });
 
-  const res = await fetch(url, {
-    method: "POST",
-    mode: "cors",
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body
-  });
+    const data = await response.json();
+    console.log("GAS response:", data);
 
-  const data = await res.json();
-  console.log(data);
+  } catch (err) {
+    console.error("Error:", err);
+  }
 }
 
 callGAS();
