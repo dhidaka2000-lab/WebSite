@@ -41,9 +41,9 @@
     <caption>Items</caption>
     <thead>
       <tr>
-        <th>ID</th>
-        <th>名前</th>
-        <th>価格</th>
+        <th>区域番号</th>
+        <th>子カード番号</th>
+        <th>カード名</th>
       </tr>
     </thead>
     <tbody>
@@ -89,15 +89,15 @@
           const tr = document.createElement("tr");
 
           const tdId = document.createElement("td");
-          tdId.textContent = item.id ?? "";
+          tdId.textContent = item.CARDNO ?? "";
           tr.appendChild(tdId);
 
           const tdName = document.createElement("td");
-          tdName.textContent = item.name ?? "";
+          tdName.textContent = item.CHILDNO ?? "";
           tr.appendChild(tdName);
 
           const tdPrice = document.createElement("td");
-          tdPrice.textContent = item.price ?? "";
+          tdPrice.textContent = item.CHILDBLOCK ?? "";
           tr.appendChild(tdPrice);
 
           tbody.appendChild(tr);
