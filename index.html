@@ -1,112 +1,64 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>GAS JSON Table View</title>
-  <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 20px; }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      max-width: 600px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px 10px;
-      text-align: left;
-    }
-    th {
-      background: #f0f0f0;
-    }
-    caption {
-      text-align: left;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    #meta {
-      margin-bottom: 16px;
-      color: #555;
-      font-size: 0.9rem;
-    }
-    #error {
-      color: #c00;
-      margin-top: 10px;
-    }
-  </style>
-</head>
-<body>
-  <h2>GAS JSON Table</h2>
-  <div id="meta">Loading...</div>
-  <table id="items-table">
-    <caption>Items</caption>
-    <thead>
-      <tr>
-        <th>区域番号</th>
-        <th>子カード番号</th>
-        <th>カード名</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- ここに JS で行を追加 -->
-    </tbody>
-  </table>
-  <div id="error"></div>
+<script>
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
+  const CACHE_KEY = "childListCache";
+  const CACHE_TTL = 5 * 60 * 1000; // 5分キャッシュ（ミリ秒）
 
-  <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"; // ← あなたのGAS WebアプリURL
+  const metaEl = document.getElementById("meta");
+  const tbody = document.querySelector("#items-table tbody");
+  const errorEl = document.getElementById("error");
 
-    const metaEl = document.getElementById("meta");
-    const tbody = document.querySelector("#items-table tbody");
-    const errorEl = document.getElementById("error");
+  async function loadData() {
+    const cached = localStorage.getItem(CACHE_KEY);
 
+    if (cached) {
+      const cachedObj = JSON.parse(cached);
+      const age = Date.now() - cachedObj.timestamp;
+
+      if (age < CACHE_TTL) {
+        console.log("Using cached data");
+        renderTable(cachedObj.data);
+        return;
+      }
+    }
+
+    console.log("Fetching from GAS");
     fetch(GAS_URL)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("HTTP status " + response.status);
-        }
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
-        // メタ情報表示
-        metaEl.textContent = `status: ${data.status}, timestamp: ${data.timestamp}`;
+        // キャッシュ保存
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ timestamp: Date.now(), data })
+        );
 
-        // items が配列である前提
-        if (!Array.isArray(data.items)) {
-          tbody.innerHTML = "<tr><td colspan='3'>items が配列ではありません</td></tr>";
-          return;
-        }
-
-        // テーブル行を生成
-        if (data.items.length === 0) {
-          tbody.innerHTML = "<tr><td colspan='3'>データがありません</td></tr>";
-          return;
-        }
-
-        // 一旦空にしてから追加
-        tbody.innerHTML = "";
-
-        data.items.forEach(item => {
-          const tr = document.createElement("tr");
-
-          const tdId = document.createElement("td");
-          tdId.textContent = item.CARDNO ?? "";
-          tr.appendChild(tdId);
-
-          const tdName = document.createElement("td");
-          tdName.textContent = item.CHILDNO ?? "";
-          tr.appendChild(tdName);
-
-          const tdPrice = document.createElement("td");
-          tdPrice.textContent = item.CHILDBLOCK ?? "";
-          tr.appendChild(tdPrice);
-
-          tbody.appendChild(tr);
-        });
+        renderTable(data);
       })
       .catch(err => {
-        metaEl.textContent = "データ取得に失敗しました。";
         errorEl.textContent = "Error: " + err.message;
       });
-  </script>
-</body>
-</html>
+  }
+
+  function renderTable(data) {
+    metaEl.textContent = `status: ${data.status}, timestamp: ${data.timestamp}`;
+
+    if (!Array.isArray(data.items)) {
+      tbody.innerHTML = "<tr><td colspan='3'>items が配列ではありません</td></tr>";
+      return;
+    }
+
+    tbody.innerHTML = "";
+    data.items.forEach(item => {
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${item.CARDNO ?? ""}</td>
+        <td>${item.CHILDNO ?? ""}</td>
+        <td>${item.CHILDBLOCK ?? ""}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  loadData();
+</script>
