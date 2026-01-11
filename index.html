@@ -24,14 +24,8 @@
     console.log("Fetching from GAS");
 
     fetch(GAS_URL)
-      .then(response => response.text())   // ★ JSON ではなく text() で受け取る
-      .then(text => {
-        let outer = JSON.parse(text);      // ★ statusCode / headers / body を含む外側の JSON
-
-        // ★ body が JSON 文字列なので再パース
-        let data = typeof outer.body === "string"
-          ? JSON.parse(outer.body)
-          : outer;
+      .then(response => response.json())   // ★ これでOK
+      .then(data => {
 
         // キャッシュ保存
         localStorage.setItem(
