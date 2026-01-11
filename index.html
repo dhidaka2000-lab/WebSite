@@ -1,66 +1,83 @@
 <script>
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
-  const CACHE_KEY = "childListCache";
-  const CACHE_TTL = 5 * 60 * 1000; // 5分キャッシュ
+   const GAS_URL = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
+   const CACHE_KEY = "childListCache";
+   const CACHE_TTL = 5 * 60 * 1000; // 5分キャッシュ
 
-  const metaEl = document.getElementById("meta");
-  const tbody = document.querySelector("#items-table tbody");
-  const errorEl = document.getElementById("error");
+   const metaEl = document.getElementById("meta");
+   const tbody = document.querySelector("#items-table tbody");
+   const errorEl = document.getElementById("error");
 
-  async function loadData() {
-    const cached = localStorage.getItem(CACHE_KEY);
+   async function loadData() {
+   try {
+      const cached = localStorage.getItem(CACHE_KEY);
 
-    if (cached) {
-      const cachedObj = JSON.parse(cached);
-      const age = Date.now() - cachedObj.timestamp;
+      if (cached) {
+         const cachedObj = JSON.parse(cached);
+         const age = Date.now() - cachedObj.timestamp;
 
-      if (age < CACHE_TTL) {
-        console.log("Using cached data");
-        renderTable(cachedObj.data);
-        return;
+         if (age < CACHE_TTL && cachedObj.data) {
+         console.log("Using cached data");
+         renderTable(cachedObj.data);
+         return;
+         }
       }
-    }
 
-    console.log("Fetching from GAS");
+      console.log("Fetching from GAS");
 
-    fetch(GAS_URL)
-      .then(response => response.json())   // ★ これでOK
-      .then(data => {
+      const response = await fetch(GAS_URL);
 
-        // キャッシュ保存
-        localStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({ timestamp: Date.now(), data })
-        );
+      if (!response.ok) {
+         throw new Error("HTTP status " + response.status);
+      }
 
-        renderTable(data);
-      })
-      .catch(err => {
-        errorEl.textContent = "Error: " + err.message;
-      });
-  }
+      const data = await response.json();
 
-  function renderTable(data) {
-    metaEl.textContent = `status: ${data.status}, timestamp: ${data.timestamp}`;
+      if (!data || typeof data !== "object") {
+         throw new Error("Invalid JSON received");
+      }
 
-    if (!Array.isArray(data.items)) {
+      // キャッシュ保存
+      localStorage.setItem(
+         CACHE_KEY,
+         JSON.stringify({ timestamp: Date.now(), data })
+      );
+
+      renderTable(data);
+
+   } catch (err) {
+      errorEl.textContent = "Error: " + err.message;
+      renderTable(null);   // ★ null を渡しても安全に動くようにする
+   }
+   }
+
+   function renderTable(data) {
+   if (!data || !data.items) {
+      metaEl.textContent = "データがありません";
+      tbody.innerHTML = "<tr><td colspan='3'>データが取得できませんでした</td></tr>";
+      return;
+   }
+
+   metaEl.textContent = `status: ${data.status}, timestamp: ${data.timestamp}`;
+
+   if (!Array.isArray(data.items)) {
       tbody.innerHTML = "<tr><td colspan='3'>items が配列ではありません</td></tr>";
       return;
-    }
+   }
 
-    tbody.innerHTML = "";
-    data.items.forEach(item => {
+   tbody.innerHTML = "";
+   data.items.forEach(item => {
       const tr = document.createElement("tr");
 
       tr.innerHTML = `
-        <td>${item.CARDNO ?? ""}</td>
-        <td>${item.CHILDNO ?? ""}</td>
-        <td>${item.CHILDBLOCK ?? ""}</td>
+         <td>${item.CARDNO ?? ""}</td>
+         <td>${item.CHILDNO ?? ""}</td>
+         <td>${item.CHILDBLOCK ?? ""}</td>
       `;
 
       tbody.appendChild(tr);
-    });
-  }
+   });
+   }
 
-  loadData();
+   loadData();
+
 </script>
