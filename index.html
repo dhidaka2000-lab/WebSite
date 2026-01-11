@@ -1,7 +1,7 @@
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
   const CACHE_KEY = "childListCache";
-  const CACHE_TTL = 5 * 60 * 1000; // 5分キャッシュ（ミリ秒）
+  const CACHE_TTL = 5 * 60 * 1000; // 5分キャッシュ
 
   const metaEl = document.getElementById("meta");
   const tbody = document.querySelector("#items-table tbody");
@@ -22,9 +22,17 @@
     }
 
     console.log("Fetching from GAS");
+
     fetch(GAS_URL)
-      .then(response => response.json())
-      .then(data => {
+      .then(response => response.text())   // ★ JSON ではなく text() で受け取る
+      .then(text => {
+        let outer = JSON.parse(text);      // ★ statusCode / headers / body を含む外側の JSON
+
+        // ★ body が JSON 文字列なので再パース
+        let data = typeof outer.body === "string"
+          ? JSON.parse(outer.body)
+          : outer;
+
         // キャッシュ保存
         localStorage.setItem(
           CACHE_KEY,
