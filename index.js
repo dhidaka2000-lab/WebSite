@@ -16,26 +16,24 @@ const firebaseConfig = {
     authDomain: "ekuikidev.firebaseapp.com",
     projectId: "ekuikidev",
     storageBucket: "ekuikidev.firebasestorage.app",
-    messagingSenderId: "896828437660",
     appId: "1:896828437660:web:3c3154fd640a522e0fe959"
 };
 
 // Firebaseの初期化
 const  app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const   db = firebase.firestore();
 
 // イベントリスナー（ログインフォームからの送信ボタン押下待ち）
 document.getElementById("loginBtn").addEventListener("click", () => {
-const email = document.getElementById("email").value;
-const pass = document.getElementById("password").value;
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
 
-// ログイン成否の判定
-signInWithEmailAndPassword(auth, email, pass)
-    .then(() => {
-    window.location.href = "mainMenu.html";
-    })
-    .catch((error) => {
-    document.getElementById("errorMsg").textContent = "ログイン失敗：" + error.message;
-    });
+    // ログイン成否の判定
+    signInWithEmailAndPassword(auth, email, pass)
+        .then(() => {
+        window.location.href = "mainMenu.html";
+        })
+        .catch((error) => {
+        document.getElementById("errorMsg").textContent = "ログイン失敗：" + error.message;
+        });
 });
