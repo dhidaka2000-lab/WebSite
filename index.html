@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>配布カード一覧</title>
+  <title>e区域_next</next></title>
   <style>
     :root{
       --bg:#f4f6fb;
@@ -43,285 +43,23 @@
   <div class="wrap">
     <header>
       <div>
-        <h1>配布カード一覧</h1>
-        <div class="meta">GAS が返す JSON をパースして表形式で表示します</div>
-      </div>
-
-      <div class="controls">
-        <input id="q" type="search" placeholder="検索 CHILDBLOCK / CHILDGROUP / CHILDOPERATOR" />
-        <select id="statusFilter">
-          <option value="">全ての状態</option>
-          <option value="貸出中">貸出中</option>
-          <option value="返却済">返却済</option>
-          <option value="未貸出">未貸出</option>
-        </select>
-        <select id="sortBy">
-          <option value="CHILDLIMITDATE_desc">期限 降順</option>
-          <option value="CHILDLIMITDATE_asc">期限 昇順</option>
-          <option value="CHILDHOUSES_desc">戸数 降順</option>
-          <option value="CHILDHOUSES_asc">戸数 昇順</option>
-        </select>
-        <button id="refreshBtn">再読み込み</button>
+        <h1>e区域ログインページ</h1>
+        <div class="meta">登録されたメールアドレスとパスワードを入力して[ログイン]ボタンを押してください</div>
       </div>
     </header>
 
     <section class="card" id="mainCard">
-      <div class="flex" style="justify-content:space-between; align-items:center;">
-        <div>
-          <span class="pill" id="statusPill">読み込み中</span>
-          <span class="small" id="timestamp" style="margin-left:10px;"></span>
-        </div>
-        <div class="small">件数: <strong id="count">0</strong></div>
-      </div>
+      <input type="email" id="email" placeholder="メールアドレス"><br>
+      <input type="password" id="password" placeholder="パスワード"><br>
+      <button id="loginBtn">ログイン</button>
 
-      <div id="tableWrap">
-        <table id="dataTable" aria-live="polite">
-          <thead>
-            <tr>
-              <th>カード</th>
-              <th>区画</th>
-              <th>戸数</th>
-              <th>期間</th>
-              <th>状態</th>
-              <th>開始日</th>
-              <th>期限</th>
-              <th>貸出日</th>
-              <th>担当</th>
-              <th class="nowrap">訪問</th>
-              <th>備考</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="11" class="empty">データを読み込んでいます…</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div id="noData" class="empty" style="display:none;">該当するデータがありません</div>
+      <p id="errorMsg" style="color:red;"></p>
     </section>
 
-    <footer style="margin-top:12px;" class="small">このページは GitHub Pages 用の静的ビューです</footer>
+    <footer style="margin-top:12px;" class="small">このページは e区域nextの技術要素検証ページです</footer>
   </div>
 
-  <script>
-    // ==== 認証：firebase authの初期化
-    import { initializeApp } from 'firebase/app';
-    // TODO: Replace the following with your app's Firebase configuration
-    const firebaseConfig = {
-      //...
-    };
+  <script type="module" src="index.js"></script>
 
-    const app = initializeApp(firebaseConfig);
-
-    // ==== 設定: ここに GAS Web アプリの URL を入れてください ====
-    const GAS_JSON_URL = "https://script.google.com/macros/s/xxxxxAKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"; // 例: "https://script.google.com/macros/s/XXXXXXXX/exec"
-    // ==== フォールバック JSON (あなたが提示したサンプル) ====
-    const FALLBACK_JSON = {
-      "status":"success",
-      "timestamp":"2026-01-12T12:44:37.282Z",
-      "items":[
-        {"CHILDID":976,"CARDNO":38,"CHILDNO":1,"CHILDBLOCK":"【重点】xx町ーxx付近","CHILDHOUSES":36,"CHILDTERM":"2025年11月","CHILDSTATUS":"貸出中","CHILDPDF":"38-1xx町－xx付近.pdf","CHILDKML":"038-01.kml","CHILDLNG":"","CHILDLAT":"","CHILDGROUP":"いちじく","CHILDARRENGER":"田中一郎","CHILDMINISTER":"田中一郎","CHILDSTARTDATE":"2025-11-01","CHILDLIMITDATE":"2025-12-25","CHILDCHECKOUTDATE":"2025-11-29","CHILDRETURNDATE":"","CHILDNEXTAVAILABLEDATE":"","CHILDRENEW":"","CHILDOVERDUE":"","CHILDLOST":"","CHILDATTACH1":"","CHILDATTACH2":"","CHILDATTACH3":"","CHILDDESCRIPTION":"","CHILDTIMESTAMP":"2025-11-29T12:46:45.000Z","CHILDOPERATOR":"鈴木花子","CHILDPARENTSTATUS":"貸出中","BADFLAG":"","BADCOMMENT":"","BADTIMESTAMP":"","BADOPERATOR":"","BADDETAIL":0,"HOME":36,"BUSSINESS":0,"AUTOLOCK":0,"TELENABLED":0,"UNCHECKEDNG":0,"VISITED":22,"YOUNGERGEN":7,"CHILDCLASSIFY":0,"FLAG1":0,"FLAG2":0,"NICKNAMEFLAG":0,"NICKNAME":0,"USERMEMO":0,"COLOR":"★","bgCOLOR":"backgroundColor:#00FF00","BTN_UPDATE_LABEL":"更新","BTN_UPDATE_STATUS":false,"BTN_cUPDATE_LABEL":"更新","BTN_cUPDATE_STATUS":false},
-        {"CHILDID":982,"CARDNO":38,"CHILDNO":6,"CHILDBLOCK":"【重点】xx町ーxx付近","CHILDHOUSES":15,"CHILDTERM":"2025年11月","CHILDSTATUS":"貸出中","CHILDPDF":"38-6xx町－xx付近.pdf","CHILDKML":"038-06.kml","CHILDLNG":"","CHILDLAT":"","CHILDGROUP":"いちじく","CHILDARRENGER":"田中一郎","CHILDMINISTER":"田中一郎","CHILDSTARTDATE":"2025-11-01","CHILDLIMITDATE":"2026-01-25","CHILDCHECKOUTDATE":"2025-12-30","CHILDRETURNDATE":"","CHILDNEXTAVAILABLEDATE":"","CHILDRENEW":"","CHILDOVERDUE":"","CHILDLOST":"","CHILDATTACH1":"","CHILDATTACH2":"","CHILDATTACH3":"","CHILDDESCRIPTION":"","CHILDTIMESTAMP":"2025-12-30T12:56:28.000Z","CHILDOPERATOR":"鈴木花子","CHILDPARENTSTATUS":"貸出中","BADFLAG":"","BADCOMMENT":"","BADTIMESTAMP":"","BADOPERATOR":"","BADDETAIL":0,"HOME":15,"BUSSINESS":0,"AUTOLOCK":0,"TELENABLED":0,"UNCHECKEDNG":0,"VISITED":1,"YOUNGERGEN":4,"CHILDCLASSIFY":0,"FLAG1":0,"FLAG2":0,"NICKNAMEFLAG":0,"NICKNAME":0,"USERMEMO":0,"COLOR":"★","bgCOLOR":"backgroundColor:#00FF00","BTN_UPDATE_LABEL":"更新","BTN_UPDATE_STATUS":false,"BTN_cUPDATE_LABEL":"更新","BTN_cUPDATE_STATUS":false},
-        {"CHILDID":797,"CARDNO":43,"CHILDNO":6,"CHILDBLOCK":"【重点】xx町xx町側","CHILDHOUSES":20,"CHILDTERM":"2025年12月","CHILDSTATUS":"貸出中","CHILDPDF":"43-6xx町xx町側.pdf","CHILDKML":"043-06.kml","CHILDLNG":"","CHILDLAT":"","CHILDGROUP":"いちじく","CHILDARRENGER":"田中一郎","CHILDMINISTER":"田中一郎","CHILDSTARTDATE":"2025-12-01","CHILDLIMITDATE":"2026-01-25","CHILDCHECKOUTDATE":"2025-12-30","CHILDRETURNDATE":"","CHILDNEXTAVAILABLEDATE":"","CHILDRENEW":"","CHILDOVERDUE":"","CHILDLOST":"","CHILDATTACH1":"","CHILDATTACH2":"","CHILDATTACH3":"","CHILDDESCRIPTION":"","CHILDTIMESTAMP":"2025-12-30T12:57:43.000Z","CHILDOPERATOR":"鈴木花子","CHILDPARENTSTATUS":"貸出中","BADFLAG":"","BADCOMMENT":"","BADTIMESTAMP":"","BADOPERATOR":"","BADDETAIL":2,"HOME":20,"BUSSINESS":0,"AUTOLOCK":0,"TELENABLED":2,"UNCHECKEDNG":0,"VISITED":20,"YOUNGERGEN":2,"CHILDCLASSIFY":0,"FLAG1":0,"FLAG2":0,"NICKNAMEFLAG":0,"NICKNAME":0,"USERMEMO":0,"COLOR":"★","bgCOLOR":"backgroundColor:#00FF00","BTN_UPDATE_LABEL":"更新","BTN_UPDATE_STATUS":false,"BTN_cUPDATE_LABEL":"更新","BTN_cUPDATE_STATUS":false}
-      ]
-    };
-
-    // ==== DOM refs ====
-    const tbody = document.getElementById("tbody");
-    const countEl = document.getElementById("count");
-    const statusPill = document.getElementById("statusPill");
-    const timestampEl = document.getElementById("timestamp");
-    const qInput = document.getElementById("q");
-    const statusFilter = document.getElementById("statusFilter");
-    const sortBy = document.getElementById("sortBy");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const noData = document.getElementById("noData");
-
-    let RAW = []; // 元データ保持
-
-    // ==== ヘルパー ====
-    function parseBgColor(bgStr){
-      // bgCOLOR: "backgroundColor:#00FF00" など
-      if(!bgStr) return "";
-      const m = bgStr.match(/#([0-9A-Fa-f]{3,6})/);
-      return m ? "#" + m[1] : "";
-    }
-    function formatDate(d){
-      if(!d) return "";
-      // YYYY-MM-DD or ISO
-      const dt = new Date(d);
-      if(isNaN(dt)) return d;
-      return dt.toLocaleDateString('ja-JP');
-    }
-    function safeText(v){ return v === null || v === undefined ? "" : String(v); }
-
-    // ==== レンダリング ====
-    function renderTable(items){
-      tbody.innerHTML = "";
-      if(!items || items.length === 0){
-        tbody.innerHTML = '<tr><td colspan="11" class="empty">該当するデータがありません</td></tr>';
-        noData.style.display = "";
-        countEl.textContent = "0";
-        return;
-      }
-      noData.style.display = "none";
-      countEl.textContent = items.length;
-      for(const it of items){
-        const tr = document.createElement("tr");
-
-        // 背景色が指定されていれば行に反映
-        const bg = parseBgColor(it.bgCOLOR);
-        if(bg) tr.style.background = bg + "22"; // 透明度を少し付ける
-
-        // カード列: CARDNO-CHILDNO と CHILDID
-        const cardCell = document.createElement("td");
-        cardCell.innerHTML = `<strong>${safeText(it.CARDNO)}-${safeText(it.CHILDNO)}</strong><div class="small">ID ${safeText(it.CHILDID)}</div>`;
-        tr.appendChild(cardCell);
-
-        // 区画
-        const blockCell = document.createElement("td");
-        blockCell.textContent = safeText(it.CHILDBLOCK);
-        tr.appendChild(blockCell);
-
-        // 戸数
-        const housesCell = document.createElement("td");
-        housesCell.textContent = safeText(it.CHILDHOUSES);
-        tr.appendChild(housesCell);
-
-        // 期間
-        const termCell = document.createElement("td");
-        termCell.textContent = safeText(it.CHILDTERM);
-        tr.appendChild(termCell);
-
-        // 状態
-        const statusCell = document.createElement("td");
-        statusCell.innerHTML = `<span class="badge">${safeText(it.CHILDSTATUS)}</span>`;
-        tr.appendChild(statusCell);
-
-        // 開始日
-        const startCell = document.createElement("td");
-        startCell.textContent = formatDate(it.CHILDSTARTDATE);
-        tr.appendChild(startCell);
-
-        // 期限
-        const limitCell = document.createElement("td");
-        limitCell.textContent = formatDate(it.CHILDLIMITDATE);
-        tr.appendChild(limitCell);
-
-        // 貸出日
-        const checkoutCell = document.createElement("td");
-        checkoutCell.textContent = formatDate(it.CHILDCHECKOUTDATE);
-        tr.appendChild(checkoutCell);
-
-        // 担当
-        const opCell = document.createElement("td");
-        opCell.textContent = safeText(it.CHILDOPERATOR || it.CHILDMINISTER || it.CHILDARRENGER);
-        tr.appendChild(opCell);
-
-        // 訪問 / 若年世帯
-        const visitCell = document.createElement("td");
-        visitCell.innerHTML = `<div class="small">訪問 ${safeText(it.VISITED)}</div><div class="small">若年 ${safeText(it.YOUNGERGEN)}</div>`;
-        tr.appendChild(visitCell);
-
-        // 備考: BADDETAIL, HOME, TELENABLED, COLOR, PDF/KML
-        const noteCell = document.createElement("td");
-        const parts = [];
-        if(it.BADDETAIL) parts.push(`不備 ${it.BADDETAIL}`);
-        if(it.HOME) parts.push(`世帯 ${it.HOME}`);
-        if(it.TELENABLED) parts.push(`遠隔 ${it.TELENABLED}`);
-        if(it.COLOR) parts.push(`色 ${it.COLOR}`);
-        if(it.CHILDPDF) parts.push(`<a class="link" href="${encodeURI(it.CHILDPDF)}" target="_blank" rel="noopener">PDF</a>`);
-        if(it.CHILDKML) parts.push(`<a class="link" href="${encodeURI(it.CHILDKML)}" target="_blank" rel="noopener">KML</a>`);
-        noteCell.innerHTML = parts.join(' ・ ');
-        tr.appendChild(noteCell);
-
-        tbody.appendChild(tr);
-      }
-    }
-
-    // ==== フィルタリングとソート ====
-    function applyFiltersAndRender(){
-      const q = qInput.value.trim().toLowerCase();
-      const status = statusFilter.value;
-      const sortVal = sortBy.value;
-
-      let items = RAW.slice();
-
-      if(status){
-        items = items.filter(i => (i.CHILDSTATUS || "").toString() === status);
-      }
-      if(q){
-        items = items.filter(i => {
-          return (safeText(i.CHILDBLOCK).toLowerCase().includes(q) ||
-                  safeText(i.CHILDGROUP).toLowerCase().includes(q) ||
-                  safeText(i.CHILDOPERATOR).toLowerCase().includes(q));
-        });
-      }
-
-      // ソート
-      const [key, dir] = sortVal.split('_');
-      items.sort((a,b) => {
-        const va = a[key] || "";
-        const vb = b[key] || "";
-        // 日付判定
-        if(/\d{4}-\d{2}-\d{2}/.test(va) || /\d{4}-\d{2}-\d{2}/.test(vb)){
-          const da = new Date(va || 0).getTime() || 0;
-          const db = new Date(vb || 0).getTime() || 0;
-          return dir === 'asc' ? da - db : db - da;
-        }
-        // 数値判定
-        if(!isNaN(Number(va)) && !isNaN(Number(vb))){
-          return dir === 'asc' ? Number(va) - Number(vb) : Number(vb) - Number(va);
-        }
-        // 文字列
-        return dir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
-      });
-
-      renderTable(items);
-    }
-
-    // ==== フェッチ ====
-    async function fetchData(){
-      statusPill.textContent = "読み込み中";
-      timestampEl.textContent = "";
-      try{
-        let json;
-        if(GAS_JSON_URL){
-          const resp = await fetch(GAS_JSON_URL, {cache:"no-store"});
-          if(!resp.ok) throw new Error("HTTP " + resp.status);
-          json = await resp.json();
-        } else {
-          // URL 未設定時はフォールバックを使う
-          json = FALLBACK_JSON;
-        }
-
-        // 基本チェック
-        if(!json || !Array.isArray(json.items)){
-          throw new Error("不正な JSON 形式です");
-        }
-
-        RAW = json.items;
-        statusPill.textContent = json.status || "ok";
-        timestampEl.textContent = json.timestamp ? `更新: ${new Date(json.timestamp).toLocaleString('ja-JP')}` : "";
-        applyFiltersAndRender();
-      } catch(err){
-        // フォールバックを使う
-        console.warn("fetch error, using fallback:", err);
-        RAW = FALLBACK_JSON.items;
-        statusPill.textContent = "fallback";
-        timestampEl.textContent = `ローカルサンプルを表示`;
-        applyFiltersAndRender();
-      }
-    }
-
-    // ==== イベント ====
-    qInput.addEventListener("input", () => { applyFiltersAndRender(); });
-    statusFilter.addEventListener("change", () => { applyFiltersAndRender(); });
-    sortBy.addEventListener("change", () => { applyFiltersAndRender(); });
-    refreshBtn.addEventListener("click", () => { fetchData(); });
-
-    // 初回
-    fetchData();
-  </script>
 </body>
 </html>
