@@ -1,6 +1,6 @@
 // firebaseをCDNから読み込む
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
 // ==== 認証：firebase authの初期化
 // firebaseコンソールから取得して貼り付け
