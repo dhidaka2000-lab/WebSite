@@ -33,16 +33,14 @@
         <div class="col-2"></div>
 
         <div class="col-6">
-          <p>
-            [ユーザー名]<br>
-            {{ userEmail }} ({{ userGroup }})
-          </p>
+          <p>[ユーザー名]</p>
+          <p id="userInfo"></p>
         </div>
 
         <div class="col-1"></div>
 
         <div class="col-3">
-          <button class="btn btn-link" @click="logout">
+          <button class="btn btn-link" id="logoutBtn" @click="logout">
             <i class="fas fa-2x fa-door-open"></i><br>終了
           </button>
         </div>
@@ -129,12 +127,6 @@
 
         <div class="col-sm-8">
           <h5><b>お知らせ</b></h5>
-          <h6><b>2023/04/05</b></h6>
-
-          <p class="text-danger"><b>マイページの貸出中カードに残件数を表示するよう変更しました。</b></p>
-          <p>・一旦、全ての住戸の件数が表示されています。</p>
-          <p class="text-primary"><b>・カードを開いて表示すると件数が更新されます。</b></p>
-          <p>・残件数とは、訪問済や留守宅、訪問拒否を除いた、訪問可能な件数です。</p>
         </div>
 
         <div class="col-sm-2"></div>

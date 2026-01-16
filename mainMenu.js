@@ -11,11 +11,15 @@ new Vue({
   },
 
   created() {
+    // ログイン状態の変化をコールバックで監視
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = "index.html";
         return;
-      }
+      } else {
+      // 未ログインならログイン画面へ
+      window.location.href = "index.html";
+    }
 
       // Firebase のユーザー情報
       this.userEmail = user.email;
@@ -28,6 +32,7 @@ new Vue({
   },
 
   methods: {
+    // ログアウト
     logout() {
       signOut(auth).then(() => {
         window.location.href = "index.html";
