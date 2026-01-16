@@ -15,12 +15,9 @@ new Vue({
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = "index.html";
-        return;
-      } else {
-      // 未ログインならログイン画面へ
-      window.location.href = "index.html";
-    }
-
+        return;        
+      }
+      
       // Firebase のユーザー情報
       this.userEmail = user.email;
 
