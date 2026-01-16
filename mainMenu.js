@@ -1,5 +1,5 @@
 // Firebaseの初期化
-import { auth, onAuthStateChanged, logout } from "./firebase.js";
+import { auth, onAuthStateChanged, signOut } from "./firebase.js";
 
 new Vue({
   el: "#app",
