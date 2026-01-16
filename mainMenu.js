@@ -1,29 +1,30 @@
 // Firebaseの初期化
-import { auth, onAuthStateChanged, signOut } from "./firebase.js";
+import { auth, onAuthStateChanged, logout } from "./firebase.js";
 
 new Vue({
   el: "#app",
 
   data: {
-    userEmail: "",
-    userGroup: "一般",
+    userEmail: "none",
+    userGroup: "（なし）",
     userrole: 0
   },
 
   created() {
     // ログイン状態の変化をコールバックで監視
     onAuthStateChanged(auth, (user) => {
+      // 未ログインならログイン画面に遷移して処理を終了
       if (!user) {
         window.location.href = "index.html";
         return;        
       }
-      
+
       // Firebase のユーザー情報
       this.userEmail = user.email;
 
       // ★必要なら Firestore からユーザー情報を取得して userGroup / userrole を更新
       // 今は仮の値
-      this.userGroup = "Group A";
+      this.userGroup = "いちじく";
       this.userrole = 1100;
     });
   },
