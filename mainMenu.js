@@ -20,7 +20,7 @@ const app = Vue.createApp({
 
       // ★必要なら Firestore から取得
       this.userGroup = "いちじく";
-      this.userrole = 1100;
+      this.userrole = 9001;
     });
   },
 
