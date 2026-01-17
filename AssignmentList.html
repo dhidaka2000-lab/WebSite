@@ -31,7 +31,7 @@
         <!-- ヘッダー -->
         <div class="row bg-light align-items-center py-2">
           <div class="col-2">
-            <a href="#" class="btn btn-link">
+            <a href="#" class="btn btn-link" @click="go('mainMenu')">
               <i class="fas fa-2x fa-arrow-circle-left"></i><br>戻る
             </a>
           </div>
@@ -45,10 +45,10 @@
           </div>
 
           <div class="col-6 text-end">
-            <a href="#" class="btn btn-link">
+            <a href="#" class="btn btn-link" @click="go('mainMenu')">
               <i class="fas fa-2x fa-home"></i><br>ホーム
             </a>
-            <a href="#" class="btn btn-link">
+            <a href="#" class="btn btn-link" @click="logout">
               <i class="fas fa-2x fa-door-open"></i><br>終了
             </a>
           </div>
