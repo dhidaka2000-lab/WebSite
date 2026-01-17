@@ -84,7 +84,7 @@ createApp({
       screenWidth.value = window.innerWidth;
     };
 
-    // ③ GAS Web API からデータ取得
+    // GAS Web API からデータ取得
     const fetchChildCards = async () => {
       const url =
         "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec?funcName=getFilteredChildCardbyUser";
@@ -93,9 +93,25 @@ createApp({
         const response = await fetch(url);
         const data = await response.json();
 
-        // 取得した JSON をそのまま代入
-        childs.value = data;
-        cardsNumbers.value = childs.value.length;
+        console.log("GAS response:", data);
+
+        // data.items がある場合
+        if (data && Array.isArray(data.items)) {
+          childs.value = data.items;
+          cardsNumbers.value = data.items.length;
+          return;
+        }
+
+        // data 自体が配列の場合
+        if (Array.isArray(data)) {
+          childs.value = data;
+          cardsNumbers.value = data.length;
+          return;
+        }
+
+        // どちらでもない場合 → エラー
+        console.error("GAS API の戻り値が想定外:", data);
+
       } catch (error) {
         console.error("GAS API の取得に失敗:", error);
       }
