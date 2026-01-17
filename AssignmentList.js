@@ -29,14 +29,14 @@ createApp({
       }
     };
 
-    // ① ログアウト処理
+    // ログアウト処理
     const logout = () => {
       signOut(auth).then(() => {
         window.location.href = "index.html";
       });
     };
 
-    // ② ページ遷移
+    // ページ遷移
     const go = (page) => {
       window.location.href = page + ".html";
     };
@@ -95,7 +95,7 @@ createApp({
 
         // 取得した JSON をそのまま代入
         childs.value = data;
-        cardsNumbers.value = childs.items.length;
+        cardsNumbers.value = childs.value.items.length;
       } catch (error) {
         console.error("GAS API の取得に失敗:", error);
       }
