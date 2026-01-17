@@ -103,6 +103,7 @@ createApp({
         if (data && Array.isArray(data.items)) {
           childs.value = data.items;
           cardsNumbers.value = data.items.length;
+          document.getElementById("loading").style.display = "none";
           return;
         }
 
@@ -110,6 +111,7 @@ createApp({
         if (Array.isArray(data)) {
           childs.value = data;
           cardsNumbers.value = data.length;
+          document.getElementById("loading").style.display = "none";
           return;
         }
 
@@ -117,10 +119,10 @@ createApp({
         console.error("GAS API の戻り値が想定外:", data);
 
       } catch (error) {
+        document.getElementById("loading").style.display = "none";
         console.error("GAS API の取得に失敗:", error);
       }
 
-      document.getElementById("loading").style.display = "none";
     };
 
     onMounted(() => {
