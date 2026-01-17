@@ -50,7 +50,7 @@ createApp({
 
       // ログインユーザー情報をセット
       userEmail.value = user.email;
-      userName.value = user.displayName ?? "unknown";
+      userName.value = user.displayName ?? "日高大輔";
       userGroup.value = "いちじく"; // 必要なら Firestore から取得
       userrole.value = 9001;
     });
@@ -84,6 +84,10 @@ createApp({
       screenWidth.value = window.innerWidth;
     };
 
+    // Toast表示処理
+    const isUpdating = ref(false);
+    let toastInstance = null;
+
     // GAS からデータ取得（キャッシュ対応）
     const fetchChildCards = async () => {
 
@@ -115,53 +119,78 @@ createApp({
 
     // --- GAS から強制取得する関数（更新ボタンもここを使う） ---
     const fetchFromGAS = async (hideLoading) => {
+      return new Promise(async (resolve) => {
 
-      const url =
-        "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"
-        + "?funcName=getFilteredChildCardbyUser"
-        + "&userName=" + encodeURIComponent(userName.value)
-        + "&t=" + Date.now();
+        const url =
+          "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
+        const payload = {
+          funcName: "getFilteredChildCardbyUser",
+          userName: userName.value
+        };
 
-        console.log("GAS 最新データ:", data);
+        try {
+          const response = await fetch(url, {
+            method: "POST",
+            body: JSON.stringify(payload),
+            headers: {
+              "Content-Type": "application/json"
+            }
+          });
 
-        if (data && Array.isArray(data.items)) {
+          const data = await response.json();
+          console.log("GAS response:", data);
 
-          // Vue に反映
-          childs.value = data.items;
-          cardsNumbers.value = data.items.length;
+          if (data && Array.isArray(data.items)) {
+            childs.value = data.items;
+            cardsNumbers.value = data.items.length;
 
-          // キャッシュ保存
-          localStorage.setItem("childCardCache", JSON.stringify({
-            timestamp: Date.now(),
-            items: data.items
-          }));
+            localStorage.setItem("childCardCache", JSON.stringify({
+              timestamp: Date.now(),
+              items: data.items
+            }));
 
-          if (hideLoading) {
-            document.getElementById("loading").style.display = "none";
+            if (hideLoading) {
+              document.getElementById("loading").style.display = "none";
+            }
+
+            resolve();
+            return;
           }
-          return;
+
+          console.error("GAS API の戻り値が想定外:", data);
+
+        } catch (error) {
+          console.error("GAS API の取得に失敗:", error);
         }
 
-        console.error("GAS API の戻り値が想定外:", data);
+        if (hideLoading) {
+          document.getElementById("loading").style.display = "none";
+        }
 
-      } catch (error) {
-        console.error("GAS API の取得に失敗:", error);
-      }
-
-      if (hideLoading) {
-        document.getElementById("loading").style.display = "none";
-      }
+        resolve();
+      });
     };
 
-    // --- 手動更新（キャッシュ無視） ---
+    // --- 手動更新（キャッシュ無視・更新中フラグ＋トースト対応） ---
     const refresh = () => {
+      if (isUpdating.value) return; // 二重更新防止
+
+      isUpdating.value = true;
       document.getElementById("loading").style.display = "flex";
-      fetchFromGAS(true);
+
+      fetchFromGAS(true).then(() => {
+        isUpdating.value = false;
+
+        // トースト表示
+        if (!toastInstance) {
+          const toastEl = document.getElementById("updateToast");
+          toastInstance = new bootstrap.Toast(toastEl);
+        }
+        toastInstance.show();
+      });
     };
+
 
     onMounted(() => {
       window.addEventListener("resize", handleResize);
@@ -186,7 +215,8 @@ createApp({
       printChildMap,
       logout,
       go,
-      refresh
+      refresh,
+      isUpdating
     };
   }
 }).mount("#app");
