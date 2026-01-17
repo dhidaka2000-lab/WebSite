@@ -84,38 +84,36 @@ createApp({
       screenWidth.value = window.innerWidth;
     };
 
-    // GAS Web API からデータ取得（キャッシュ対応）
+    // GAS からデータ取得（キャッシュ対応）
     const fetchChildCards = async () => {
 
       const CACHE_KEY = "childCardCache";
-      const CACHE_EXPIRE = 10 * 60 * 1000; // 10分
+      const CACHE_EXPIRE = 300 * 60 * 1000; // 300分（5時間）
 
-      // --- ① キャッシュがあれば即座に表示 ---
+      // --- キャッシュがあれば即表示 ---
       const cache = localStorage.getItem(CACHE_KEY);
       if (cache) {
         const parsed = JSON.parse(cache);
 
-        // 有効期限チェック
         if (Date.now() - parsed.timestamp < CACHE_EXPIRE) {
           console.log("キャッシュから読み込み");
           childs.value = parsed.items;
           cardsNumbers.value = parsed.items.length;
 
-          // 画面を即座に表示
           document.getElementById("loading").style.display = "none";
 
-          // 裏で最新データを取得（画面は止めない）
+          // 裏で最新データを取得
           fetchFromGAS(false);
           return;
         }
       }
 
-      // --- ② キャッシュが無い or 期限切れ → GAS から取得 ---
+      // キャッシュなし → GAS から取得
       fetchFromGAS(true);
     };
 
 
-    // --- GAS からデータ取得する関数 ---
+    // --- GAS から強制取得する関数（更新ボタンもここを使う） ---
     const fetchFromGAS = async (hideLoading) => {
 
       const url =
@@ -128,7 +126,7 @@ createApp({
         const response = await fetch(url);
         const data = await response.json();
 
-        console.log("GAS response:", data);
+        console.log("GAS 最新データ:", data);
 
         if (data && Array.isArray(data.items)) {
 
@@ -136,7 +134,7 @@ createApp({
           childs.value = data.items;
           cardsNumbers.value = data.items.length;
 
-          // --- ③ キャッシュ保存 ---
+          // キャッシュ保存
           localStorage.setItem("childCardCache", JSON.stringify({
             timestamp: Date.now(),
             items: data.items
@@ -157,6 +155,12 @@ createApp({
       if (hideLoading) {
         document.getElementById("loading").style.display = "none";
       }
+    };
+
+    // --- 手動更新（キャッシュ無視） ---
+    const refresh = () => {
+      document.getElementById("loading").style.display = "flex";
+      fetchFromGAS(true);
     };
 
     onMounted(() => {
@@ -180,8 +184,9 @@ createApp({
       closeModal,
       goToMap,
       printChildMap,
-      logout, // ① 追加
-      go      // ② 追加
+      logout,
+      go,
+      refresh
     };
   }
 }).mount("#app");
