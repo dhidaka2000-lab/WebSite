@@ -84,14 +84,45 @@ createApp({
       screenWidth.value = window.innerWidth;
     };
 
-    // GAS Web API からデータ取得
+    // GAS Web API からデータ取得（キャッシュ対応）
     const fetchChildCards = async () => {
+
+      const CACHE_KEY = "childCardCache";
+      const CACHE_EXPIRE = 10 * 60 * 1000; // 10分
+
+      // --- ① キャッシュがあれば即座に表示 ---
+      const cache = localStorage.getItem(CACHE_KEY);
+      if (cache) {
+        const parsed = JSON.parse(cache);
+
+        // 有効期限チェック
+        if (Date.now() - parsed.timestamp < CACHE_EXPIRE) {
+          console.log("キャッシュから読み込み");
+          childs.value = parsed.items;
+          cardsNumbers.value = parsed.items.length;
+
+          // 画面を即座に表示
+          document.getElementById("loading").style.display = "none";
+
+          // 裏で最新データを取得（画面は止めない）
+          fetchFromGAS(false);
+          return;
+        }
+      }
+
+      // --- ② キャッシュが無い or 期限切れ → GAS から取得 ---
+      fetchFromGAS(true);
+    };
+
+
+    // --- GAS からデータ取得する関数 ---
+    const fetchFromGAS = async (hideLoading) => {
+
       const url =
         "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"
-          +"?funcName=getFilteredChildCardbyUser" 
-          + "&userName=" 
-          + encodeURIComponent('日高大輔')
-          + "&t=" + Date.now();
+        + "?funcName=getFilteredChildCardbyUser"
+        + "&userName=" + encodeURIComponent(userName.value)
+        + "&t=" + Date.now();
 
       try {
         const response = await fetch(url);
@@ -99,30 +130,33 @@ createApp({
 
         console.log("GAS response:", data);
 
-        // data.items がある場合
         if (data && Array.isArray(data.items)) {
+
+          // Vue に反映
           childs.value = data.items;
           cardsNumbers.value = data.items.length;
-          document.getElementById("loading").style.display = "none";
+
+          // --- ③ キャッシュ保存 ---
+          localStorage.setItem("childCardCache", JSON.stringify({
+            timestamp: Date.now(),
+            items: data.items
+          }));
+
+          if (hideLoading) {
+            document.getElementById("loading").style.display = "none";
+          }
           return;
         }
 
-        // data 自体が配列の場合
-        if (Array.isArray(data)) {
-          childs.value = data;
-          cardsNumbers.value = data.length;
-          document.getElementById("loading").style.display = "none";
-          return;
-        }
-
-        // どちらでもない場合 → エラー
         console.error("GAS API の戻り値が想定外:", data);
 
       } catch (error) {
-        document.getElementById("loading").style.display = "none";
         console.error("GAS API の取得に失敗:", error);
       }
 
+      if (hideLoading) {
+        document.getElementById("loading").style.display = "none";
+      }
     };
 
     onMounted(() => {
