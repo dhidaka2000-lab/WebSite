@@ -95,8 +95,7 @@ createApp({
 
         // 取得した JSON をそのまま代入
         childs.value = data;
-
-        cardsNumbers.value = childs.value.length;
+        cardsNumbers.value = childs.items.length;
       } catch (error) {
         console.error("GAS API の取得に失敗:", error);
       }
