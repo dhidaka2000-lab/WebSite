@@ -50,7 +50,7 @@ createApp({
 
       // ログインユーザー情報をセット
       userEmail.value = user.email;
-      userName.value = user.displayName ?? "ユーザー";
+      userName.value = user.displayName ?? "unknown";
       userGroup.value = "いちじく"; // 必要なら Firestore から取得
       userrole.value = 9001;
     });
@@ -87,7 +87,11 @@ createApp({
     // GAS Web API からデータ取得
     const fetchChildCards = async () => {
       const url =
-        "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec?funcName=getFilteredChildCardbyUser";
+        "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"
+          +"?funcName=getFilteredChildCardbyUser" 
+          + "&userName=" 
+          + encodeURIComponent('日高大輔')
+          + "&t=" + Date.now();
 
       try {
         const response = await fetch(url);
