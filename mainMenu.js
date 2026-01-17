@@ -3,9 +3,10 @@ import { auth, onAuthStateChanged, signOut } from "./firebase.js";
 const app = Vue.createApp({
   data() {
     return {
-      userEmail: "",
-      userGroup: "（なし）",
-      userrole: 0
+      userEmail: "dhidaka@outlook.jp",
+      username: "日高大輔",
+      userGroup: "いちじく",
+      userrole: 9001
     };
   },
 
