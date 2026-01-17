@@ -49,9 +49,12 @@
               <i class="fas fa-2x fa-home"></i><br>ホーム
             </a>
 
-            <!-- ★ 追加：更新ボタン -->
-            <a href="#" class="btn btn-link" @click="refresh">
-              <i class="fas fa-2x fa-rotate-right"></i><br>更新
+            <a href="#" class="btn btn-link"
+              @click="refresh"
+              :class="{ disabled: isUpdating }"
+              :style="isUpdating ? 'pointer-events:none; opacity:0.5;' : ''">
+              <i class="fas fa-2x fa-rotate-right"></i><br>
+              {{ isUpdating ? "更新中…" : "更新" }}
             </a>
 
             <a href="#" class="btn btn-link" @click="logout">
@@ -169,6 +172,20 @@
             <div class="modal-footer">
               <button class="btn btn-secondary" @click="closeModal">閉じる</button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 更新完了トースト -->
+      <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+        <div id="updateToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header">
+            <strong class="me-auto">通知</strong>
+            <small>Just now</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+          </div>
+          <div class="toast-body">
+            更新しました
           </div>
         </div>
       </div>
