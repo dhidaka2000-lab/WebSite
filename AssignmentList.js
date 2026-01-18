@@ -121,24 +121,19 @@ createApp({
     const fetchFromGAS = async (hideLoading) => {
       return new Promise(async (resolve) => {
 
-        const url = "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
-
-        const payload = {
-          funcName: "getFilteredChildCardbyUser",
-          userName: userName.value
-        };
+        const url =
+          "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"
+          + "?funcName=getFilteredChildCardbyUser"
+          + "&userName=" + encodeURIComponent(userName.value)
+          + "&t=" + Date.now();
 
         try {
           const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
+            method: "GET",
+            mode: "cors"
           });
 
-          const text = await response.text();  // HtmlService は text で返す
-          const data = JSON.parse(text);
+          const data = await response.json();
 
           console.log("GAS response:", data);
 
@@ -172,7 +167,6 @@ createApp({
         resolve();
       });
     };
-
 
     // --- 手動更新（キャッシュ無視・更新中フラグ＋トースト対応） ---
     const refresh = () => {
