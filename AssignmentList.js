@@ -53,6 +53,10 @@ createApp({
       userName.value = user.displayName ?? "日高大輔";
       userGroup.value = "いちじく"; // 必要なら Firestore から取得
       userrole.value = 9001;
+
+      // ★★★ ログインが確定してからデータ取得 ★★★
+      fetchChildCards();
+
     });
 
     // モーダル表示
@@ -199,9 +203,6 @@ createApp({
 
     onMounted(() => {
       window.addEventListener("resize", handleResize);
-
-      // GAS API からデータ取得
-      fetchChildCards();
     });
 
     return {
