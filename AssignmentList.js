@@ -122,6 +122,7 @@ createApp({
       return new Promise(async (resolve) => {
 
         const idToken = await auth.currentUser.getIdToken(true);
+        console.log(idToken);
 
         const url =
           "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"
