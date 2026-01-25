@@ -1,24 +1,22 @@
 export default {
-  async fetch(request) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // ★ あなたの GAS Web アプリ URL（デプロイ時の URL）
     const gasUrl =
       "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
 
-    // ★ クエリをそのまま GAS に転送
     const target = gasUrl + url.search;
 
-    // ★ GAS にリクエスト
-    const gasResponse = await fetch(target, {
-      method: "GET",
-    });
-
+    // GAS にリクエスト
+    const gasResponse = await fetch(target);
     const body = await gasResponse.text();
 
-    // ★ CORS ヘッダーを Worker が付けて返す
+    // ★★★ ここで GAS のレスポンスをログに出す ★★★
+    console.log("GAS response status:", gasResponse.status);
+    console.log("GAS response body:", body.substring(0, 500)); // 長すぎると困るので先頭だけ
+
     return new Response(body, {
-      status: 200,
+      status: gasResponse.status,
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
