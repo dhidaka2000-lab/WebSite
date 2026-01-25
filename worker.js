@@ -1,28 +1,41 @@
 export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
+  async fetch(request) {
+    // CORS preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "POST, OPTIONS"
+        }
+      });
+    }
+
+    const body = await request.json();
+    const idToken = request.headers.get("Authorization")?.replace("Bearer ", "");
 
     const gasUrl =
-      "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec";
+      "https://script.google.com/macros/s/AKfycbxV6HtICJkZfvzYYdAmIjnXHi9O_nC0RzTFoIr7Qp0f4cRQl-yfIogoOLSX3kHYdWCJxw/exec";
+       
+    const gasResponse = await fetch(gasUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        funcName: body.funcName,
+        userName: body.userName,
+        idToken: idToken
+      })
+    });
 
-    const target = gasUrl + url.search;
+    const text = await gasResponse.text();
 
-    // GAS にリクエスト
-    const gasResponse = await fetch(target);
-    const body = await gasResponse.text();
-
-    // ★★★ ここで GAS のレスポンスをログに出す ★★★
-    console.log("GAS response status:", gasResponse.status);
-    console.log("GAS response body:", body.substring(0, 500)); // 長すぎると困るので先頭だけ
-
-    return new Response(body, {
+    return new Response(text, {
       status: gasResponse.status,
       headers: {
-        "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      },
+        "Content-Type": "application/json"
+      }
     });
   }
 };
