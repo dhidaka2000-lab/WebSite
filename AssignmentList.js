@@ -129,7 +129,7 @@ createApp({
         console.log(idToken);
 
         const url =
-          "https://script.google.com/macros/s/AKfycbw9ONyKBLAzL_DunjAjsUPAmUQ3E3W2wwAvDw88eL6blTxpHR5_w-fOCLoOW1hw7a3r/exec"
+          "https://ekuikidev.dhidaka2000.workers.dev"
           + "?funcName=getFilteredChildCardbyUser"
           + "&userName=" + encodeURIComponent("日高大輔")
           + "&idToken=" + encodeURIComponent(idToken)
