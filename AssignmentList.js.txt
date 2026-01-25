@@ -126,23 +126,23 @@ createApp({
       return new Promise(async (resolve) => {
 
         const idToken = await auth.currentUser.getIdToken(true);
+        console.log(idToken);
 
-        const payload = {
-          funcName: "getFilteredChildCardbyUser",
-          userName: "日高大輔"
-        };
+        const url =
+          "https://ekuikidev.dhidaka2000.workers.dev"
+          + "?funcName=getFilteredChildCardbyUser"
+          + "&userName=" + encodeURIComponent("日高大輔")
+          + "&idToken=" + encodeURIComponent(idToken)
+          + "&t=" + Date.now();
 
         try {
-          const response = await fetch("https://ekuikidev.dhidaka2000.workers.dev", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Bearer " + idToken
-            },
-            body: JSON.stringify(payload)
+          const response = await fetch(url, {
+            method: "GET",
+            mode: "cors"
           });
 
           const data = await response.json();
+
           console.log("GAS response:", data);
 
           if (data.status === "unauthorized") {
@@ -180,7 +180,6 @@ createApp({
         resolve();
       });
     };
-
 
     // --- 手動更新（キャッシュ無視・更新中フラグ＋トースト対応） ---
     const refresh = () => {
