@@ -144,6 +144,8 @@ createApp({
 
           const data = await response.json();
           console.log("GAS response:", data);
+          console.log("typeof data.items:", typeof data.items);
+          console.log("data.items:", data.items);
 
           if (data.status === "unauthorized") {
             console.error("Firebase Token invalid");
