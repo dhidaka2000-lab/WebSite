@@ -13,8 +13,10 @@ export default {
     }
 
     const body = await request.json();
+    // フロントから送られてきた JSON をログに出す
+    console.log("Worker received body:", JSON.stringify(body));
     const idToken = request.headers.get("Authorization")?.replace("Bearer ", "");
-
+    
     const gasUrl =
       "https://script.google.com/macros/s/AKfycbw-D4WoDgQxC6aDDBDMBcdd9iuqBAdZ-aASxilkCWpUcmrbF9NMf6bInMU-bMYhFoh_gg/exec";
        
@@ -29,13 +31,16 @@ export default {
     });
 
     const text = await gasResponse.text();
+    console.log("Worker received body:", JSON.stringify(body));
 
     return new Response(text, {
-      status: gasResponse.status,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json"
+        status: gasResponse.status,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json"
+        }
       }
-    });
+    );
+
   }
 };
