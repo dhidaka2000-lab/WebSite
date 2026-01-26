@@ -7,14 +7,24 @@
 // https://qiita.com/ganyariya/items/7b58c9ba103bacadc380
 
 // firebase.js
+
+// Firebase App
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
+// Firebase Auth
 import {
   getAuth,
   signInWithEmailAndPassword,
   onAuthStateChanged,
-  signOut
+  signOut,
+  GoogleAuthProvider,
+  OAuthProvider,
+  signInWithPopup
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
+// ===============================
+// Firebase 設定
+// ===============================
 export const firebaseConfig = {
   apiKey: "AIzaSyBCib4rAXfXO_6nAiEO-VutN-FytgdnuvA",
   authDomain: "ekuikidev.firebaseapp.com",
@@ -23,13 +33,20 @@ export const firebaseConfig = {
   appId: "1:896828437660:web:3c3154fd640a522e0fe959"
 };
 
-// Firebase 初期化（全ページ共通）
+// ===============================
+// Firebase 初期化
+// ===============================
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// 必要な関数を再エクスポート
+// ===============================
+// 必要な関数をまとめて export
+// ===============================
 export {
   signInWithEmailAndPassword,
   onAuthStateChanged,
-  signOut
+  signOut,
+  GoogleAuthProvider,   // ← Google ログイン
+  OAuthProvider,        // ← Apple / Microsoft ログイン
+  signInWithPopup       // ← OAuth 共通
 };
