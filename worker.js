@@ -1,5 +1,6 @@
 export default {
   async fetch(request) {
+
     // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, {
@@ -12,14 +13,23 @@ export default {
       });
     }
 
+    // ★ GET が来たら JSON を読まずに即返す（これが重要）
+    if (request.method !== "POST") {
+      return new Response("OK", {
+        status: 200,
+        headers: { "Access-Control-Allow-Origin": "*" }
+      });
+    }
+
+    // POST のときだけ JSON を読む
     const body = await request.json();
-    // フロントから送られてきた JSON をログに出す
     console.log("Worker received body:", JSON.stringify(body));
+
     const idToken = request.headers.get("Authorization")?.replace("Bearer ", "");
-    
+
     const gasUrl =
       "https://script.google.com/macros/s/AKfycbxt64NJNKMOyNPaCwzNTh5XZXr4JReBjS4kscezjtvrysjiENDoprEa0JTvXDwQKXP-jw/exec";
-       
+
     const gasResponse = await fetch(gasUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -31,16 +41,13 @@ export default {
     });
 
     const text = await gasResponse.text();
-    console.log("Worker received body:", JSON.stringify(body));
 
     return new Response(text, {
-        status: gasResponse.status,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json"
-        }
+      status: gasResponse.status,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json"
       }
-    );
-
+    });
   }
 };
