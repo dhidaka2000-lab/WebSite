@@ -16,7 +16,7 @@ export default {
     const idToken = request.headers.get("Authorization")?.replace("Bearer ", "");
 
     const gasUrl =
-      "https://script.google.com/macros/s/AKfycbxV6HtICJkZfvzYYdAmIjnXHi9O_nC0RzTFoIr7Qp0f4cRQl-yfIogoOLSX3kHYdWCJxw/exec";
+      "https://script.google.com/macros/s/AKfycbw-D4WoDgQxC6aDDBDMBcdd9iuqBAdZ-aASxilkCWpUcmrbF9NMf6bInMU-bMYhFoh_gg/exec";
        
     const gasResponse = await fetch(gasUrl, {
       method: "POST",
