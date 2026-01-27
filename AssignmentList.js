@@ -125,11 +125,14 @@ createApp({
     const fetchFromGAS = async (hideLoading) => {
       return new Promise(async (resolve) => {
 
+        const user = auth.currentUser;
         const idToken = await auth.currentUser.getIdToken(true);
 
+        // Worker に送るデータ（data 部分だけ）
         const payload = {
           funcName: "getFilteredChildCardbyUser",
-          userName: "日高大輔"
+          userName: user.email,   // メールアドレス
+          uid: user.uid           // Firebase の一意ID
         };
 
         try {
@@ -143,9 +146,7 @@ createApp({
           });
 
           const data = await response.json();
-          console.log("GAS response:", data);
-          console.log("typeof data.items:", typeof data.items);
-          console.log("data.items:", data.items);
+          console.log("Worker response:", data);
 
           if (data.status === "unauthorized") {
             console.error("Firebase Token invalid");
@@ -169,10 +170,10 @@ createApp({
             return;
           }
 
-          console.error("GAS API の戻り値が想定外:", data);
+          console.error("Worker/GAS API の戻り値が想定外:", data);
 
         } catch (error) {
-          console.error("GAS API の取得に失敗:", error);
+          console.error("Worker/GAS API の取得に失敗:", error);
         }
 
         if (hideLoading) {
@@ -182,7 +183,6 @@ createApp({
         resolve();
       });
     };
-
 
     // --- 手動更新（キャッシュ無視・更新中フラグ＋トースト対応） ---
     const refresh = () => {

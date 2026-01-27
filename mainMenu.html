@@ -19,7 +19,7 @@
   <!-- Vue 3 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 
-  <!-- Vue Dialog（Vue3対応版） -->
+  <!-- Vue Dialog -->
   <script src="https://unpkg.com/vue3-dialog/dist/vue3-dialog.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/vue3-dialog/dist/vue3-dialog.css">
 </head>
@@ -28,103 +28,110 @@
   <main role="main">
     <div id="app" class="container">
 
-      <!-- 上部ユーザー情報バー -->
-      <div class="row bg-light mt-3 p-3">
-        <div class="col-2"></div>
-
-        <div class="col-6">
-          <p>
-            [ユーザー名]<br>
-            {{ userEmail }} ({{ userGroup }})
-          </p>
-        </div>
-
-        <div class="col-1"></div>
-
-        <div class="col-3 d-flex justify-content-end">
-          <button class="btn btn-link text-danger" @click="logout">
-            <i class="fas fa-2x fa-door-open"></i><br>終了
-          </button>
-        </div>
+      <!-- ローディング表示 -->
+      <div v-if="loading" class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3">ユーザー情報を取得しています...</p>
       </div>
 
-      <br>
+      <!-- メイン表示 -->
+      <div v-else>
 
-      <!-- タイトル -->
-      <div class="row">
-        <div class="col-sm-8 mx-auto text-center">
-          <h2><i class="fas fa-home"></i> ホーム</h2>
+        <!-- 上部ユーザー情報バー -->
+        <div class="row bg-light mt-3 p-3 align-items-center">
+
+          <div class="col-8">
+            <p class="mb-0">
+              <strong>{{ username }}</strong><br>
+              {{ userEmail }}（{{ userGroup }}）
+            </p>
+          </div>
+
+          <div class="col-4 d-flex justify-content-end">
+            <button class="btn btn-link text-danger" @click="logout">
+              <i class="fas fa-2x fa-door-open"></i><br>終了
+            </button>
+          </div>
         </div>
-      </div>
 
-      <br>
+        <br>
 
-      <!-- メニュー ボタン群 -->
-      <div class="row">
-        <div class="col-sm-8 mx-auto">
-
-          <button
-            v-if="userrole >= 1100"
-            class="btn btn-info col-12 mb-3"
-            @click="go('cardlist')"
-          >
-            <i class="fas fa-2x fa-tasks"></i>
-            <h6>区域リスト</h6>
-          </button>
-
-          <button
-            v-if="userrole >= 1010"
-            class="btn btn-info col-12 mb-3"
-            @click="go('childlist')"
-          >
-            <i class="fas fa-2x fa-users"></i>
-            <h6>グループページ</h6>
-          </button>
-
-          <button
-            class="btn btn-primary col-12 mb-3"
-            @click="go('AssignmentList')"
-          >
-            <i class="fas fa-2x fa-street-view"></i>
-            <h6>マイページ</h6>
-          </button>
-
-          <button
-            v-if="userrole >= 1001"
-            class="btn btn-light col-12 mb-3"
-            @click="go('settings')"
-          >
-            <i class="fas fa-2x fa-tools"></i>
-            <h6>設定</h6>
-          </button>
-
-          <button
-            v-if="userrole >= 9001"
-            class="btn btn-light col-12 mb-3"
-            @click="go('admin')"
-          >
-            <i class="fas fa-2x fa-user-cog"></i>
-            <h6>管理者設定</h6>
-          </button>
-
+        <!-- タイトル -->
+        <div class="row">
+          <div class="col-sm-8 mx-auto text-center">
+            <h2><i class="fas fa-home"></i> ホーム</h2>
+          </div>
         </div>
-      </div>
 
-      <br>
+        <br>
 
-      <!-- お知らせ -->
-      <div class="row">
-        <div class="col-sm-8 mx-auto">
-          <h5><b>お知らせ</b></h5>
-          <h6><b>2023/04/05</b></h6>
+        <!-- メニュー ボタン群 -->
+        <div class="row">
+          <div class="col-sm-8 mx-auto">
 
-          <p class="text-danger"><b>マイページの貸出中カードに残件数を表示するよう変更しました。</b></p>
-          <p>・一旦、全ての住戸の件数が表示されています。</p>
-          <p class="text-primary"><b>・カードを開いて表示すると件数が更新されます。</b></p>
-          <p>・残件数とは、訪問済や留守宅、訪問拒否を除いた、訪問可能な件数です。</p>
+            <button
+              v-if="userrole >= 1100"
+              class="btn btn-info col-12 mb-3"
+              @click="go('cardlist')"
+            >
+              <i class="fas fa-2x fa-tasks"></i>
+              <h6>区域リスト</h6>
+            </button>
+
+            <button
+              v-if="userrole >= 1010"
+              class="btn btn-info col-12 mb-3"
+              @click="go('childlist')"
+            >
+              <i class="fas fa-2x fa-users"></i>
+              <h6>グループページ</h6>
+            </button>
+
+            <button
+              class="btn btn-primary col-12 mb-3"
+              @click="go('AssignmentList')"
+            >
+              <i class="fas fa-2x fa-street-view"></i>
+              <h6>マイページ</h6>
+            </button>
+
+            <button
+              v-if="userrole >= 1001"
+              class="btn btn-light col-12 mb-3"
+              @click="go('settings')"
+            >
+              <i class="fas fa-2x fa-tools"></i>
+              <h6>設定</h6>
+            </button>
+
+            <button
+              v-if="userrole >= 9001"
+              class="btn btn-light col-12 mb-3"
+              @click="go('admin')"
+            >
+              <i class="fas fa-2x fa-user-cog"></i>
+              <h6>管理者設定</h6>
+            </button>
+
+          </div>
         </div>
-      </div>
 
+        <br>
+
+        <!-- お知らせ -->
+        <div class="row">
+          <div class="col-sm-8 mx-auto">
+            <h5><b>お知らせ</b></h5>
+            <h6><b>2023/04/05</b></h6>
+
+            <p class="text-danger"><b>マイページの貸出中カードに残件数を表示するよう変更しました。</b></p>
+            <p>・一旦、全ての住戸の件数が表示されています。</p>
+            <p class="text-primary"><b>・カードを開いて表示すると件数が更新されます。</b></p>
+            <p>・残件数とは、訪問済や留守宅、訪問拒否を除いた、訪問可能な件数です。</p>
+          </div>
+        </div>
+
+      </div>
     </div>
   </main>
 
