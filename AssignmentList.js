@@ -48,13 +48,13 @@ createApp({
         return;
       }
 
-      // ★★★ mainMenu と同じく localStorage から取得 ★★★
+      // ★★★ localStorage からユーザー情報を取得（高速）★★★
       userEmail.value = localStorage.getItem("loginUserEmail") ?? "";
       userName.value = localStorage.getItem("loginUserName") ?? "";
       userGroup.value = localStorage.getItem("loginUserGroup") ?? "";
       userrole.value = Number(localStorage.getItem("loginUserRole") ?? 0);
 
-      // ★★★ ログイン後にデータ取得 ★★★
+      // ★★★ ログイン後にカード情報を取得 ★★★
       fetchChildCards();
     });
 
@@ -114,16 +114,16 @@ createApp({
     // GAS から取得
     const fetchFromGAS = async (hideLoading) => {
       return new Promise(async (resolve) => {
-        const user = auth.currentUser;
-        const idToken = await user.getIdToken(true);
-
-        // ★★★ userName を送る（メールではない）★★★
-        const payload = {
-          funcName: "getFilteredChildCardbyUser",
-          userName: localStorage.getItem("loginUserName"),
-        };
-
         try {
+          const user = auth.currentUser;
+          const idToken = await user.getIdToken(true);
+
+          // ★★★ userName（漢字氏名）を送る ★★★
+          const payload = {
+            funcName: "getFilteredChildCardbyUser",
+            userName: localStorage.getItem("loginUserName")
+          };
+
           const response = await fetch("https://ekuikidev.dhidaka2000.workers.dev", {
             method: "POST",
             headers: {
