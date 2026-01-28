@@ -45,16 +45,25 @@ const app = Vue.createApp({
       localStorage.setItem("loginUserUID", data.uid);
       localStorage.setItem("loginUserGroup", data.group);
 
-      // Vue に反映
+      // ★★★ Vue に反映 ★★★
       this.username = data.userName;
+      this.userEmail = data.email;
       this.userGroup = data.group;
+
+      // ★★★ Role が返ってくる場合に備えて ★★★
+      if (data.role !== undefined) {
+        this.userrole = Number(data.role);
+        localStorage.setItem("loginUserRole", data.role);
+      }
+
+      // ローディング終了
+      this.loading = false;
     });
   },
 
   methods: {
     logout() {
       signOut(auth).then(() => {
-        // localStorage をクリア
         localStorage.removeItem("loginUserName");
         localStorage.removeItem("loginUserEmail");
         localStorage.removeItem("loginUserUID");
