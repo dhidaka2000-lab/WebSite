@@ -7,12 +7,29 @@ import {
   signInWithPopup
 } from "./firebase.js";
 
-// ------------------------------
+// --------------------------------------
+// ログイン前に localStorage をクリア
+// （古いユーザー情報が残る事故を防ぐ）
+// --------------------------------------
+function clearUserInfo() {
+  localStorage.removeItem("loginUserName");
+  localStorage.removeItem("loginUserEmail");
+  localStorage.removeItem("loginUserUID");
+  localStorage.removeItem("loginUserGroup");
+  localStorage.removeItem("loginUserRole");
+}
+
+// --------------------------------------
 // 共通：ログイン後の処理
-// ------------------------------
+// --------------------------------------
 async function afterLogin() {
   try {
     const user = auth.currentUser;
+    if (!user) {
+      alert("ログイン状態が確認できません");
+      return;
+    }
+
     const idToken = await user.getIdToken(true);
 
     // Worker に問い合わせ
@@ -30,16 +47,16 @@ async function afterLogin() {
     const data = await response.json();
     console.log("ログインユーザー情報:", data);
 
-    if (data.status !== "success") {
+    if (!data || data.status !== "success") {
       alert("ユーザー情報の取得に失敗しました");
       return;
     }
 
     // ★★★ localStorage に保存 ★★★
-    localStorage.setItem("loginUserName", data.userName);
-    localStorage.setItem("loginUserEmail", data.email);
-    localStorage.setItem("loginUserUID", data.uid);
-    localStorage.setItem("loginUserGroup", data.group);
+    localStorage.setItem("loginUserName", data.userName ?? "");
+    localStorage.setItem("loginUserEmail", data.email ?? "");
+    localStorage.setItem("loginUserUID", data.uid ?? "");
+    localStorage.setItem("loginUserGroup", data.group ?? "");
 
     if (data.role !== undefined) {
       localStorage.setItem("loginUserRole", data.role);
@@ -54,10 +71,12 @@ async function afterLogin() {
   }
 }
 
-// ------------------------------
+// --------------------------------------
 // メールアドレス + パスワード
-// ------------------------------
+// --------------------------------------
 document.getElementById("loginBtn").addEventListener("click", () => {
+  clearUserInfo();
+
   const email = document.getElementById("email").value;
   const pass = document.getElementById("password").value;
 
@@ -69,10 +88,12 @@ document.getElementById("loginBtn").addEventListener("click", () => {
     });
 });
 
-// ------------------------------
+// --------------------------------------
 // Google ログイン
-// ------------------------------
+// --------------------------------------
 document.getElementById("googleBtn").addEventListener("click", () => {
+  clearUserInfo();
+
   const provider = new GoogleAuthProvider();
 
   signInWithPopup(auth, provider)
@@ -83,10 +104,12 @@ document.getElementById("googleBtn").addEventListener("click", () => {
     });
 });
 
-// ------------------------------
+// --------------------------------------
 // Apple ログイン
-// ------------------------------
+// --------------------------------------
 document.getElementById("appleBtn").addEventListener("click", () => {
+  clearUserInfo();
+
   const provider = new OAuthProvider("apple.com");
   provider.addScope("email");
   provider.addScope("name");
@@ -99,10 +122,12 @@ document.getElementById("appleBtn").addEventListener("click", () => {
     });
 });
 
-// ------------------------------
+// --------------------------------------
 // Microsoft ログイン
-// ------------------------------
+// --------------------------------------
 document.getElementById("msBtn").addEventListener("click", () => {
+  clearUserInfo();
+
   const provider = new OAuthProvider("microsoft.com");
   provider.setCustomParameters({ prompt: "select_account" });
 
