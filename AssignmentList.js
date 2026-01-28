@@ -12,7 +12,7 @@ createApp({
     // ログインユーザー情報
     const userEmail = ref("");
     const userName = ref("");
-    const userGroup = ref("");
+       const userGroup = ref("");
     const userrole = ref(0);
 
     // ステータス色

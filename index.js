@@ -8,6 +8,53 @@ import {
 } from "./firebase.js";
 
 // ------------------------------
+// 共通：ログイン後の処理
+// ------------------------------
+async function afterLogin() {
+  try {
+    const user = auth.currentUser;
+    const idToken = await user.getIdToken(true);
+
+    // Worker に問い合わせ
+    const response = await fetch("https://ekuikidev.dhidaka2000.workers.dev", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + idToken
+      },
+      body: JSON.stringify({
+        funcName: "getLoginUserInformation"
+      })
+    });
+
+    const data = await response.json();
+    console.log("ログインユーザー情報:", data);
+
+    if (data.status !== "success") {
+      alert("ユーザー情報の取得に失敗しました");
+      return;
+    }
+
+    // ★★★ localStorage に保存 ★★★
+    localStorage.setItem("loginUserName", data.userName);
+    localStorage.setItem("loginUserEmail", data.email);
+    localStorage.setItem("loginUserUID", data.uid);
+    localStorage.setItem("loginUserGroup", data.group);
+
+    if (data.role !== undefined) {
+      localStorage.setItem("loginUserRole", data.role);
+    }
+
+    // メインメニューへ
+    window.location.href = "mainMenu.html";
+
+  } catch (err) {
+    console.error("ログイン後のユーザー情報取得エラー:", err);
+    alert("ログイン後の処理でエラーが発生しました");
+  }
+}
+
+// ------------------------------
 // メールアドレス + パスワード
 // ------------------------------
 document.getElementById("loginBtn").addEventListener("click", () => {
@@ -15,9 +62,7 @@ document.getElementById("loginBtn").addEventListener("click", () => {
   const pass = document.getElementById("password").value;
 
   signInWithEmailAndPassword(auth, email, pass)
-    .then(() => {
-      window.location.href = "mainMenu.html";
-    })
+    .then(afterLogin)
     .catch((error) => {
       document.getElementById("errorMsg").textContent =
         "ログイン失敗：" + error.message;
@@ -31,9 +76,7 @@ document.getElementById("googleBtn").addEventListener("click", () => {
   const provider = new GoogleAuthProvider();
 
   signInWithPopup(auth, provider)
-    .then(() => {
-      window.location.href = "mainMenu.html";
-    })
+    .then(afterLogin)
     .catch((error) => {
       document.getElementById("errorMsg").textContent =
         "Google ログイン失敗：" + error.message;
@@ -49,9 +92,7 @@ document.getElementById("appleBtn").addEventListener("click", () => {
   provider.addScope("name");
 
   signInWithPopup(auth, provider)
-    .then(() => {
-      window.location.href = "mainMenu.html";
-    })
+    .then(afterLogin)
     .catch((error) => {
       document.getElementById("errorMsg").textContent =
         "Apple ログイン失敗：" + error.message;
@@ -66,9 +107,7 @@ document.getElementById("msBtn").addEventListener("click", () => {
   provider.setCustomParameters({ prompt: "select_account" });
 
   signInWithPopup(auth, provider)
-    .then(() => {
-      window.location.href = "mainMenu.html";
-    })
+    .then(afterLogin)
     .catch((error) => {
       document.getElementById("errorMsg").textContent =
         "Microsoft ログイン失敗：" + error.message;
