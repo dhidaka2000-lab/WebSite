@@ -29,7 +29,7 @@ createApp({
       }
     };
 
-    // ログアウト処理
+    // ログアウト
     const logout = () => {
       signOut(auth).then(() => {
         window.location.href = "index.html";
@@ -48,18 +48,17 @@ createApp({
         return;
       }
 
-      // ログインユーザー情報をセット
-      userEmail.value = user.email;
-      userName.value = user.displayName ?? "日高大輔";
-      userGroup.value = "いちじく"; // 必要なら Firestore から取得
-      userrole.value = 9001;
+      // ★★★ mainMenu と同じく localStorage から取得 ★★★
+      userEmail.value = localStorage.getItem("loginUserEmail") ?? "";
+      userName.value = localStorage.getItem("loginUserName") ?? "";
+      userGroup.value = localStorage.getItem("loginUserGroup") ?? "";
+      userrole.value = Number(localStorage.getItem("loginUserRole") ?? 0);
 
-      // ★★★ ログインが確定してからデータ取得 ★★★
+      // ★★★ ログイン後にデータ取得 ★★★
       fetchChildCards();
-
     });
 
-    // モーダル表示
+    // モーダル
     const openModal = (type, child) => {
       selectedChild.value = child;
       if (!modalInstance.value) {
@@ -76,33 +75,27 @@ createApp({
 
     const goToMap = (child) => {
       console.log("goToMap:", child);
-      // TODO: 地図ページへ遷移
     };
 
     const printChildMap = (child) => {
       console.log("printChildMap:", child);
-      // TODO: 印刷ページへ遷移
     };
 
     const handleResize = () => {
       screenWidth.value = window.innerWidth;
     };
 
-    // Toast表示処理
     const isUpdating = ref(false);
     let toastInstance = null;
 
-    // GAS からデータ取得（キャッシュ対応）
+    // キャッシュ対応
     const fetchChildCards = async () => {
-
       const CACHE_KEY = "childCardCache";
-      const CACHE_EXPIRE = 300 * 60 * 1000; // 300分（5時間）
+      const CACHE_EXPIRE = 300 * 60 * 1000;
 
-      // --- キャッシュがあれば即表示 ---
       const cache = localStorage.getItem(CACHE_KEY);
       if (cache) {
         const parsed = JSON.parse(cache);
-
         if (Date.now() - parsed.timestamp < CACHE_EXPIRE) {
           console.log("キャッシュから読み込み");
           childs.value = parsed.items;
@@ -110,29 +103,24 @@ createApp({
 
           document.getElementById("loading").style.display = "none";
 
-          // 裏で最新データを取得
           fetchFromGAS(false);
           return;
         }
       }
 
-      // キャッシュなし → GAS から取得
       fetchFromGAS(true);
     };
 
-
-    // --- GAS から強制取得する関数（更新ボタンもここを使う） ---
+    // GAS から取得
     const fetchFromGAS = async (hideLoading) => {
       return new Promise(async (resolve) => {
-
         const user = auth.currentUser;
-        const idToken = await auth.currentUser.getIdToken(true);
+        const idToken = await user.getIdToken(true);
 
-        // Worker に送るデータ（data 部分だけ）
+        // ★★★ userName を送る（メールではない）★★★
         const payload = {
           funcName: "getFilteredChildCardbyUser",
-          userName: user.email,   // メールアドレス
-          uid: user.uid           // Firebase の一意ID
+          userName: localStorage.getItem("loginUserName"),
         };
 
         try {
@@ -148,18 +136,14 @@ createApp({
           const data = await response.json();
           console.log("Worker response:", data);
 
-          if (data.status === "unauthorized") {
-            console.error("Firebase Token invalid");
-            return resolve();
-          }
-
-          if (data && Array.isArray(data.items)) {
-            childs.value = data.items;
-            cardsNumbers.value = data.items.length;
+          // ★★★ 今の GAS のレスポンス形式に対応 ★★★
+          if (data.status === "success" && Array.isArray(data.cards)) {
+            childs.value = data.cards;
+            cardsNumbers.value = data.cards.length;
 
             localStorage.setItem("childCardCache", JSON.stringify({
               timestamp: Date.now(),
-              items: data.items
+              items: data.cards
             }));
 
             if (hideLoading) {
@@ -170,7 +154,7 @@ createApp({
             return;
           }
 
-          console.error("Worker/GAS API の戻り値が想定外:", data);
+          console.error("GAS の戻り値が想定外:", data);
 
         } catch (error) {
           console.error("Worker/GAS API の取得に失敗:", error);
@@ -184,9 +168,8 @@ createApp({
       });
     };
 
-    // --- 手動更新（キャッシュ無視・更新中フラグ＋トースト対応） ---
     const refresh = () => {
-      if (isUpdating.value) return; // 二重更新防止
+      if (isUpdating.value) return;
 
       isUpdating.value = true;
       document.getElementById("loading").style.display = "flex";
@@ -194,7 +177,6 @@ createApp({
       fetchFromGAS(true).then(() => {
         isUpdating.value = false;
 
-        // トースト表示
         if (!toastInstance) {
           const toastEl = document.getElementById("updateToast");
           toastInstance = new bootstrap.Toast(toastEl);
@@ -202,7 +184,6 @@ createApp({
         toastInstance.show();
       });
     };
-
 
     onMounted(() => {
       window.addEventListener("resize", handleResize);
