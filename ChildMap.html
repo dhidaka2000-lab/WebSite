@@ -263,6 +263,23 @@
     defer
   ></script>
 
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+  <!-- Firebase 初期化 -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "ekuikidev.firebaseapp.com",
+      projectId: "ekuikidev",
+      storageBucket: "ekuikidev.appspot.com",
+      messagingSenderId: "XXXXXXXXXXXX",
+      appId: "1:XXXXXXXXXXXX:web:XXXXXXXXXXXXXX"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
   <!-- アプリ本体 -->
   <script src="./ChildMap.js"></script>
 
