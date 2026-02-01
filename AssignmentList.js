@@ -12,7 +12,7 @@ createApp({
     // ログインユーザー情報
     const userEmail = ref("");
     const userName = ref("");
-       const userGroup = ref("");
+    const userGroup = ref("");
     const userrole = ref(0);
 
     // ステータス色
@@ -41,6 +41,12 @@ createApp({
       window.location.href = page + ".html";
     };
 
+    // ★★★ 子カードページへ遷移 ★★★
+    const goToMap = (child) => {
+      const url = `./ChildMap.html?cardNo=${child.CARDNO}&childNo=${child.CHILDNO}&loginUser=${userEmail.value}`;
+      window.location.href = url;
+    };
+
     // Firebase ログイン状態監視
     onAuthStateChanged(auth, (user) => {
       if (!user) {
@@ -48,13 +54,13 @@ createApp({
         return;
       }
 
-      // ★★★ localStorage からユーザー情報を取得（高速）★★★
+      // localStorage からユーザー情報を取得
       userEmail.value = localStorage.getItem("loginUserEmail") ?? "";
       userName.value = localStorage.getItem("loginUserName") ?? "";
       userGroup.value = localStorage.getItem("loginUserGroup") ?? "";
       userrole.value = Number(localStorage.getItem("loginUserRole") ?? 0);
 
-      // ★★★ ログイン後にカード情報を取得 ★★★
+      // カード情報取得
       fetchChildCards();
     });
 
@@ -73,10 +79,6 @@ createApp({
       modalInstance.value?.hide();
     };
 
-    const goToMap = (child) => {
-      const url = `./ChildMap.html?cardNo=${child.CARDNO}&childNo=${child.CHILDNO}&loginUser=${userEmail.value}`;
-      window.location.href = url;
-    };
     const printChildMap = (child) => {
       console.log("printChildMap:", child);
     };
@@ -97,7 +99,6 @@ createApp({
       if (cache) {
         const parsed = JSON.parse(cache);
         if (Date.now() - parsed.timestamp < CACHE_EXPIRE) {
-          console.log("キャッシュから読み込み");
           childs.value = parsed.items;
           cardsNumbers.value = parsed.items.length;
 
@@ -111,14 +112,13 @@ createApp({
       fetchFromGAS(true);
     };
 
-    // GAS から取得
+    // Worker → GAS から取得
     const fetchFromGAS = async (hideLoading) => {
       return new Promise(async (resolve) => {
         try {
           const user = auth.currentUser;
           const idToken = await user.getIdToken(true);
 
-          // ★★★ userName（漢字氏名）を送る ★★★
           const payload = {
             funcName: "getFilteredChildCardbyUser",
             userName: localStorage.getItem("loginUserName")
@@ -134,9 +134,7 @@ createApp({
           });
 
           const data = await response.json();
-          console.log("Worker response:", data);
 
-          // ★★★ 今の GAS のレスポンス形式に対応 ★★★
           if (data.status === "success" && Array.isArray(data.cards)) {
             childs.value = data.cards;
             cardsNumbers.value = data.cards.length;
@@ -153,8 +151,6 @@ createApp({
             resolve();
             return;
           }
-
-          console.error("GAS の戻り値が想定外:", data);
 
         } catch (error) {
           console.error("Worker/GAS API の取得に失敗:", error);
@@ -201,8 +197,7 @@ createApp({
       statusClass,
       openModal,
       closeModal,
-      goToMap,
-      goToMap,
+      goToMap,     // ← 追加
       printChildMap,
       logout,
       go,
