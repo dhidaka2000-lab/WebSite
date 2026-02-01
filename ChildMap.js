@@ -51,7 +51,7 @@ const ChildMapApp = {
       },
 
       // ★ Cloudflare Worker の URL（GAS ではなく Worker を叩く）
-      apiEndpoint: "https://YOUR-WORKER-SUBDOMAIN.YOUR-DOMAIN.workers.dev",
+      apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
     };
   },
 
