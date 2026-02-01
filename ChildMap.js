@@ -1,17 +1,15 @@
-// childMap.js
+// ChildMap.js
 
-// ==============================
-// Vue アプリ本体
-// ==============================
 const ChildMapApp = {
   data() {
     return {
       loading: true,
       savingResult: false,
-      mapActive: false,
+
+      // Google Maps
       map: null,
       kmlLayer: null,
-      marker: null,
+      markers: [],
 
       // URL パラメータ
       cardNo: null,
@@ -31,22 +29,37 @@ const ChildMapApp = {
         comment: "",
       },
 
-      // ★ Cloudflare Worker の URL（GAS ではなく Worker を叩く）
+      // 検索
+      searchQuery: "",
+
+      // Cloudflare Worker の URL
       apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
     };
+  },
+
+  computed: {
+    filteredHouses() {
+      if (!this.searchQuery) return this.houses;
+
+      const q = this.searchQuery.toLowerCase();
+
+      return this.houses.filter(h =>
+        (h.Address || "").toLowerCase().includes(q) ||
+        (h.FamilyName || "").toLowerCase().includes(q) ||
+        (h.BuildingName || "").toLowerCase().includes(q)
+      );
+    },
   },
 
   async mounted() {
     this.parseQuery();
 
-    // Firebase ログイン状態の確認
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         alert("ログイン情報が失われました。ログインし直してください。");
         window.location.href = "./index.html";
         return;
       }
-      // ログイン済みなら子カード情報取得
       await this.fetchChildDetail();
     });
   },
@@ -57,7 +70,7 @@ const ChildMapApp = {
       const params = new URLSearchParams(window.location.search);
       this.cardNo = params.get("cardNo");
       this.childNo = params.get("childNo");
-      this.loginUser = params.get("loginUser"); // 任意（メールアドレスなど）
+      this.loginUser = params.get("loginUser");
     },
 
     // Worker 経由で getChildDetail 呼び出し
@@ -73,7 +86,7 @@ const ChildMapApp = {
           funcName: "getChildDetail",
           cardNo: this.cardNo,
           childNo: this.childNo,
-          LOGINUSER: this.loginUser || user.email || "",
+          loginUser: this.loginUser || user.email || "",
         };
 
         const res = await fetch(this.apiEndpoint, {
@@ -87,7 +100,7 @@ const ChildMapApp = {
         });
 
         const data = await res.json();
-        if (data.status !== "success") {
+        if (data.status && data.status !== "success") {
           throw new Error(data.message || "API error");
         }
 
@@ -102,69 +115,112 @@ const ChildMapApp = {
       }
     },
 
-    // マップ表示切替
-    toggleMap() {
-      this.mapActive = !this.mapActive;
-
-      if (this.mapActive && !this.map) {
-        let lat = parseFloat(this.childInfo.CSVLat || 34.6937);
-        let lng = parseFloat(this.childInfo.CSVLng || 135.5023);
-        this.initMap(lat, lng, this.childInfo.KMLURL);
-      }
-    },
-
-    // Google マップ初期化
-    initMap(lat, lng, kmlUrl) {
-      const mapEl = document.getElementById("map");
-      if (!mapEl || !window.google) return;
-
-      this.map = new google.maps.Map(mapEl, {
-        center: { lat, lng },
-        zoom: 16,
-      });
-
-      if (kmlUrl) {
-        this.kmlLayer = new google.maps.KmlLayer({
-          url: kmlUrl,
-          map: this.map,
-          preserveViewport: true,
-        });
-      }
-
-      this.marker = new google.maps.Marker({
-        position: { lat, lng },
-        map: this.map,
-      });
-    },
-
-    // 住戸をマップでフォーカス
-    focusOnHouse(house) {
-      if (!this.mapActive) {
-        this.mapActive = true;
-        this.$nextTick(() => {
-          this.initMap(
-            parseFloat(house.CSVLat),
-            parseFloat(house.CSVLng),
-            this.childInfo.KMLURL
-          );
-        });
-        return;
-      }
-
-      const pos = {
-        lat: parseFloat(house.CSVLat),
-        lng: parseFloat(house.CSVLng),
+    // マーカーアイコン（VisitStatus による色分け）
+    getMarkerIcon(status) {
+      const colors = {
+        "在宅": "green",
+        "不在": "yellow",
+        "NG": "red",
+        "保留": "gray",
       };
 
-      this.map.setCenter(pos);
-      this.map.setZoom(18);
-      if (this.marker) {
-        this.marker.setPosition(pos);
-      } else {
-        this.marker = new google.maps.Marker({
-          position: pos,
-          map: this.map,
+      const color = colors[status] || "gray";
+
+      return {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: color,
+        fillOpacity: 0.9,
+        strokeColor: "white",
+        strokeWeight: 1,
+        scale: 8,
+      };
+    },
+
+    // 地図モーダルを開く
+    openMapModal(house) {
+      const lat = parseFloat(house.CSVLat || this.childInfo.CSVLat || 34.6937);
+      const lng = parseFloat(house.CSVLng || this.childInfo.CSVLng || 135.5023);
+      const kmlUrl = this.childInfo.KMLURL;
+
+      $('#mapModal').modal('show');
+
+      this.$nextTick(() => {
+        const mapEl = document.getElementById("mapModalContainer");
+        if (!mapEl || !window.google) return;
+
+        this.map = new google.maps.Map(mapEl, {
+          center: { lat, lng },
+          zoom: 18,
         });
+
+        // KML レイヤー
+        if (kmlUrl) {
+          this.kmlLayer = new google.maps.KmlLayer({
+            url: kmlUrl,
+            map: this.map,
+            preserveViewport: false,
+          });
+
+          google.maps.event.addListener(this.kmlLayer, "defaultviewport_changed", () => {
+            const bounds = this.kmlLayer.getDefaultViewport();
+            if (bounds) {
+              this.map.fitBounds(bounds);
+            }
+          });
+        }
+
+        // 地図の idle 時に範囲内の住戸マーカーを更新
+        google.maps.event.addListener(this.map, "idle", () => {
+          this.updateVisibleHouses();
+        });
+
+        // 初期表示の住戸マーカー
+        this.updateVisibleHouses(house);
+      });
+    },
+
+    // 地図範囲内の住戸だけマーカー表示
+    updateVisibleHouses(centerHouse) {
+      if (!this.map) return;
+
+      const bounds = this.map.getBounds();
+      if (!bounds) return;
+
+      // 既存マーカー削除
+      this.markers.forEach(m => m.setMap(null));
+      this.markers = [];
+
+      this.houses.forEach(house => {
+        const lat = parseFloat(house.CSVLat);
+        const lng = parseFloat(house.CSVLng);
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        const pos = new google.maps.LatLng(lat, lng);
+
+        if (bounds.contains(pos)) {
+          const marker = new google.maps.Marker({
+            position: pos,
+            map: this.map,
+            icon: this.getMarkerIcon(house.VisitStatus),
+            title: house.Address || "",
+          });
+
+          marker.addListener("click", () => {
+            this.openResultModal(house);
+          });
+
+          this.markers.push(marker);
+        }
+      });
+
+      // 初回呼び出し時に中心住戸があれば、その位置にズーム
+      if (centerHouse) {
+        const lat = parseFloat(centerHouse.CSVLat);
+        const lng = parseFloat(centerHouse.CSVLng);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          this.map.setCenter({ lat, lng });
+          this.map.setZoom(18);
+        }
       }
     },
 
@@ -211,7 +267,7 @@ const ChildMapApp = {
           cardNo: this.cardNo,
           childNo: this.childNo,
           DetailID: this.selectedHouse.ID,
-          LOGINUSER: this.loginUser || user.email || "",
+          loginUser: this.loginUser || user.email || "",
           Result: this.resultForm.result,
           Comment: this.resultForm.comment,
         };
@@ -227,7 +283,7 @@ const ChildMapApp = {
         });
 
         const data = await res.json();
-        if (data.status !== "success") {
+        if (data.status && data.status !== "success") {
           throw new Error(data.message || "API error");
         }
 

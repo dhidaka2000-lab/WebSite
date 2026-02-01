@@ -28,10 +28,6 @@
       justify-content: center;
       z-index: 2000;
     }
-    #map {
-      width: 100%;
-      height: 300px;
-    }
     .card-house {
       margin-bottom: 1rem;
     }
@@ -40,6 +36,10 @@
       padding: 0.5rem 1rem;
       border-left: 3px solid #6c757d;
       margin-bottom: 0.5rem;
+    }
+    #mapModalContainer {
+      width: 100%;
+      height: 400px;
     }
   </style>
 </head>
@@ -67,28 +67,15 @@
           </button>
         </div>
         <div class="text-right">
-          <div class="small text-muted">カード {{ cardInfo.CARDNO }}-{{ childInfo.CHILDNO }}</div>
-          <div class="font-weight-bold">{{ childInfo.ChildTitle || '子カード' }}</div>
+          <div class="small text-muted">
+            カード {{ cardInfo.CARDNO }}-{{ childInfo.CHILDNO }}
+          </div>
+          <div class="font-weight-bold">
+            {{ childInfo.ChildTitle || '子カード' }}
+          </div>
         </div>
       </div>
     </header>
-
-    <!-- マップ表示トグル -->
-    <div class="mb-2">
-      <button
-        class="btn btn-sm"
-        :class="mapActive ? 'btn-outline-primary' : 'btn-primary'"
-        @click="toggleMap"
-      >
-        <i class="fas fa-map-marked-alt mr-1"></i>
-        マップ表示 {{ mapActive ? 'オフ' : 'オン' }}
-      </button>
-    </div>
-
-    <!-- Googleマップ -->
-    <div v-if="mapActive" class="mb-3">
-      <div id="map"></div>
-    </div>
 
     <!-- 子カード概要 -->
     <div class="card mb-3">
@@ -101,12 +88,21 @@
       </div>
     </div>
 
+    <!-- 検索 -->
+    <div class="mb-2">
+      <input
+        v-model="searchQuery"
+        class="form-control"
+        placeholder="住所・世帯名・建物名で検索"
+      />
+    </div>
+
     <!-- 住戸カード一覧 -->
     <div>
-      <h5 class="mb-2">住戸一覧（{{ houses.length }}件）</h5>
+      <h5 class="mb-2">住戸一覧（{{ filteredHouses.length }}件）</h5>
 
       <div
-        v-for="house in houses"
+        v-for="house in filteredHouses"
         :key="house.ID"
         class="card card-house"
       >
@@ -144,7 +140,7 @@
               <br />
               <button
                 class="btn btn-sm btn-outline-success mt-1"
-                @click="focusOnHouse(house)"
+                @click="openMapModal(house)"
               >
                 <i class="fas fa-map-marker-alt"></i>
               </button>
@@ -242,6 +238,30 @@
               </span>
               <span v-else>保存</span>
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 地図モーダル -->
+    <div
+      class="modal fade"
+      id="mapModal"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">地図表示</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <div id="mapModalContainer"></div>
           </div>
         </div>
       </div>
