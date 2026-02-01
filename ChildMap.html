@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>子カード詳細</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+  />
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+  />
+
+  <style>
+    [v-cloak] { display: none; }
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    #map {
+      width: 100%;
+      height: 300px;
+    }
+    .card-house {
+      margin-bottom: 1rem;
+    }
+    .visit-record {
+      background: #f8f9fa;
+      padding: 0.5rem 1rem;
+      border-left: 3px solid #6c757d;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+  <div id="childMapApp" v-cloak class="container-fluid py-2">
+
+    <!-- ローディング -->
+    <div v-if="loading" class="loading-overlay">
+      <i class="fas fa-spinner fa-4x fa-spin text-secondary"></i>
+    </div>
+
+    <!-- ヘッダー -->
+    <header class="sticky-top bg-white mb-2 py-2 border-bottom">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <button class="btn btn-link p-0 mr-2" @click="goBackToMyPage">
+            <i class="fas fa-arrow-circle-left fa-2x"></i>
+          </button>
+          <button class="btn btn-link p-0 mr-2" @click="goHome">
+            <i class="fas fa-home fa-2x"></i>
+          </button>
+          <button class="btn btn-link p-0" @click="logout">
+            <i class="fas fa-door-open fa-2x"></i>
+          </button>
+        </div>
+        <div class="text-right">
+          <div class="small text-muted">カード {{ cardInfo.CARDNO }}-{{ childInfo.CHILDNO }}</div>
+          <div class="font-weight-bold">{{ childInfo.ChildTitle || '子カード' }}</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- マップ表示トグル -->
+    <div class="mb-2">
+      <button
+        class="btn btn-sm"
+        :class="mapActive ? 'btn-outline-primary' : 'btn-primary'"
+        @click="toggleMap"
+      >
+        <i class="fas fa-map-marked-alt mr-1"></i>
+        マップ表示 {{ mapActive ? 'オフ' : 'オン' }}
+      </button>
+    </div>
+
+    <!-- Googleマップ -->
+    <div v-if="mapActive" class="mb-3">
+      <div id="map"></div>
+    </div>
+
+    <!-- 子カード概要 -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title mb-1">子カード情報</h5>
+        <p class="mb-1"><strong>区域カード:</strong> {{ cardInfo.CardTitle || '-' }}</p>
+        <p class="mb-1"><strong>子カード名:</strong> {{ childInfo.ChildTitle || '-' }}</p>
+        <p class="mb-1"><strong>担当者:</strong> {{ childInfo.MINISTER || '-' }}</p>
+        <p class="mb-0"><strong>期間:</strong> {{ childInfo.TERM || '-' }}</p>
+      </div>
+    </div>
+
+    <!-- 住戸カード一覧 -->
+    <div>
+      <h5 class="mb-2">住戸一覧（{{ houses.length }}件）</h5>
+
+      <div
+        v-for="house in houses"
+        :key="house.ID"
+        class="card card-house"
+      >
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title mb-1">
+                {{ house.Address || '住所未設定' }}
+              </h6>
+              <p class="mb-1 small text-muted">
+                建物: {{ house.BuildingName || '-' }} / 部屋: {{ house.RoomNo || '-' }}
+              </p>
+              <p class="mb-1 small">
+                世帯名: {{ house.FamilyName || '-' }}
+              </p>
+              <p class="mb-0 small">
+                ステータス: {{ house.VisitStatus || '-' }}
+              </p>
+            </div>
+
+            <div class="text-right">
+              <button
+                class="btn btn-sm btn-outline-primary mb-1"
+                @click="openResultModal(house)"
+              >
+                結果入力
+              </button>
+              <br />
+              <button
+                class="btn btn-sm btn-outline-secondary"
+                @click="toggleVisitHistory(house.ID)"
+              >
+                訪問履歴 {{ isVisitHistoryOpen(house.ID) ? '非表示' : '表示' }}
+              </button>
+              <br />
+              <button
+                class="btn btn-sm btn-outline-success mt-1"
+                @click="focusOnHouse(house)"
+              >
+                <i class="fas fa-map-marker-alt"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 訪問履歴アコーディオン -->
+          <div v-if="isVisitHistoryOpen(house.ID)" class="mt-2">
+            <div v-if="house.VRecord && house.VRecord.length > 0">
+              <div
+                v-for="rec in house.VRecord"
+                :key="rec.RecordID"
+                class="visit-record"
+              >
+                <div class="small">
+                  <strong>{{ rec.VisitDate || '-' }}</strong>
+                  （{{ rec.Operator || '-' }}）
+                </div>
+                <div class="small">
+                  結果: {{ rec.Result || '-' }}
+                </div>
+                <div class="small text-muted">
+                  メモ: {{ rec.Comment || '-' }}
+                </div>
+              </div>
+            </div>
+            <div v-else class="small text-muted">
+              訪問履歴はありません。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 結果入力モーダル -->
+    <div
+      class="modal fade"
+      id="resultModal"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">訪問結果入力</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body" v-if="selectedHouse">
+            <p class="small text-muted mb-1">
+              {{ selectedHouse.Address }}
+            </p>
+
+            <div class="form-group">
+              <label>結果</label>
+              <select v-model="resultForm.result" class="form-control">
+                <option value="">選択してください</option>
+                <option value="在宅">在宅</option>
+                <option value="不在">不在</option>
+                <option value="NG">NG</option>
+                <option value="保留">保留</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>コメント</label>
+              <textarea
+                v-model="resultForm.comment"
+                class="form-control"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              キャンセル
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              :disabled="savingResult"
+              @click="submitResult"
+            >
+              <span v-if="savingResult">
+                <i class="fas fa-spinner fa-spin mr-1"></i> 保存中…
+              </span>
+              <span v-else>保存</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <!-- jQuery & Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Google Maps API -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAizxOjs3NhTcNIdZH63kIKPspP24BvIpo&libraries=geometry"
+    async
+    defer
+  ></script>
+
+  <!-- アプリ本体 -->
+  <script src="./childMap.js"></script>
+</body>
+</html>
