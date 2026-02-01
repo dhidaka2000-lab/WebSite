@@ -1,25 +1,6 @@
 // childMap.js
 
 // ==============================
-// Firebase 初期化
-// ==============================
-/*
-  ※ 実際の値に差し替えてください
-*/
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "ekuikidev.firebaseapp.com",
-  projectId: "ekuikidev",
-  storageBucket: "ekuikidev.appspot.com",
-  messagingSenderId: "896828437660",
-  appId: "1:896828437660:web:3c3154fd640a522e0fe959",
-};
-
-if (!firebase.apps || firebase.apps.length === 0) {
-  firebase.initializeApp(firebaseConfig);
-}
-
-// ==============================
 // Vue アプリ本体
 // ==============================
 const ChildMapApp = {
