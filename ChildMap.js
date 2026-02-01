@@ -71,8 +71,8 @@ const ChildMapApp = {
 
         const payload = {
           funcName: "getChildDetail",
-          CardNo: this.cardNo,
-          ChildNo: this.childNo,
+          cardNo: this.cardNo,
+          childNo: this.childNo,
           LOGINUSER: this.loginUser || user.email || "",
         };
 
