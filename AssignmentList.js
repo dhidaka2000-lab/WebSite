@@ -74,9 +74,9 @@ createApp({
     };
 
     const goToMap = (child) => {
-      console.log("goToMap:", child);
+      const url = `./ChildMap.html?cardNo=${child.CARDNO}&childNo=${child.CHILDNO}&loginUser=${userEmail.value}`;
+      window.location.href = url;
     };
-
     const printChildMap = (child) => {
       console.log("printChildMap:", child);
     };
@@ -201,6 +201,7 @@ createApp({
       statusClass,
       openModal,
       closeModal,
+      goToMap,
       goToMap,
       printChildMap,
       logout,
