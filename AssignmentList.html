@@ -16,10 +16,22 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     >
 
-    <!-- <link rel="stylesheet" href="css/style.css"> -->
+    <style>
+      [v-cloak] { display: none; }
+      .loading {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255,255,255,0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+      }
+    </style>
   </head>
 
   <body class="bg-light">
+
     <!-- ローディング -->
     <div class="loading" id="loading">
       <i class="fas fa-spinner fa-4x fa-spin"></i>
@@ -106,12 +118,12 @@
                     </button>
                   </div>
 
-                  <!-- カード名 -->
+                  <!-- カード名（クリックで ChildMap.html へ遷移） -->
                   <div class="col-5">
                     <button
                       v-if="child.CHILDSTATUS === '貸出中'"
                       class="btn btn-link w-350px text-start p-0"
-                      @click="goToMap(child)"
+                      @click="goToChildMap(child)"
                     >
                       <h4 :style="child.bgCOLOR">{{ child.COLOR }}</h4>
                       <h4>
@@ -197,6 +209,10 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
     <!-- アプリ本体 -->
     <script type="module" src="AssignmentList.js"></script>
