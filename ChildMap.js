@@ -208,8 +208,8 @@ const ChildMapApp = {
 
         const payload = {
           funcName: "saveVisitResult",
-          CardNo: this.cardNo,
-          ChildNo: this.childNo,
+          cardNo: this.cardNo,
+          childNo: this.childNo,
           DetailID: this.selectedHouse.ID,
           LOGINUSER: this.loginUser || user.email || "",
           Result: this.resultForm.result,
