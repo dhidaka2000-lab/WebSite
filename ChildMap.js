@@ -222,6 +222,16 @@ const ChildMapApp = {
         }
       });
 
+      // すでに赤ピンがある場合は復元
+      if (this.activeMarker) {
+        const target = this.markers.find(
+          m => m.houseData.ID === this.activeMarker.houseData.ID
+        );
+        if (target) {
+          this.highlightMarker(target);
+        }
+      }
+
       // 初回呼び出し時に中心住戸があれば、その位置にズーム＆赤ピン
       if (centerHouse) {
         const lat = parseFloat(centerHouse.CSVLat);
