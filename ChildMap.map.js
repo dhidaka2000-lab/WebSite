@@ -1,7 +1,12 @@
 // ChildMap.map.js
+//
+// Google Maps 専用モジュール
+// Vue 本体（ChildMap.js）で ...MapMethods として取り込む
 
 const MapMethods = {
-  // VisitStatus による通常マーカー
+  /**
+   * VisitStatus による通常マーカー
+   */
   getMarkerIcon(status) {
     const colors = {
       "在宅": "green",
@@ -22,7 +27,9 @@ const MapMethods = {
     };
   },
 
-  // 地図モーダルを開く
+  /**
+   * 地図モーダルを開く
+   */
   openMapModal(house) {
     const lat = parseFloat(house.CSVLat || this.childInfo.CSVLat || 34.6937);
     const lng = parseFloat(house.CSVLng || this.childInfo.CSVLng || 135.5023);
@@ -58,7 +65,7 @@ const MapMethods = {
         });
       }
 
-      // 初期選択住戸を保存（idle 後に赤ピンにするため）
+      // ★ 初期選択住戸を保存（idle 後に赤ピン適用するため）
       this._initialCenterHouse = house;
 
       // idle 時にマーカー生成 → その後に赤ピン適用
@@ -78,7 +85,9 @@ const MapMethods = {
     });
   },
 
-  // 地図範囲内の住戸だけマーカー表示（赤ピン対応）
+  /**
+   * 地図範囲内の住戸だけマーカー表示（赤ピン対応）
+   */
   updateVisibleHouses() {
     if (!this.map) return;
 
@@ -125,7 +134,10 @@ const MapMethods = {
     }
   },
 
-  // マーカーを赤ピンにして吹き出し表示
+  /**
+   * マーカーを赤ピンにして吹き出し表示
+   * 吹き出しクリック → 一覧へスクロール
+   */
   highlightMarker(marker) {
     // すでに赤ピンがあれば元の色に戻す
     if (this.activeMarker && this.activeMarker !== marker) {
@@ -133,20 +145,34 @@ const MapMethods = {
       this.activeMarker.setIcon(this.getMarkerIcon(hPrev.VisitStatus));
     }
 
-    // クリックされたマーカーを赤ピンに
+    // 赤ピン化
     marker.setIcon("http://maps.google.com/mapfiles/ms/icons/red-dot.png");
     this.activeMarker = marker;
 
-    // 吹き出し内容（表札名＋住所）
     const h = marker.houseData;
+
     const content = `
-      <div style="font-size:14px;">
+      <div id="infowindow-content" style="font-size:14px; cursor:pointer;">
         <strong>${h.FamilyName || '世帯名なし'}</strong><br>
         ${h.Address || ''}
+        <div style="margin-top:4px; font-size:12px; color:#007bff;">
+          → この住戸へ移動
+        </div>
       </div>
     `;
 
     this.infoWindow.setContent(content);
     this.infoWindow.open(this.map, marker);
+
+    // ★ InfoWindow の DOM が生成されたタイミングでクリックイベントを付与
+    google.maps.event.addListenerOnce(this.infoWindow, "domready", () => {
+      const el = document.getElementById("infowindow-content");
+      if (el) {
+        el.addEventListener("click", () => {
+          // Vue の scrollToHouse を呼ぶ
+          this.scrollToHouse(h.ID);
+        });
+      }
+    });
   },
 };

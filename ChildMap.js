@@ -1,4 +1,8 @@
 // ChildMap.js
+//
+// Vue 本体（司令塔）
+// API: ApiMethods
+// MAP: MapMethods
 
 const ChildMapApp = {
   data() {
@@ -35,6 +39,9 @@ const ChildMapApp = {
       // 検索
       searchQuery: "",
 
+      // 一覧側のフォーカス
+      focusedHouseId: null,
+
       // Cloudflare Worker の URL
       apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
     };
@@ -68,7 +75,9 @@ const ChildMapApp = {
   },
 
   methods: {
-    // 共通・画面制御
+    // -----------------------------
+    // URL パラメータ
+    // -----------------------------
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
       this.cardNo = params.get("cardNo");
@@ -76,6 +85,26 @@ const ChildMapApp = {
       this.loginUser = params.get("loginUser");
     },
 
+    // -----------------------------
+    // 一覧側のフォーカス制御
+    // -----------------------------
+    scrollToHouse(houseId) {
+      this.focusedHouseId = houseId;
+
+      this.$nextTick(() => {
+        const el = document.getElementById(`house-${houseId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      });
+
+      // 地図を閉じる
+      $('#mapModal').modal('hide');
+    },
+
+    // -----------------------------
+    // 訪問履歴トグル
+    // -----------------------------
     toggleVisitHistory(id) {
       if (this.openVisitHistoryIds.has(id)) {
         this.openVisitHistoryIds.delete(id);
@@ -89,6 +118,9 @@ const ChildMapApp = {
       return this.openVisitHistoryIds.has(id);
     },
 
+    // -----------------------------
+    // 結果入力モーダル
+    // -----------------------------
     openResultModal(house) {
       this.selectedHouse = house;
       this.resultForm.result = "";
@@ -96,6 +128,9 @@ const ChildMapApp = {
       $("#resultModal").modal("show");
     },
 
+    // -----------------------------
+    // 画面遷移
+    // -----------------------------
     goBackToMyPage() {
       window.location.href = "./AssignmentList.html";
     },
@@ -113,10 +148,14 @@ const ChildMapApp = {
       window.location.href = "./index.html";
     },
 
-    // API メソッド
+    // -----------------------------
+    // API メソッド（B ファイル）
+    // -----------------------------
     ...ApiMethods,
 
-    // 地図メソッド
+    // -----------------------------
+    // 地図メソッド（C ファイル）
+    // -----------------------------
     ...MapMethods,
   },
 };

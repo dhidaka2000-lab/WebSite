@@ -1,6 +1,12 @@
 // ChildMap.api.js
+//
+// Cloudflare Worker API 通信専用モジュール
+// Vue 本体（ChildMap.js）で ...ApiMethods として取り込む
 
 const ApiMethods = {
+  /**
+   * 子カード詳細を取得
+   */
   async fetchChildDetail() {
     this.loading = true;
     try {
@@ -31,6 +37,7 @@ const ApiMethods = {
         throw new Error(data.message || "API error");
       }
 
+      // Vue 側のデータに反映
       this.cardInfo = data.cardInfo || {};
       this.childInfo = data.childInfo || {};
       this.houses = data.houses || [];
@@ -42,8 +49,12 @@ const ApiMethods = {
     }
   },
 
+  /**
+   * 訪問結果を保存
+   */
   async submitResult() {
     if (!this.selectedHouse) return;
+
     if (!this.resultForm.result) {
       alert("結果を選択してください。");
       return;
@@ -82,7 +93,10 @@ const ApiMethods = {
         throw new Error(data.message || "API error");
       }
 
+      // 最新データを再取得
       await this.fetchChildDetail();
+
+      // モーダルを閉じる
       $("#resultModal").modal("hide");
     } catch (err) {
       console.error(err);
