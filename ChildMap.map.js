@@ -58,18 +58,28 @@ const MapMethods = {
         });
       }
 
-      // idle 時に範囲内の住戸マーカーを更新
+      // 初期選択住戸を保存（idle 後に赤ピンにするため）
+      this._initialCenterHouse = house;
+
+      // idle 時にマーカー生成 → その後に赤ピン適用
       google.maps.event.addListener(this.map, "idle", () => {
         this.updateVisibleHouses();
-      });
 
-      // 初期表示
-      this.updateVisibleHouses(house);
+        if (this._initialCenterHouse) {
+          const target = this.markers.find(
+            m => m.houseData.ID === this._initialCenterHouse.ID
+          );
+          if (target) {
+            this.highlightMarker(target);
+          }
+          this._initialCenterHouse = null;
+        }
+      });
     });
   },
 
   // 地図範囲内の住戸だけマーカー表示（赤ピン対応）
-  updateVisibleHouses(centerHouse) {
+  updateVisibleHouses() {
     if (!this.map) return;
 
     const bounds = this.map.getBounds();
@@ -111,21 +121,6 @@ const MapMethods = {
       );
       if (target) {
         this.highlightMarker(target);
-      }
-    }
-
-    // 初回呼び出し時に中心住戸があれば、その位置にズーム＆赤ピン
-    if (centerHouse) {
-      const lat = parseFloat(centerHouse.CSVLat);
-      const lng = parseFloat(centerHouse.CSVLng);
-      if (!isNaN(lat) && !isNaN(lng)) {
-        this.map.setCenter({ lat, lng });
-        this.map.setZoom(18);
-
-        const target = this.markers.find(m => m.houseData.ID === centerHouse.ID);
-        if (target) {
-          this.highlightMarker(target);
-        }
       }
     }
   },

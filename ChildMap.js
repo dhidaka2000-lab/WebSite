@@ -12,6 +12,7 @@ const ChildMapApp = {
       markers: [],
       activeMarker: null,
       infoWindow: null,
+      _initialCenterHouse: null,
 
       // URL パラメータ
       cardNo: null,
@@ -67,7 +68,7 @@ const ChildMapApp = {
   },
 
   methods: {
-    // --- 共通・画面制御 ---
+    // 共通・画面制御
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
       this.cardNo = params.get("cardNo");
@@ -112,10 +113,10 @@ const ChildMapApp = {
       window.location.href = "./index.html";
     },
 
-    // --- API メソッドをマージ ---
+    // API メソッド
     ...ApiMethods,
 
-    // --- 地図メソッドをマージ ---
+    // 地図メソッド
     ...MapMethods,
   },
 };
