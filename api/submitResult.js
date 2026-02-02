@@ -1,7 +1,14 @@
-// api/fetchChildDetail.js
+// api/submitResult.js
 
-function fetchChildDetail() {
-  this.loading = true;
+function submitResult() {
+  if (!this.selectedHouse) return;
+  if (!this.resultForm.result) {
+    alert("結果を選択してください。");
+    return;
+  }
+
+  this.savingResult = true;
+
   (async () => {
     try {
       const user = firebase.auth().currentUser;
@@ -10,10 +17,13 @@ function fetchChildDetail() {
       const idToken = await user.getIdToken();
 
       const payload = {
-        funcName: "getChildDetail",
+        funcName: "saveVisitResult",
         cardNo: this.cardNo,
         childNo: this.childNo,
+        DetailID: this.selectedHouse.ID,
         loginUser: this.loginUser || user.email || "",
+        Result: this.resultForm.result,
+        Comment: this.resultForm.comment,
       };
 
       const res = await fetch(this.apiEndpoint, {
@@ -31,14 +41,13 @@ function fetchChildDetail() {
         throw new Error(data.message || "API error");
       }
 
-      this.cardInfo = data.cardInfo || {};
-      this.childInfo = data.childInfo || {};
-      this.houses = data.houses || [];
+      await this.fetchChildDetail();
+      $("#resultModal").modal("hide");
     } catch (err) {
       console.error(err);
-      alert("子カード情報の取得に失敗しました。");
+      alert("訪問結果の保存に失敗しました。");
     } finally {
-      this.loading = false;
+      this.savingResult = false;
     }
   })();
 }
