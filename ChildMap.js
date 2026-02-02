@@ -117,7 +117,7 @@ const ChildMapApp = {
       }
     },
 
-    // マーカーアイコン（VisitStatus による色分け）
+    // マーカーアイコン（VisitStatus による色分け：通常表示用）
     getMarkerIcon(status) {
       const colors = {
         "在宅": "green",
@@ -210,8 +210,10 @@ const ChildMapApp = {
             title: house.Address || "",
           });
 
+          // 住戸データを保持
           marker.houseData = house;
 
+          // クリックで赤ピン＋吹き出し
           marker.addListener("click", () => {
             this.highlightMarker(marker);
           });
@@ -220,7 +222,7 @@ const ChildMapApp = {
         }
       });
 
-      // 初回表示の中心住戸
+      // 初回呼び出し時に中心住戸があれば、その位置にズーム＆赤ピン
       if (centerHouse) {
         const lat = parseFloat(centerHouse.CSVLat);
         const lng = parseFloat(centerHouse.CSVLng);
@@ -230,4 +232,126 @@ const ChildMapApp = {
 
           const target = this.markers.find(m => m.houseData.ID === centerHouse.ID);
           if (target) {
-            this.highlightMarker
+            this.highlightMarker(target);
+          }
+        }
+      }
+    },
+
+    // マーカーを赤ピンにして吹き出し表示
+    highlightMarker(marker) {
+      // すでに赤ピンがあれば元の色に戻す
+      if (this.activeMarker && this.activeMarker !== marker) {
+        const hPrev = this.activeMarker.houseData;
+        this.activeMarker.setIcon(this.getMarkerIcon(hPrev.VisitStatus));
+      }
+
+      // クリックされたマーカーを赤ピンに
+      marker.setIcon("http://maps.google.com/mapfiles/ms/icons/red-dot.png");
+      this.activeMarker = marker;
+
+      // 吹き出し内容（表札名＋住所）
+      const h = marker.houseData;
+      const content = `
+        <div style="font-size:14px;">
+          <strong>${h.FamilyName || '世帯名なし'}</strong><br>
+          ${h.Address || ''}
+        </div>
+      `;
+
+      this.infoWindow.setContent(content);
+      this.infoWindow.open(this.map, marker);
+    },
+
+    // 訪問履歴トグル
+    toggleVisitHistory(id) {
+      if (this.openVisitHistoryIds.has(id)) {
+        this.openVisitHistoryIds.delete(id);
+      } else {
+        this.openVisitHistoryIds.add(id);
+      }
+      this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
+    },
+
+    isVisitHistoryOpen(id) {
+      return this.openVisitHistoryIds.has(id);
+    },
+
+    // 結果入力モーダル（一覧側のボタンから）
+    openResultModal(house) {
+      this.selectedHouse = house;
+      this.resultForm.result = "";
+      this.resultForm.comment = "";
+      $("#resultModal").modal("show");
+    },
+
+    // Worker 経由で saveVisitResult 呼び出し
+    async submitResult() {
+      if (!this.selectedHouse) return;
+      if (!this.resultForm.result) {
+        alert("結果を選択してください。");
+        return;
+      }
+
+      this.savingResult = true;
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) throw new Error("Not authenticated");
+
+        const idToken = await user.getIdToken();
+
+        const payload = {
+          funcName: "saveVisitResult",
+          cardNo: this.cardNo,
+          childNo: this.childNo,
+          DetailID: this.selectedHouse.ID,
+          loginUser: this.loginUser || user.email || "",
+          Result: this.resultForm.result,
+          Comment: this.resultForm.comment,
+        };
+
+        const res = await fetch(this.apiEndpoint, {
+          method: "POST",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (data.status && data.status !== "success") {
+          throw new Error(data.message || "API error");
+        }
+
+        await this.fetchChildDetail();
+        $("#resultModal").modal("hide");
+      } catch (err) {
+        console.error(err);
+        alert("訪問結果の保存に失敗しました。");
+      } finally {
+        this.savingResult = false;
+      }
+    },
+
+    // 画面遷移
+    goBackToMyPage() {
+      window.location.href = "./AssignmentList.html";
+    },
+    goHome() {
+      window.location.href = "./mainMenu.html";
+    },
+    async logout() {
+      try {
+        await firebase.auth().signOut();
+      } catch (e) {
+        console.error(e);
+      }
+      window.location.href = "./index.html";
+    },
+  },
+};
+
+Vue.createApp(ChildMapApp).mount("#childMapApp");
