@@ -10,6 +10,8 @@ const ChildMapApp = {
       map: null,
       kmlLayer: null,
       markers: [],
+      activeMarker: null,
+      infoWindow: null,
 
       // URL パラメータ
       cardNo: null,
@@ -153,6 +155,9 @@ const ChildMapApp = {
           zoom: 18,
         });
 
+        this.infoWindow = new google.maps.InfoWindow();
+        this.activeMarker = null;
+
         // KML レイヤー
         if (kmlUrl) {
           this.kmlLayer = new google.maps.KmlLayer({
@@ -179,7 +184,7 @@ const ChildMapApp = {
       });
     },
 
-    // 地図範囲内の住戸だけマーカー表示
+    // 地図範囲内の住戸だけマーカー表示（赤ピン対応）
     updateVisibleHouses(centerHouse) {
       if (!this.map) return;
 
@@ -205,114 +210,24 @@ const ChildMapApp = {
             title: house.Address || "",
           });
 
+          marker.houseData = house;
+
           marker.addListener("click", () => {
-            this.openResultModal(house);
+            this.highlightMarker(marker);
           });
 
           this.markers.push(marker);
         }
       });
 
-      // 初回呼び出し時に中心住戸があれば、その位置にズーム
+      // 初回表示の中心住戸
       if (centerHouse) {
         const lat = parseFloat(centerHouse.CSVLat);
         const lng = parseFloat(centerHouse.CSVLng);
         if (!isNaN(lat) && !isNaN(lng)) {
           this.map.setCenter({ lat, lng });
           this.map.setZoom(18);
-        }
-      }
-    },
 
-    // 訪問履歴トグル
-    toggleVisitHistory(id) {
-      if (this.openVisitHistoryIds.has(id)) {
-        this.openVisitHistoryIds.delete(id);
-      } else {
-        this.openVisitHistoryIds.add(id);
-      }
-      this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
-    },
-
-    isVisitHistoryOpen(id) {
-      return this.openVisitHistoryIds.has(id);
-    },
-
-    // 結果入力モーダル
-    openResultModal(house) {
-      this.selectedHouse = house;
-      this.resultForm.result = "";
-      this.resultForm.comment = "";
-      $("#resultModal").modal("show");
-    },
-
-    // Worker 経由で saveVisitResult 呼び出し
-    async submitResult() {
-      if (!this.selectedHouse) return;
-      if (!this.resultForm.result) {
-        alert("結果を選択してください。");
-        return;
-      }
-
-      this.savingResult = true;
-
-      try {
-        const user = firebase.auth().currentUser;
-        if (!user) throw new Error("Not authenticated");
-
-        const idToken = await user.getIdToken();
-
-        const payload = {
-          funcName: "saveVisitResult",
-          cardNo: this.cardNo,
-          childNo: this.childNo,
-          DetailID: this.selectedHouse.ID,
-          loginUser: this.loginUser || user.email || "",
-          Result: this.resultForm.result,
-          Comment: this.resultForm.comment,
-        };
-
-        const res = await fetch(this.apiEndpoint, {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const data = await res.json();
-        if (data.status && data.status !== "success") {
-          throw new Error(data.message || "API error");
-        }
-
-        await this.fetchChildDetail();
-        $("#resultModal").modal("hide");
-      } catch (err) {
-        console.error(err);
-        alert("訪問結果の保存に失敗しました。");
-      } finally {
-        this.savingResult = false;
-      }
-    },
-
-    // 画面遷移
-    goBackToMyPage() {
-      window.location.href = "./AssignmentList.html";
-    },
-    goHome() {
-      window.location.href = "./mainMenu.html";
-    },
-    async logout() {
-      try {
-        await firebase.auth().signOut();
-      } catch (e) {
-        console.error(e);
-      }
-      window.location.href = "./index.html";
-    },
-  },
-};
-
-Vue.createApp(ChildMapApp).mount("#childMapApp");
+          const target = this.markers.find(m => m.houseData.ID === centerHouse.ID);
+          if (target) {
+            this.highlightMarker
