@@ -35,7 +35,6 @@
       transition: background-color 0.3s ease;
     }
 
-    /* ★ フォーカス中の住戸カードを薄い黄色で強調 */
     .focused-house {
       background-color: #fff8d6 !important;
     }
@@ -51,18 +50,54 @@
       width: 100%;
       height: 400px;
     }
+
+    /* スマホ向け調整 */
+    @media (max-width: 768px) {
+      body {
+        font-size: 18px;
+      }
+
+      .card-house {
+        padding: 1rem;
+        font-size: 18px;
+        margin-bottom: 1.2rem;
+        border-radius: 12px;
+      }
+
+      .card-house h6 {
+        font-size: 20px;
+      }
+
+      .btn {
+        font-size: 18px;
+        padding: 10px 16px;
+      }
+
+      input.form-control,
+      textarea.form-control {
+        font-size: 18px;
+        padding: 12px;
+      }
+
+      #mapModalContainer {
+        height: 60vh;
+      }
+
+      .gm-style-iw {
+        font-size: 18px !important;
+        line-height: 1.4;
+      }
+    }
   </style>
 </head>
 
 <body class="bg-light">
   <div id="childMapApp" v-cloak class="container-fluid py-2">
 
-    <!-- ローディング -->
     <div v-if="loading" class="loading-overlay">
       <i class="fas fa-spinner fa-4x fa-spin text-secondary"></i>
     </div>
 
-    <!-- ヘッダー -->
     <header class="sticky-top bg-white mb-2 py-2 border-bottom">
       <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -87,7 +122,6 @@
       </div>
     </header>
 
-    <!-- 子カード概要 -->
     <div class="card mb-3">
       <div class="card-body">
         <h5 class="card-title mb-1">子カード情報</h5>
@@ -98,7 +132,6 @@
       </div>
     </div>
 
-    <!-- 検索 -->
     <div class="mb-2">
       <input
         v-model="searchQuery"
@@ -107,7 +140,6 @@
       />
     </div>
 
-    <!-- 住戸カード一覧 -->
     <div>
       <h5 class="mb-2">住戸一覧（{{ filteredHouses.length }}件）</h5>
 
@@ -159,7 +191,6 @@
             </div>
           </div>
 
-          <!-- 訪問履歴アコーディオン -->
           <div v-if="isVisitHistoryOpen(house.ID)" class="mt-2">
             <div v-if="house.VRecord && house.VRecord.length > 0">
               <div
@@ -187,7 +218,6 @@
       </div>
     </div>
 
-    <!-- 結果入力モーダル -->
     <div
       class="modal fade"
       id="resultModal"
@@ -255,7 +285,6 @@
       </div>
     </div>
 
-    <!-- 地図モーダル -->
     <div
       class="modal fade"
       id="mapModal"
@@ -281,25 +310,19 @@
 
   </div>
 
-  <!-- Vue 3 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-
-  <!-- jQuery & Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Google Maps API -->
   <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAizxOjs3NhTcNIdZH63kIKPspP24BvIpo&libraries=geometry"
     async
     defer
   ></script>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
-  <!-- Firebase 初期化 -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBCib4rAXfXO_6nAiEO-VutN-FytgdnuvA",
@@ -312,9 +335,16 @@
     firebase.initializeApp(firebaseConfig);
   </script>
 
-  <!-- 分割した JS -->
-  <script src="./ChildMap.api.js"></script>
-  <script src="./ChildMap.map.js"></script>
+  <!-- API 分割 -->
+  <script src="./api/fetchChildDetail.js"></script>
+  <script src="./api/submitResult.js"></script>
+
+  <!-- Map 分割 -->
+  <script src="./map/openMapModal.js"></script>
+  <script src="./map/updateVisibleHouses.js"></script>
+  <script src="./map/highlightMarker.js"></script>
+
+  <!-- Vue 本体 -->
   <script src="./ChildMap.js"></script>
 
 </body>

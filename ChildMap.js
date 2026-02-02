@@ -1,8 +1,16 @@
 // ChildMap.js
-//
-// Vue 本体（司令塔）
-// API: ApiMethods
-// MAP: MapMethods
+
+const ApiMethods = {
+  fetchChildDetail,
+  submitResult,
+};
+
+const MapMethods = {
+  openMapModal,
+  updateVisibleHouses,
+  highlightMarker,
+  getMarkerIcon,
+};
 
 const ChildMapApp = {
   data() {
@@ -10,7 +18,6 @@ const ChildMapApp = {
       loading: true,
       savingResult: false,
 
-      // Google Maps
       map: null,
       kmlLayer: null,
       markers: [],
@@ -18,17 +25,14 @@ const ChildMapApp = {
       infoWindow: null,
       _initialCenterHouse: null,
 
-      // URL パラメータ
       cardNo: null,
       childNo: null,
       loginUser: null,
 
-      // データ本体
       cardInfo: {},
       childInfo: {},
       houses: [],
 
-      // UI 状態
       openVisitHistoryIds: new Set(),
       selectedHouse: null,
       resultForm: {
@@ -36,13 +40,9 @@ const ChildMapApp = {
         comment: "",
       },
 
-      // 検索
       searchQuery: "",
-
-      // 一覧側のフォーカス
       focusedHouseId: null,
 
-      // Cloudflare Worker の URL
       apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
     };
   },
@@ -61,7 +61,7 @@ const ChildMapApp = {
     },
   },
 
-  async mounted() {
+  mounted() {
     this.parseQuery();
 
     firebase.auth().onAuthStateChanged(async (user) => {
@@ -70,14 +70,11 @@ const ChildMapApp = {
         window.location.href = "./index.html";
         return;
       }
-      await this.fetchChildDetail();
+      this.fetchChildDetail();
     });
   },
 
   methods: {
-    // -----------------------------
-    // URL パラメータ
-    // -----------------------------
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
       this.cardNo = params.get("cardNo");
@@ -85,9 +82,6 @@ const ChildMapApp = {
       this.loginUser = params.get("loginUser");
     },
 
-    // -----------------------------
-    // 一覧側のフォーカス制御
-    // -----------------------------
     scrollToHouse(houseId) {
       this.focusedHouseId = houseId;
 
@@ -98,13 +92,9 @@ const ChildMapApp = {
         }
       });
 
-      // 地図を閉じる
       $('#mapModal').modal('hide');
     },
 
-    // -----------------------------
-    // 訪問履歴トグル
-    // -----------------------------
     toggleVisitHistory(id) {
       if (this.openVisitHistoryIds.has(id)) {
         this.openVisitHistoryIds.delete(id);
@@ -118,9 +108,6 @@ const ChildMapApp = {
       return this.openVisitHistoryIds.has(id);
     },
 
-    // -----------------------------
-    // 結果入力モーダル
-    // -----------------------------
     openResultModal(house) {
       this.selectedHouse = house;
       this.resultForm.result = "";
@@ -128,9 +115,6 @@ const ChildMapApp = {
       $("#resultModal").modal("show");
     },
 
-    // -----------------------------
-    // 画面遷移
-    // -----------------------------
     goBackToMyPage() {
       window.location.href = "./AssignmentList.html";
     },
@@ -148,14 +132,7 @@ const ChildMapApp = {
       window.location.href = "./index.html";
     },
 
-    // -----------------------------
-    // API メソッド（B ファイル）
-    // -----------------------------
     ...ApiMethods,
-
-    // -----------------------------
-    // 地図メソッド（C ファイル）
-    // -----------------------------
     ...MapMethods,
   },
 };
