@@ -1,3 +1,22 @@
+// Firebaseの初期化（必須）
+import {
+  auth,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  OAuthProvider,
+  signInWithPopup
+} from "./firebase.js";
+
+// --------------------------------------
+// UI制御：ボタンの有効/無効
+// --------------------------------------
+function setButtonsDisabled(disabled) {
+  document.getElementById("loginBtn").disabled = disabled;
+  document.getElementById("googleBtn").disabled = disabled;
+  document.getElementById("appleBtn").disabled = disabled;
+  document.getElementById("msBtn").disabled = disabled;
+}
+
 async function afterLogin() {
   try {
     setStatusMessage("ユーザー情報取得中…");
