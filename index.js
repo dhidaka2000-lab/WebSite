@@ -17,6 +17,16 @@ function setButtonsDisabled(disabled) {
   document.getElementById("msBtn").disabled = disabled;
 }
 
+// --------------------------------------
+// ステータスメッセージ表示
+// --------------------------------------
+function setStatusMessage(msg) {
+  document.getElementById("statusMsg").textContent = msg;
+}
+
+// --------------------------------------
+// ログイン後の処理
+// --------------------------------------
 async function afterLogin() {
   try {
     setStatusMessage("ユーザー情報取得中…");
@@ -66,3 +76,83 @@ async function afterLogin() {
     setButtonsDisabled(false);
   }
 }
+
+// --------------------------------------
+// メールアドレス + パスワードログイン
+// --------------------------------------
+document.getElementById("loginBtn").addEventListener("click", () => {
+  setButtonsDisabled(true);
+  setStatusMessage("ログイン処理中…");
+
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("password").value;
+
+  signInWithEmailAndPassword(auth, email, pass)
+    .then(afterLogin)
+    .catch((error) => {
+      document.getElementById("errorMsg").textContent =
+        "ログイン失敗：" + error.message;
+      setButtonsDisabled(false);
+      setStatusMessage("");
+    });
+});
+
+// --------------------------------------
+// Google ログイン
+// --------------------------------------
+document.getElementById("googleBtn").addEventListener("click", () => {
+  setButtonsDisabled(true);
+  setStatusMessage("Google ログイン処理中…");
+
+  const provider = new GoogleAuthProvider();
+
+  signInWithPopup(auth, provider)
+    .then(afterLogin)
+    .catch((error) => {
+      document.getElementById("errorMsg").textContent =
+        "Google ログイン失敗：" + error.message;
+      setButtonsDisabled(false);
+      setStatusMessage("");
+    });
+});
+
+// --------------------------------------
+// Apple ログイン
+// --------------------------------------
+document.getElementById("appleBtn").addEventListener("click", () => {
+  setButtonsDisabled(true);
+  setStatusMessage("Apple ログイン処理中…");
+
+  const provider = new OAuthProvider("apple.com");
+  provider.addScope("email");
+  provider.addScope("name");
+
+  signInWithPopup(auth, provider)
+    .then(afterLogin)
+    .catch((error) => {
+      document.getElementById("errorMsg").textContent =
+        "Apple ログイン失敗：" + error.message;
+      setButtonsDisabled(false);
+      setStatusMessage("");
+    });
+});
+
+// --------------------------------------
+// Microsoft ログイン
+// --------------------------------------
+document.getElementById("msBtn").addEventListener("click", () => {
+  setButtonsDisabled(true);
+  setStatusMessage("Microsoft ログイン処理中…");
+
+  const provider = new OAuthProvider("microsoft.com");
+  provider.setCustomParameters({ prompt: "select_account" });
+
+  signInWithPopup(auth, provider)
+    .then(afterLogin)
+    .catch((error) => {
+      document.getElementById("errorMsg").textContent =
+        "Microsoft ログイン失敗：" + error.message;
+      setButtonsDisabled(false);
+      setStatusMessage("");
+    });
+});
