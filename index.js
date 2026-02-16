@@ -1,11 +1,5 @@
-// Firebaseの初期化（必須）
-import {
-  auth,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  OAuthProvider,
-  signInWithPopup
-} from "./firebase.js";
+// ★ フロント側は Firebase Web SDK を使うので import は不要 ★
+// import { auth, signInWithEmailAndPassword, GoogleAuthProvider, OAuthProvider, signInWithPopup } from "./firebase.js";
 
 // --------------------------------------
 // UI制御：ボタンの有効/無効
@@ -31,7 +25,7 @@ async function afterLogin() {
   try {
     setStatusMessage("ユーザー情報取得中…");
 
-    const user = auth.currentUser;
+    const user = firebase.auth().currentUser;
     if (!user) {
       alert("ログイン状態が確認できません");
       setButtonsDisabled(false);
@@ -87,7 +81,7 @@ document.getElementById("loginBtn").addEventListener("click", () => {
   const email = document.getElementById("email").value;
   const pass = document.getElementById("password").value;
 
-  signInWithEmailAndPassword(auth, email, pass)
+  firebase.auth().signInWithEmailAndPassword(email, pass)
     .then(afterLogin)
     .catch((error) => {
       document.getElementById("errorMsg").textContent =
@@ -104,9 +98,9 @@ document.getElementById("googleBtn").addEventListener("click", () => {
   setButtonsDisabled(true);
   setStatusMessage("Google ログイン処理中…");
 
-  const provider = new GoogleAuthProvider();
+  const provider = new firebase.auth.GoogleAuthProvider();
 
-  signInWithPopup(auth, provider)
+  firebase.auth().signInWithPopup(provider)
     .then(afterLogin)
     .catch((error) => {
       document.getElementById("errorMsg").textContent =
@@ -123,11 +117,11 @@ document.getElementById("appleBtn").addEventListener("click", () => {
   setButtonsDisabled(true);
   setStatusMessage("Apple ログイン処理中…");
 
-  const provider = new OAuthProvider("apple.com");
+  const provider = new firebase.auth.OAuthProvider("apple.com");
   provider.addScope("email");
   provider.addScope("name");
 
-  signInWithPopup(auth, provider)
+  firebase.auth().signInWithPopup(provider)
     .then(afterLogin)
     .catch((error) => {
       document.getElementById("errorMsg").textContent =
@@ -144,10 +138,10 @@ document.getElementById("msBtn").addEventListener("click", () => {
   setButtonsDisabled(true);
   setStatusMessage("Microsoft ログイン処理中…");
 
-  const provider = new OAuthProvider("microsoft.com");
+  const provider = new firebase.auth.OAuthProvider("microsoft.com");
   provider.setCustomParameters({ prompt: "select_account" });
 
-  signInWithPopup(auth, provider)
+  firebase.auth().signInWithPopup(provider)
     .then(afterLogin)
     .catch((error) => {
       document.getElementById("errorMsg").textContent =
