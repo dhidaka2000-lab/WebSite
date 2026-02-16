@@ -1,4 +1,5 @@
-import { auth, onAuthStateChanged, signOut } from "./firebase.js";
+// ★ フロント側は Firebase Web SDK を使うので import は不要 ★
+// import { auth, onAuthStateChanged, signOut } from "./firebase.js";
 
 const app = Vue.createApp({
   data() {
@@ -12,19 +13,19 @@ const app = Vue.createApp({
   },
 
   created() {
-    onAuthStateChanged(auth, async (user) => {
+    // Firebase Web SDK の onAuthStateChanged を使用
+    firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "index.html";
         return;
       }
 
       try {
-        // ★★★ localStorage から読み込むだけ（高速）★★★
+        // ★ localStorage から高速読み込み ★
         this.username  = localStorage.getItem("loginUserName")  ?? "";
         this.userEmail = localStorage.getItem("loginUserEmail") ?? "";
         this.userGroup = localStorage.getItem("loginUserGroup") ?? "";
 
-        // ★★★ Role が返ってくる場合に備えて（将来の拡張用）★★★
         const savedRole = localStorage.getItem("loginUserRole");
         this.userrole = savedRole !== null ? Number(savedRole) : 0;
 
@@ -39,7 +40,7 @@ const app = Vue.createApp({
 
   methods: {
     logout() {
-      signOut(auth).then(() => {
+      firebase.auth().signOut().then(() => {
         localStorage.removeItem("loginUserName");
         localStorage.removeItem("loginUserEmail");
         localStorage.removeItem("loginUserUID");
