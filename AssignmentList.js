@@ -1,4 +1,6 @@
-import { auth, onAuthStateChanged, signOut } from "./firebase.js";
+// ★ フロント側は Firebase Web SDK（compat）を使うので import は不要 ★
+// import { auth, onAuthStateChanged, signOut } from "./firebase.js";
+
 const { createApp, ref, onMounted } = Vue;
 
 createApp({
@@ -31,7 +33,7 @@ createApp({
 
     // ログアウト
     const logout = () => {
-      signOut(auth).then(() => {
+      firebase.auth().signOut().then(() => {
         window.location.href = "index.html";
       });
     };
@@ -41,14 +43,14 @@ createApp({
       window.location.href = page + ".html";
     };
 
-    // ★★★ 子カードページへ遷移 ★★★
+    // 子カードページへ遷移
     const goToMap = (child) => {
       const url = `./ChildMap.html?cardNo=${child.CARDNO}&childNo=${child.CHILDNO}&loginUser=${userEmail.value}`;
       window.location.href = url;
     };
 
-    // Firebase ログイン状態監視
-    onAuthStateChanged(auth, (user) => {
+    // Firebase ログイン状態監視（compat）
+    firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "index.html";
         return;
@@ -104,64 +106,52 @@ createApp({
 
           document.getElementById("loading").style.display = "none";
 
-          fetchFromGAS(false);
+          fetchFromWorker(false);
           return;
         }
       }
 
-      fetchFromGAS(true);
+      fetchFromWorker(true);
     };
 
-    // Worker → GAS から取得
-    const fetchFromGAS = async (hideLoading) => {
-      return new Promise(async (resolve) => {
-        try {
-          const user = auth.currentUser;
-          const idToken = await user.getIdToken(true);
+    // ★★★ Worker → Supabase から取得（GAS 完全撤廃）★★★
+    const fetchFromWorker = async (hideLoading) => {
+      try {
+        const user = firebase.auth().currentUser;
+        const idToken = await user.getIdToken(true);
 
-          const payload = {
-            funcName: "getFilteredChildCardbyUser",
-            userName: localStorage.getItem("loginUserName")
-          };
+        const payload = {
+          funcName: "getFilteredChildCardbyUser",
+          userName: localStorage.getItem("loginUserName")
+        };
 
-          const response = await fetch("https://ekuikidev.dhidaka2000.workers.dev", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Bearer " + idToken
-            },
-            body: JSON.stringify(payload)
-          });
+        const response = await fetch("https://ekuikidev.dhidaka2000.workers.dev", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + idToken
+          },
+          body: JSON.stringify(payload)
+        });
 
-          const data = await response.json();
+        const data = await response.json();
 
-          if (data.status === "success" && Array.isArray(data.cards)) {
-            childs.value = data.cards;
-            cardsNumbers.value = data.cards.length;
+        if (data.status === "success" && Array.isArray(data.cards)) {
+          childs.value = data.cards;
+          cardsNumbers.value = data.cards.length;
 
-            localStorage.setItem("childCardCache", JSON.stringify({
-              timestamp: Date.now(),
-              items: data.cards
-            }));
-
-            if (hideLoading) {
-              document.getElementById("loading").style.display = "none";
-            }
-
-            resolve();
-            return;
-          }
-
-        } catch (error) {
-          console.error("Worker/GAS API の取得に失敗:", error);
+          localStorage.setItem("childCardCache", JSON.stringify({
+            timestamp: Date.now(),
+            items: data.cards
+          }));
         }
+      } catch (error) {
+        console.error("Worker/Supabase API の取得に失敗:", error);
+      }
 
-        if (hideLoading) {
-          document.getElementById("loading").style.display = "none";
-        }
-
-        resolve();
-      });
+      if (hideLoading) {
+        document.getElementById("loading").style.display = "none";
+      }
     };
 
     const refresh = () => {
@@ -170,7 +160,7 @@ createApp({
       isUpdating.value = true;
       document.getElementById("loading").style.display = "flex";
 
-      fetchFromGAS(true).then(() => {
+      fetchFromWorker(true).then(() => {
         isUpdating.value = false;
 
         if (!toastInstance) {
@@ -197,7 +187,7 @@ createApp({
       statusClass,
       openModal,
       closeModal,
-      goToMap,     // ← 追加
+      goToMap,
       printChildMap,
       logout,
       go,
