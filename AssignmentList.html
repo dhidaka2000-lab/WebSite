@@ -1,70 +1,169 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="utf-8">
-    <title>マイページ｜区域カード</title>
+<head>
+  <meta charset="utf-8">
+  <title>マイページ｜区域カード</title>
 
-    <!-- Bootstrap 5 CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    >
+  <!-- Bootstrap 5 CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
 
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    >
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  >
 
-    <style>
-      [v-cloak] { display: none; }
-      .loading {
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(255,255,255,0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 2000;
-      }
-    </style>
-  </head>
+  <style>
+    [v-cloak] { display: none; }
+    .loading {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+  </style>
+</head>
 
-  <body class="bg-light">
+<body class="bg-light">
 
-    <!-- ローディング -->
-    <div class="loading" id="loading">
-      <i class="fas fa-spinner fa-4x fa-spin"></i>
+  <!-- ローディング -->
+  <div class="loading" id="loading">
+    <i class="fas fa-spinner fa-4x fa-spin"></i>
+  </div>
+
+  <!-- ★ Vue アプリ本体 -->
+  <main role="main" id="app" v-cloak class="container py-3">
+
+    <!-- ヘッダー -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="m-0">区域カード一覧</h3>
+      <button class="btn btn-outline-danger" @click="logout">
+        <i class="fas fa-sign-out-alt"></i> ログアウト
+      </button>
     </div>
 
-    <main role="main" id="app" v-cloak>
-      <!-- ここはあなたの UI をそのまま残す（省略） -->
-      <!-- 省略部分は一切変更なし -->
-      <!-- …………………………………………………………… -->
-    </main>
+    <!-- ユーザー情報 -->
+    <div class="alert alert-secondary py-2 mb-3">
+      <strong>{{ userName }}</strong>（{{ userEmail }}）  
+      ／ グループ：{{ userGroup }} ／ 権限：{{ userrole }}
+    </div>
 
-    <!-- Vue 3 -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- 更新ボタン -->
+    <div class="d-flex justify-content-end mb-2">
+      <button class="btn btn-primary" @click="refresh" :disabled="isUpdating">
+        <i class="fas fa-sync-alt"></i> 最新情報に更新
+      </button>
+    </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- カード一覧 -->
+    <div class="row g-3">
+      <div
+        class="col-12 col-md-6 col-lg-4"
+        v-for="child in childs"
+        :key="child.CHILDID"
+      >
+        <div class="card shadow-sm">
+          <div class="card-body">
 
-    <!-- ★ Firebase Web SDK（compat 版 10.7.1） -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+            <div class="d-flex justify-content-between">
+              <h5 class="card-title mb-1">
+                {{ child.CHILDBLOCK }}  
+                {{ child.CARDNO }}-{{ child.CHILDNO }}
+              </h5>
 
-    <!-- ★ Firebase 初期化（mainMenu と統一） -->
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyBCib4rAXfXO_6nAiEO-VutN-FytgdnuvA",
-        authDomain: "ekuikidev.firebaseapp.com",
-        projectId: "ekuikidev",
-      };
-      firebase.initializeApp(firebaseConfig);
-    </script>
+              <span class="badge" :class="statusClass(child)">
+                {{ child.CHILDSTATUS }}
+              </span>
+            </div>
 
-    <!-- ★ アプリ本体（module を外す） -->
-    <script src="AssignmentList.js"></script>
+            <p class="text-muted mb-2">
+              戸数：{{ child.CHILDHOUSES }}
+            </p>
 
-  </body>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-primary w-50"
+                @click="goToMap(child)">
+                <i class="fas fa-map"></i> 地図へ
+              </button>
+
+              <button class="btn btn-sm btn-outline-secondary w-50"
+                @click="openModal('detail', child)">
+                <i class="fas fa-info-circle"></i> 詳細
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- モーダル -->
+    <div class="modal fade" id="childModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h5 class="modal-title">
+              {{ selectedChild?.CHILDBLOCK }}
+              {{ selectedChild?.CARDNO }}-{{ selectedChild?.CHILDNO }}
+            </h5>
+            <button type="button" class="btn-close" @click="closeModal"></button>
+          </div>
+
+          <div class="modal-body">
+            <p><strong>状態：</strong> {{ selectedChild?.CHILDSTATUS }}</p>
+            <p><strong>戸数：</strong> {{ selectedChild?.CHILDHOUSES }}</p>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="closeModal">閉じる</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- 更新完了トースト -->
+    <div class="toast position-fixed bottom-0 end-0 m-3" id="updateToast">
+      <div class="toast-header">
+        <strong class="me-auto">更新完了</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+      </div>
+      <div class="toast-body">
+        最新のカード情報を取得しました。
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Firebase Web SDK（compat） -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+  <!-- Firebase 初期化 -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCib4rAXfXO_6nAiEO-VutN-FytgdnuvA",
+      authDomain: "ekuikidev.firebaseapp.com",
+      projectId: "ekuikidev",
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <!-- アプリ本体 -->
+  <script src="AssignmentList.js"></script>
+
+</body>
 </html>
