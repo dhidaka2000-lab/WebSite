@@ -1,7 +1,4 @@
-// ★ フロント側は Firebase Web SDK（compat）を使うので import は不要 ★
-// import { auth, onAuthStateChanged, signOut } from "./firebase.js";
-
-const { createApp, ref, onMounted } = Vue;
+const { createApp, ref, onMounted, computed } = Vue;
 
 createApp({
   setup() {
@@ -49,20 +46,18 @@ createApp({
       window.location.href = url;
     };
 
-    // Firebase ログイン状態監視（compat）
+    // Firebase ログイン状態監視
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "index.html";
         return;
       }
 
-      // localStorage からユーザー情報を取得
       userEmail.value = localStorage.getItem("loginUserEmail") ?? "";
       userName.value = localStorage.getItem("loginUserName") ?? "";
       userGroup.value = localStorage.getItem("loginUserGroup") ?? "";
       userrole.value = Number(localStorage.getItem("loginUserRole") ?? 0);
 
-      // カード情報取得
       fetchChildCards();
     });
 
@@ -79,10 +74,6 @@ createApp({
 
     const closeModal = () => {
       modalInstance.value?.hide();
-    };
-
-    const printChildMap = (child) => {
-      console.log("printChildMap:", child);
     };
 
     const handleResize = () => {
@@ -114,7 +105,7 @@ createApp({
       fetchFromWorker(true);
     };
 
-    // ★★★ Worker → Supabase から取得（GAS 完全撤廃）★★★
+    // Worker → Supabase
     const fetchFromWorker = async (hideLoading) => {
       try {
         const user = firebase.auth().currentUser;
@@ -171,8 +162,37 @@ createApp({
       });
     };
 
+    // ★ 貸出中フィルタ
+    const showOnlyLent = ref(false);
+
+    const toggleFilter = () => {
+      showOnlyLent.value = !showOnlyLent.value;
+    };
+
+    const filteredChilds = computed(() => {
+      if (!showOnlyLent.value) return childs.value;
+      return childs.value.filter(c => c.CHILDSTATUS === "貸出中");
+    });
+
+    // ★ セッション管理（300秒）
+    let sessionTimer = null;
+    const SESSION_LIMIT = 300 * 1000;
+
+    const resetSessionTimer = () => {
+      if (sessionTimer) clearTimeout(sessionTimer);
+      sessionTimer = setTimeout(() => {
+        alert("一定時間操作がなかったためログアウトしました。");
+        logout();
+      }, SESSION_LIMIT);
+    };
+
+    window.addEventListener("click", resetSessionTimer);
+    window.addEventListener("keydown", resetSessionTimer);
+    window.addEventListener("touchstart", resetSessionTimer);
+
     onMounted(() => {
       window.addEventListener("resize", handleResize);
+      resetSessionTimer();
     });
 
     return {
@@ -188,11 +208,13 @@ createApp({
       openModal,
       closeModal,
       goToMap,
-      printChildMap,
       logout,
       go,
       refresh,
-      isUpdating
+      isUpdating,
+      showOnlyLent,
+      toggleFilter,
+      filteredChilds
     };
   }
 }).mount("#app");
