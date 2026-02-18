@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  
+
   <title>マイページ｜区域カード</title>
 
   <!-- Bootstrap 5 CSS -->
@@ -31,53 +31,36 @@
       z-index: 2000;
     }
 
-    /* スマホ（〜512px）：全体を3倍スケール */
+    /* スマホ（〜512px）：全体を3倍スケール＋カード余白を1/4に調整 */
     @media (max-width: 512px) {
 
       body {
-        font-size: 24px; /* 通常の約3倍 */
-      }
-
-      h3, h5 {
-        font-size: 30px; /* 見出しも3倍 */
-      }
-
-      .btn {
-        font-size: 24px;      /* ボタン文字3倍 */
-        padding: 20px 24px;   /* ボタンの縦横も3倍 */
-        border-radius: 12px;  /* ボタンの角も大きく */
-      }
-
-      .card {
-        padding: 20px;        /* カード内の余白も拡大 */
-        border-radius: 16px;
-      }
-
-      .card-body {
-        padding: 24px;
-      }
-
-      .badge {
-        font-size: 20px;      /* バッジも拡大 */
-        padding: 10px 14px;
-      }
-
-      .modal-content {
         font-size: 24px;
       }
 
-      .modal-title {
+      h3, h5 {
         font-size: 30px;
       }
 
-      .toast {
-        font-size: 22px;
+      .btn {
+        font-size: 24px;
+        padding: 20px 24px;
+        border-radius: 12px;
       }
 
-      /* カードの列数は1列固定（既にOK） */
-      .col-12 {
-        flex: 0 0 100%;
-        max-width: 100%;
+      /* ★ ここを調整：カードの余白を1/4にする ★ */
+      .card {
+        padding: 5px !important;        /* ← 20px → 5px（1/4） */
+        border-radius: 12px;
+      }
+
+      .card-body {
+        padding: 8px !important;        /* ← 24px → 8px（1/3〜1/4） */
+      }
+
+      .badge {
+        font-size: 20px;
+        padding: 6px 10px;
       }
     }
     
