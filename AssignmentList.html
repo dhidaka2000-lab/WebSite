@@ -83,21 +83,34 @@
   <!-- Vue アプリ本体 -->
   <main role="main" id="app" v-cloak class="container py-3">
 
-    <!-- ヘッダー -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- ヘッダー（ChildMap と完全統一） -->
+    <header class="sticky-top bg-white mb-2 py-2 border-bottom">
+      <div class="d-flex justify-content-between align-items-center">
 
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary" @click="go('mainMenu')">
-          <i class="fas fa-home"></i> メインメニュー
-        </button>
+        <!-- 左側：戻る・ホーム・ログアウト -->
+        <div>
+          <button class="btn btn-link p-0 mr-2" @click="go('mainMenu')">
+            <i class="fas fa-arrow-circle-left fa-2x"></i>
+          </button>
 
-        <button class="btn btn-outline-danger" @click="logout">
-          <i class="fas fa-sign-out-alt"></i> ログアウト
-        </button>
+          <button class="btn btn-link p-0 mr-2" @click="go('mainMenu')">
+            <i class="fas fa-home fa-2x"></i>
+          </button>
+
+          <button class="btn btn-link p-0" @click="logout">
+            <i class="fas fa-door-open fa-2x"></i>
+          </button>
+        </div>
+
+        <!-- 右側：タイトル -->
+        <div class="text-right">
+          <div class="font-weight-bold">
+            区域カード一覧
+          </div>
+        </div>
+
       </div>
-
-      <h3 class="m-0">区域カード一覧</h3>
-    </div>
+    </header>
 
     <!-- ユーザー情報 -->
     <div class="alert alert-secondary py-2 mb-3">
