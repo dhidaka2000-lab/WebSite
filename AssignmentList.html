@@ -83,34 +83,48 @@
   <!-- Vue アプリ本体 -->
   <main role="main" id="app" v-cloak class="container py-3">
 
-    <!-- ヘッダー（ChildMap と完全統一） -->
-    <header class="sticky-top bg-white mb-2 py-2 border-bottom">
-      <div class="d-flex justify-content-between align-items-center">
+  <!-- ヘッダー（ChildMap と完全統一＋ラベル付き） -->
+  <header class="sticky-top bg-white mb-2 py-2 border-bottom">
+    <div class="d-flex justify-content-between align-items-center">
 
-        <!-- 左側：戻る・ホーム・ログアウト -->
-        <div>
-          <button class="btn btn-link p-0 mr-2" @click="go('mainMenu')">
-            <i class="fas fa-arrow-circle-left fa-2x"></i><br>戻る
-          </button>
+      <!-- 左側：戻る・ホーム・終了 -->
+      <div class="d-flex gap-3">
 
-          <button class="btn btn-link p-0 mr-2" @click="go('mainMenu')">
-            <i class="fas fa-home fa-2x"></i><br>メニューへ
-          </button>
-
-          <button class="btn btn-link p-0" @click="logout">
-            <i class="fas fa-door-open fa-2x"></i><br>終了
-          </button>
-        </div>
-
-        <!-- 右側：タイトル -->
-        <div class="text-right">
-          <div class="font-weight-bold">
-            区域カード一覧
+        <!-- 戻る -->
+        <button class="btn btn-link p-0 text-center" @click="go('mainMenu')">
+          <div>
+            <i class="fas fa-arrow-circle-left fa-2x"></i>
           </div>
-        </div>
+          <div class="small">戻る</div>
+        </button>
+
+        <!-- ホーム -->
+        <button class="btn btn-link p-0 text-center" @click="go('mainMenu')">
+          <div>
+            <i class="fas fa-home fa-2x"></i>
+          </div>
+          <div class="small">ホーム</div>
+        </button>
+
+        <!-- 終了 -->
+        <button class="btn btn-link p-0 text-center" @click="logout">
+          <div>
+            <i class="fas fa-door-open fa-2x"></i>
+          </div>
+          <div class="small">終了</div>
+        </button>
 
       </div>
-    </header>
+
+      <!-- 右側：タイトル -->
+      <div class="text-right">
+        <div class="font-weight-bold">
+          区域カード一覧
+        </div>
+      </div>
+
+    </div>
+  </header>
 
     <!-- ユーザー情報 -->
     <div class="alert alert-secondary py-2 mb-3">
