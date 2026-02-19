@@ -36,6 +36,7 @@ const ChildMapApp = {
 
   computed: {
     filteredHouses() {
+      if (!this.houses) return [];
       if (!this.searchQuery) return this.houses;
 
       const q = this.searchQuery.toLowerCase();

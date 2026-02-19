@@ -144,7 +144,7 @@
 
     <!-- 住戸一覧 -->
     <div>
-      <h5 class="mb-2">住戸一覧（{{ filteredHouses.length }}件）</h5>
+      <h5 class="mb-2">住戸一覧（{{ filteredHouses?.length ?? 0 }}件）</h5>
 
       <div
         v-for="house in filteredHouses"
