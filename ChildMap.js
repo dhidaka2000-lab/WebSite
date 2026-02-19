@@ -1,16 +1,4 @@
-// ChildMap.js
-
-const ApiMethods = {
-  fetchChildDetail,
-  submitResult,
-};
-
-const MapMethods = {
-  openMapModal,
-  updateVisibleHouses,
-  highlightMarker,
-  getMarkerIcon,
-};
+// ChildMap.js（Supabase＋Worker＋安全な Google Maps 対応版）
 
 const ChildMapApp = {
   data() {
@@ -19,11 +7,10 @@ const ChildMapApp = {
       savingResult: false,
 
       map: null,
-      kmlLayer: null,
       markers: [],
       activeMarker: null,
       infoWindow: null,
-      _initialCenterHouse: null,
+      focusedHouseId: null,
 
       cardNo: null,
       childNo: null,
@@ -41,8 +28,8 @@ const ChildMapApp = {
       },
 
       searchQuery: "",
-      focusedHouseId: null,
 
+      // ★ Worker のエンドポイント（固定）
       apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
     };
   },
@@ -53,7 +40,7 @@ const ChildMapApp = {
 
       const q = this.searchQuery.toLowerCase();
 
-      return this.houses.filter(h =>
+      return this.houses.filter((h) =>
         (h.Address || "").toLowerCase().includes(q) ||
         (h.FamilyName || "").toLowerCase().includes(q) ||
         (h.BuildingName || "").toLowerCase().includes(q)
@@ -70,11 +57,15 @@ const ChildMapApp = {
         window.location.href = "./index.html";
         return;
       }
-      this.fetchChildDetail();
+      await this.fetchChildDetail();
+      this.loading = false;
     });
   },
 
   methods: {
+    // -----------------------------
+    // URL パラメータ
+    // -----------------------------
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
       this.cardNo = params.get("cardNo");
@@ -82,19 +73,40 @@ const ChildMapApp = {
       this.loginUser = params.get("loginUser");
     },
 
-    scrollToHouse(houseId) {
-      this.focusedHouseId = houseId;
+    // -----------------------------
+    // Supabase（Worker 経由）
+    // -----------------------------
+    async fetchChildDetail() {
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
 
-      this.$nextTick(() => {
-        const el = document.getElementById(`house-${houseId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
+      const payload = {
+        funcName: "getChildDetail",
+        cardNo: this.cardNo,
+        childNo: this.childNo,
+      };
+
+      const res = await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(payload),
       });
 
-      $('#mapModal').modal('hide');
+      const data = await res.json();
+
+      if (data.status === "success") {
+        this.cardInfo = data.cardInfo;
+        this.childInfo = data.childInfo;
+        this.houses = data.houses;
+      }
     },
 
+    // -----------------------------
+    // 訪問履歴の開閉
+    // -----------------------------
     toggleVisitHistory(id) {
       if (this.openVisitHistoryIds.has(id)) {
         this.openVisitHistoryIds.delete(id);
@@ -108,6 +120,9 @@ const ChildMapApp = {
       return this.openVisitHistoryIds.has(id);
     },
 
+    // -----------------------------
+    // 結果入力モーダル
+    // -----------------------------
     openResultModal(house) {
       this.selectedHouse = house;
       this.resultForm.result = "";
@@ -115,6 +130,90 @@ const ChildMapApp = {
       $("#resultModal").modal("show");
     },
 
+    async submitResult() {
+      this.savingResult = true;
+
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
+
+      const payload = {
+        funcName: "upsertVisitRecord",
+        cardNo: this.cardNo,
+        childNo: this.childNo,
+        houseId: this.selectedHouse.ID,
+        result: this.resultForm.result,
+        comment: this.resultForm.comment,
+      };
+
+      await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      $("#resultModal").modal("hide");
+      this.savingResult = false;
+
+      await this.fetchChildDetail();
+    },
+
+    // -----------------------------
+    // Google Maps（安全版）
+    // -----------------------------
+    async openMapModal(house) {
+      this.focusedHouseId = house.ID;
+
+      // ★ Worker から安全な Google Maps script URL を取得
+      const urlRes = await fetch(
+        `${this.apiEndpoint}?funcName=getGoogleMapsUrl`
+      );
+      const { mapUrl } = await urlRes.json();
+
+      // ★ 動的に Google Maps script を読み込む
+      const script = document.createElement("script");
+      script.src = mapUrl;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => this.initMap(house);
+      document.body.appendChild(script);
+
+      $("#mapModal").modal("show");
+    },
+
+    initMap(house) {
+      this.map = new google.maps.Map(
+        document.getElementById("mapModalContainer"),
+        {
+          center: { lat: house.Lat, lng: house.Lng },
+          zoom: 18,
+        }
+      );
+
+      new google.maps.Marker({
+        position: { lat: house.Lat, lng: house.Lng },
+        map: this.map,
+      });
+    },
+
+    scrollToHouse(houseId) {
+      this.focusedHouseId = houseId;
+
+      this.$nextTick(() => {
+        const el = document.getElementById(`house-${houseId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      });
+
+      $("#mapModal").modal("hide");
+    },
+
+    // -----------------------------
+    // ページ遷移
+    // -----------------------------
     goBackToMyPage() {
       window.location.href = "./AssignmentList.html";
     },
@@ -131,9 +230,6 @@ const ChildMapApp = {
       }
       window.location.href = "./index.html";
     },
-
-    ...ApiMethods,
-    ...MapMethods,
   },
 };
 
