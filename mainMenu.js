@@ -8,20 +8,34 @@ const app = Vue.createApp({
       loading: true,
 
       apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
+      firebaseReady: false,
     };
   },
 
   async created() {
-    // ★ Firebase API Key を Worker から取得
+    // ------------------------------
+    // ① Worker から Firebase API Key を取得
+    // ------------------------------
     const firebaseConfig = await this.fetchFirebaseConfig();
-    firebase.initializeApp(firebaseConfig);
 
+    // ------------------------------
+    // ② Firebase 初期化
+    // ------------------------------
+    firebase.initializeApp(firebaseConfig);
+    this.firebaseReady = true;
+
+    // ------------------------------
+    // ③ Firebase 認証状態の監視
+    // ------------------------------
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "index.html";
         return;
       }
 
+      // ------------------------------
+      // ④ ローカルストレージからユーザー情報を読み込み
+      // ------------------------------
       try {
         this.username  = localStorage.getItem("loginUserName")  ?? "";
         this.userEmail = localStorage.getItem("loginUserEmail") ?? "";
@@ -40,6 +54,7 @@ const app = Vue.createApp({
   },
 
   methods: {
+    // Worker から Firebase API Key を取得
     async fetchFirebaseConfig() {
       const res = await fetch(this.apiEndpoint, {
         method: "POST",
@@ -48,6 +63,7 @@ const app = Vue.createApp({
       });
 
       const data = await res.json();
+
       return {
         apiKey: data.apiKey,
         authDomain: "ekuikidev.firebaseapp.com",
