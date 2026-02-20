@@ -1,6 +1,3 @@
-// ★ フロント側は Firebase Web SDK を使うので import は不要 ★
-// import { auth, onAuthStateChanged, signOut } from "./firebase.js";
-
 const app = Vue.createApp({
   data() {
     return {
@@ -8,12 +5,17 @@ const app = Vue.createApp({
       username: "",
       userGroup: "",
       userrole: 0,
-      loading: true
+      loading: true,
+
+      apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
     };
   },
 
-  created() {
-    // Firebase Web SDK の onAuthStateChanged を使用
+  async created() {
+    // ★ Firebase API Key を Worker から取得
+    const firebaseConfig = await this.fetchFirebaseConfig();
+    firebase.initializeApp(firebaseConfig);
+
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "index.html";
@@ -21,7 +23,6 @@ const app = Vue.createApp({
       }
 
       try {
-        // ★ localStorage から高速読み込み ★
         this.username  = localStorage.getItem("loginUserName")  ?? "";
         this.userEmail = localStorage.getItem("loginUserEmail") ?? "";
         this.userGroup = localStorage.getItem("loginUserGroup") ?? "";
@@ -39,14 +40,24 @@ const app = Vue.createApp({
   },
 
   methods: {
+    async fetchFirebaseConfig() {
+      const res = await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ funcName: "getFirebaseConfig" }),
+      });
+
+      const data = await res.json();
+      return {
+        apiKey: data.apiKey,
+        authDomain: "ekuikidev.firebaseapp.com",
+        projectId: "ekuikidev",
+      };
+    },
+
     logout() {
       firebase.auth().signOut().then(() => {
-        localStorage.removeItem("loginUserName");
-        localStorage.removeItem("loginUserEmail");
-        localStorage.removeItem("loginUserUID");
-        localStorage.removeItem("loginUserGroup");
-        localStorage.removeItem("loginUserRole");
-
+        localStorage.clear();
         window.location.href = "index.html";
       });
     },
