@@ -93,6 +93,33 @@
         font-size: 21px;
       }
     }
+
+    /* ▼ 上部ユーザー情報バーの高さを 3分の2 に圧縮 */
+    .top-user-bar {
+      padding-top: 0.8rem !important;
+      padding-bottom: 0.8rem !important;
+    }
+
+    /* ▼ メニューの各ボタンの高さを 3分の2 に圧縮 */
+    .menu-button {
+      padding-top: 0.8rem !important;
+      padding-bottom: 0.8rem !important;
+    }
+
+    @media (max-width: 512px) {
+      /* ▼ スマホ時：上部バーを 4倍 → 3分の2 に調整 */
+      .top-user-bar {
+        padding-top: 1.2rem !important;
+        padding-bottom: 1.2rem !important;
+      }
+
+      /* ▼ スマホ時：メニューボタンも 4倍 → 3分の2 に調整 */
+      .menu-button {
+        padding-top: 1.2rem !important;
+        padding-bottom: 1.2rem !important;
+      }
+    }
+
   </style>
 </head>
 
@@ -110,7 +137,7 @@
       <div v-else>
 
         <!-- 上部ユーザー情報バー -->
-        <div class="row bg-light mt-3 p-3 align-items-center rounded shadow-sm">
+          <div class="row bg-light mt-3 p-3 align-items-center rounded shadow-sm top-user-bar">
 
           <div class="col-8">
             <p class="mb-0">
