@@ -53,6 +53,45 @@
         font-size: 1.3rem;
       }
     }
+
+    /* スマホ（〜512px）：全体を4倍スケール */
+    @media (max-width: 512px) {
+
+      body {
+        font-size: 28px; /* 通常の約4倍 */
+      }
+
+      h2, h5, h6 {
+        font-size: 32px;
+      }
+
+      #app {
+        padding: 2rem;
+      }
+
+      .menu-button {
+        padding: 2.4rem;      /* ボタンの縦横も4倍 */
+        font-size: 1.8rem;    /* ボタン文字も4倍 */
+      }
+
+      .btn i {
+        font-size: 3rem;      /* アイコンも拡大 */
+      }
+
+      .row.bg-light p {
+        font-size: 28px;
+      }
+
+      .spinner-border {
+        width: 4rem;
+        height: 4rem;
+        border-width: .6rem;
+      }
+
+      .text-center p {
+        font-size: 28px;
+      }
+    }
   </style>
 </head>
 
