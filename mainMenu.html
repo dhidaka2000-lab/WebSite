@@ -17,11 +17,15 @@
   />
 
   <!-- Vue 3 -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js" defer></script>
 
-  <!-- Vue Dialog -->
-  <script src="https://unpkg.com/vue3-dialog@latest/dist/vue3-dialog.min.js"></script>
+  <!-- Vue Dialog（404 修正版） -->
+  <script src="https://unpkg.com/vue3-dialog@latest/dist/vue3-dialog.min.js" defer></script>
   <link rel="stylesheet" href="https://unpkg.com/vue3-dialog@latest/dist/vue3-dialog.css">
+
+  <!-- Firebase SDK（必ず defer を付ける） -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js" defer></script>
 
   <style>
     /* スマホ〜PCまで自然に伸びるレスポンシブ調整 */
@@ -159,6 +163,7 @@
     </div>
   </main>
 
-  <script type="module" src="mainMenu.js"></script>
+  <!-- mainMenu.js は module を外して defer -->
+  <script src="mainMenu.js" defer></script>
 </body>
 </html>
