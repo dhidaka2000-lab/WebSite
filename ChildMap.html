@@ -112,10 +112,10 @@
 
         <div class="text-right">
           <div class="small text-muted">
-            カード {{ cardInfo?.CARDNO ?? '' }}-{{ childInfo?.CHILDNO ?? '' }}
+            区域カード {{ childInfo?.CardNo ?? '' }} - {{ childInfo?.ChildNo ?? '' }}
           </div>
           <div class="font-weight-bold">
-            {{ childInfo?.ChildTitle || '子カード' }}
+            {{ childInfo?.Block || '子カード' }}
           </div>
         </div>
 
@@ -126,10 +126,10 @@
     <div class="card mb-3">
       <div class="card-body">
         <h5 class="card-title mb-1">子カード情報</h5>
-        <p class="mb-1"><strong>区域カード:</strong> {{ cardInfo?.CardTitle || '-' }}</p>
-        <p class="mb-1"><strong>子カード名:</strong> {{ childInfo?.ChildTitle || '-' }}</p>
-        <p class="mb-1"><strong>担当者:</strong> {{ childInfo?.MINISTER || '-' }}</p>
-        <p class="mb-0"><strong>期間:</strong> {{ childInfo?.TERM || '-' }}</p>
+        <p class="mb-1"><strong>区域カード:</strong> {{ childInfo?.CardNo ?? '' }} - {{ childInfo?.ChildNo ?? '' }}</p>
+        <p class="mb-1"><strong>子カード名:</strong> {{ childInfo?.Block || '-' }}</p>
+        <p class="mb-1"><strong>奉仕者名:</strong> {{ childInfo?.Minister || '-' }}</p>
+        <p class="mb-0"><strong>返却期日:</strong> {{ childInfo?.LimitDate || '-' }}</p>
       </div>
     </div>
 
@@ -157,13 +157,13 @@
           <div class="d-flex justify-content-between">
             <div>
               <h6 class="card-title mb-1">
-                {{ house.Address || '住所未設定' }}
+                {{ house.FamilyName || '（表札名なし）' }}
               </h6>
               <p class="mb-1 small text-muted">
-                建物: {{ house.BuildingName || '-' }} / 部屋: {{ house.RoomNo || '-' }}
+                住所: {{ house.Address || '住所未設定' }}
               </p>
               <p class="mb-1 small">
-                世帯名: {{ house.FamilyName || '-' }}
+                建物: {{ house.BuildingName || '-' }} / 部屋: {{ house.RoomNo || '-' }}
               </p>
               <p class="mb-0 small">
                 ステータス: {{ house.VisitStatus || '-' }}
