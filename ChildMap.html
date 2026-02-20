@@ -157,7 +157,7 @@
           <div class="d-flex justify-content-between">
             <div>
               <h6 class="card-title mb-1">
-                {{ house.FamilyName || '（表札名なし）' }}
+                {{ house.FamilyName 'さん' || '（表札名なし）' }}
               </h6>
               <p class="mb-1 small text-muted">
                 住所: {{ house.Address || '住所未設定' }}
