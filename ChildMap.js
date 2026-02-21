@@ -318,6 +318,26 @@ const ChildMapApp = {
       });
     },
 
+    scrollToMapAndFocus(house) {
+      // 地図アコーディオンを開く
+      if (!this.mapOpen) {
+        this.mapOpen = true;
+      }
+
+      // 地図へスクロール
+      this.$nextTick(() => {
+        const mapEl = document.getElementById("mapContainer");
+        if (mapEl) {
+          mapEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        // スクロール後にピンを立てる
+        setTimeout(() => {
+          this.focusOnMap(house);
+        }, 400);
+      });
+    }
+
     // -----------------------------
     // 訪問履歴アコーディオン
     // -----------------------------

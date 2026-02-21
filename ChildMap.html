@@ -163,10 +163,13 @@
       <div class="card-header py-2 d-flex justify-content-between align-items-center">
 
         <!-- 左：ID ボタン -->
-        <button class="house-no-btn mr-2" @click="focusOnMap(house)">
+        <button
+          class="house-no-btn mr-2"
+          @click="scrollToMapAndFocus(house)"
+        >
           {{ house.ID }}
         </button>
-
+        
         <!-- 中央 -->
         <div class="flex-grow-1">
           <strong>{{ house.FamilyName || '（表札名なし）' }}さん</strong>
