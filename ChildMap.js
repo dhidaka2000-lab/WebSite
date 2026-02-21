@@ -8,6 +8,7 @@ const ChildMapApp = {
 
       map: null,
       selectedHouse: null,
+      googleMapsLoaded: false,
 
       cardNo: null,
       childNo: null,
@@ -26,8 +27,6 @@ const ChildMapApp = {
       searchQuery: "",
 
       apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
-
-      googleMapsLoaded: false,
     };
   },
 
@@ -58,7 +57,7 @@ const ChildMapApp = {
       this.loading = false;
     });
 
-    // ★ モーダルが開いた瞬間に地図を描画する
+    // ★ モーダルが開いた瞬間に地図を描画
     $('#mapModal').on('shown.bs.modal', () => {
       if (this.selectedHouse) {
         this.initMapAfterModal();
@@ -153,12 +152,25 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // Google Maps（安定版）
+    // Google Maps（認証付きロード）
     // -----------------------------
     async loadGoogleMaps() {
       if (this.googleMapsLoaded) return;
 
-      const urlRes = await fetch(`${this.apiEndpoint}?funcName=getGoogleMapsUrl`);
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
+
+      const payload = { funcName: "getGoogleMapsUrl" };
+
+      const urlRes = await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
       const { mapUrl } = await urlRes.json();
 
       await new Promise((resolve) => {
