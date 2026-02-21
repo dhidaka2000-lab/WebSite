@@ -1,4 +1,4 @@
-// ChildMap.js（Supabase＋Worker＋安全な Google Maps 対応版）
+// ChildMap.js（Supabase＋Worker＋Google Maps 安定版）
 
 const ChildMapApp = {
   data() {
@@ -7,10 +7,7 @@ const ChildMapApp = {
       savingResult: false,
 
       map: null,
-      markers: [],
-      activeMarker: null,
-      infoWindow: null,
-      focusedHouseId: null,
+      selectedHouse: null,
 
       cardNo: null,
       childNo: null,
@@ -21,7 +18,6 @@ const ChildMapApp = {
       houses: [],
 
       openVisitHistoryIds: new Set(),
-      selectedHouse: null,
       resultForm: {
         result: "",
         comment: "",
@@ -29,8 +25,9 @@ const ChildMapApp = {
 
       searchQuery: "",
 
-      // ★ Worker のエンドポイント（固定）
       apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
+
+      googleMapsLoaded: false,
     };
   },
 
@@ -40,7 +37,6 @@ const ChildMapApp = {
       if (!this.searchQuery) return this.houses;
 
       const q = this.searchQuery.toLowerCase();
-
       return this.houses.filter((h) =>
         (h.Address || "").toLowerCase().includes(q) ||
         (h.FamilyName || "").toLowerCase().includes(q) ||
@@ -61,12 +57,16 @@ const ChildMapApp = {
       await this.fetchChildDetail();
       this.loading = false;
     });
+
+    // ★ モーダルが開いた瞬間に地図を描画する
+    $('#mapModal').on('shown.bs.modal', () => {
+      if (this.selectedHouse) {
+        this.initMapAfterModal();
+      }
+    });
   },
 
   methods: {
-    // -----------------------------
-    // URL パラメータ
-    // -----------------------------
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
       this.cardNo = params.get("cardNo");
@@ -74,9 +74,6 @@ const ChildMapApp = {
       this.loginUser = params.get("loginUser");
     },
 
-    // -----------------------------
-    // Supabase（Worker 経由）
-    // -----------------------------
     async fetchChildDetail() {
       const user = firebase.auth().currentUser;
       const idToken = await user.getIdToken(true);
@@ -105,9 +102,6 @@ const ChildMapApp = {
       }
     },
 
-    // -----------------------------
-    // 訪問履歴の開閉
-    // -----------------------------
     toggleVisitHistory(id) {
       if (this.openVisitHistoryIds.has(id)) {
         this.openVisitHistoryIds.delete(id);
@@ -121,9 +115,6 @@ const ChildMapApp = {
       return this.openVisitHistoryIds.has(id);
     },
 
-    // -----------------------------
-    // 結果入力モーダル
-    // -----------------------------
     openResultModal(house) {
       this.selectedHouse = house;
       this.resultForm.result = "";
@@ -162,59 +153,54 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // Google Maps（安全版）
+    // Google Maps（安定版）
     // -----------------------------
-    async openMapModal(house) {
-      this.focusedHouseId = house.ID;
+    async loadGoogleMaps() {
+      if (this.googleMapsLoaded) return;
 
-      // ★ Worker から安全な Google Maps script URL を取得
-      const urlRes = await fetch(
-        `${this.apiEndpoint}?funcName=getGoogleMapsUrl`
-      );
+      const urlRes = await fetch(`${this.apiEndpoint}?funcName=getGoogleMapsUrl`);
       const { mapUrl } = await urlRes.json();
 
-      // ★ 動的に Google Maps script を読み込む
-      const script = document.createElement("script");
-      script.src = mapUrl;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => this.initMap(house);
-      document.body.appendChild(script);
+      await new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = mapUrl;
+        script.onload = resolve;
+        document.head.appendChild(script);
+      });
 
+      this.googleMapsLoaded = true;
+    },
+
+    async openMapModal(house) {
+      this.selectedHouse = house;
       $("#mapModal").modal("show");
     },
 
-    initMap(house) {
+    async initMapAfterModal() {
+      await this.loadGoogleMaps();
+
+      const lat = Number(this.selectedHouse.CSVLat);
+      const lng = Number(this.selectedHouse.CSVLng);
+
+      if (!lat || !lng) {
+        console.warn("座標がありません:", this.selectedHouse);
+        return;
+      }
+
       this.map = new google.maps.Map(
         document.getElementById("mapModalContainer"),
         {
-          center: { lat: house.Lat, lng: house.Lng },
+          center: { lat, lng },
           zoom: 18,
         }
       );
 
       new google.maps.Marker({
-        position: { lat: house.Lat, lng: house.Lng },
+        position: { lat, lng },
         map: this.map,
       });
     },
 
-    scrollToHouse(houseId) {
-      this.focusedHouseId = houseId;
-
-      this.$nextTick(() => {
-        const el = document.getElementById(`house-${houseId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      });
-
-      $("#mapModal").modal("hide");
-    },
-
-    // -----------------------------
-    // ページ遷移
-    // -----------------------------
     goBackToMyPage() {
       window.location.href = "./AssignmentList.html";
     },
@@ -234,4 +220,4 @@ const ChildMapApp = {
   },
 };
 
-Vue.createApp(ChildMapApp).mount("#childMapApp");
+window.childMapApp = Vue.createApp(ChildMapApp).mount("#childMapApp");

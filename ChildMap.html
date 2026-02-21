@@ -49,9 +49,9 @@
     #mapModalContainer {
       width: 100%;
       height: 400px;
+      overflow: hidden;
     }
 
-    /* スマホ向け調整 */
     @media (max-width: 768px) {
       body { font-size: 18px; }
 
@@ -77,6 +77,7 @@
 
       #mapModalContainer {
         height: 60vh;
+        overflow: hidden;
       }
     }
   </style>
@@ -89,7 +90,7 @@
       <i class="fas fa-spinner fa-4x fa-spin text-secondary"></i>
     </div>
 
-    <!-- ヘッダー（AssignmentList と統一） -->
+    <!-- ヘッダー -->
     <header class="sticky-top bg-white mb-2 py-2 border-bottom">
       <div class="d-flex justify-content-between align-items-center">
 
@@ -198,12 +199,12 @@
             <div v-if="house.VRecord && house.VRecord.length > 0">
               <div
                 v-for="rec in house.VRecord"
-                :key="rec.RecordID"
+                :key="rec.ID"
                 class="visit-record"
               >
                 <div class="small">
                   <strong>{{ rec.VisitDate || '-' }}</strong>
-                  （{{ rec.Operator || '-' }}）
+                  （{{ rec.Minister || '-' }}）
                 </div>
                 <div class="small">
                   結果: {{ rec.Result || '-' }}
@@ -308,7 +309,7 @@
   <!-- jQuery（Bootstrap 4 に必須） -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 
-  <!-- Bootstrap 4 JS（jQuery の後） -->
+  <!-- Bootstrap 4 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Firebase -->
