@@ -1,4 +1,4 @@
-// ChildMap.js（IDボタン連動＋全件灰色●＋選択だけ赤ピン＋IDラベル＋InfoWindow最新3件＋訪問履歴アコーディオン）
+// ChildMap.js（IDボタン連動＋全件黄色●＋選択だけ赤ピン＋IDラベル＋InfoWindow最新3件＋リンクでカードへ移動）
 
 const ChildMapApp = {
   data() {
@@ -60,6 +60,9 @@ const ChildMapApp = {
   },
 
   methods: {
+    // -----------------------------
+    // URL パラメータ
+    // -----------------------------
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
       this.cardNo = params.get("cardNo");
@@ -67,6 +70,9 @@ const ChildMapApp = {
       this.loginUser = params.get("loginUser");
     },
 
+    // -----------------------------
+    // 子カード詳細取得
+    // -----------------------------
     async fetchChildDetail() {
       const user = firebase.auth().currentUser;
       const idToken = await user.getIdToken(true);
@@ -94,6 +100,9 @@ const ChildMapApp = {
       }
     },
 
+    // -----------------------------
+    // 地図アコーディオン
+    // -----------------------------
     toggleMap() {
       this.mapOpen = !this.mapOpen;
 
@@ -109,6 +118,9 @@ const ChildMapApp = {
       }
     },
 
+    // -----------------------------
+    // Google Maps ロード
+    // -----------------------------
     async loadGoogleMaps() {
       if (this.googleMapsLoaded || window.google?.maps) {
         this.googleMapsLoaded = true;
@@ -144,6 +156,9 @@ const ChildMapApp = {
       });
     },
 
+    // -----------------------------
+    // 地図初期化
+    // -----------------------------
     async initMap() {
       await this.loadGoogleMaps();
 
@@ -167,7 +182,9 @@ const ChildMapApp = {
       this.addCurrentLocationButton();
     },
 
-    // ★ マーカーに ID ラベルを付ける
+    // -----------------------------
+    // 全件プロット（非選択＝黄色●、選択＝赤ピン）
+    // -----------------------------
     addAllMarkers(selectedId) {
       this.markers.forEach(m => m.setMap(null));
       this.markers = [];
@@ -181,10 +198,11 @@ const ChildMapApp = {
           ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
           : {
               path: google.maps.SymbolPath.CIRCLE,
-              scale: 6,
-              fillColor: "#888",
+              scale: 7,
+              fillColor: "#FFD700",   // ★ 黄色
               fillOpacity: 1,
-              strokeWeight: 0,
+              strokeWeight: 1,
+              strokeColor: "#CCAA00"
             };
 
         const marker = new google.maps.Marker({
@@ -200,12 +218,171 @@ const ChildMapApp = {
         });
 
         marker.addListener("click", () => {
-          this.focusOnMap(h);
-          this.scrollToHouse(h.ID);
+          this.focusOnMap(h);   // InfoWindow を開くだけ
         });
 
         this.markers.push(marker);
       });
     },
 
-    //
+    // -----------------------------
+    // InfoWindow（最新3件＋カードへ移動リンク）
+    // -----------------------------
+    async focusOnMap(house) {
+      this.focusedId = house.ID;
+
+      if (!this.mapOpen) {
+        this.mapOpen = true;
+        await this.$nextTick();
+        if (!this.map) {
+          await this.initMap();
+        }
+      }
+
+      this.addAllMarkers(house.ID);
+
+      const pos = {
+        lat: Number(house.CSVLat),
+        lng: Number(house.CSVLng),
+      };
+
+      this.map.panTo(pos);
+      this.map.setZoom(17);
+
+      // 最新3件
+      const latest3 = (house.VRecord || [])
+        .sort((a, b) => (b.VisitDate || "").localeCompare(a.VisitDate || ""))
+        .slice(0, 3);
+
+      const historyHtml = latest3.map(r => `
+        <div>
+          <strong>${r.VisitDate}</strong> / ${r.Result || "-"}（${r.Minister || "-"}）
+          <div class="small text-muted">${r.Comment || ""}</div>
+        </div>
+      `).join("");
+
+      const html = `
+        <div style="font-size:13px; max-width:240px;">
+          <strong>${house.FamilyName || "（表札なし）"}さん</strong><br>
+          <span>${house.Address || ""}</span><br>
+          <span>ステータス: ${house.VisitStatus || "未訪問"}</span><br>
+
+          <hr style="margin:6px 0;">
+          <div><strong>最新訪問（3件）</strong></div>
+          ${historyHtml || "履歴なし"}
+
+          <hr style="margin:6px 0;">
+          <a href="javascript:void(0)" onclick="childMapApp.scrollToHouse(${house.ID})">
+            ▶ この住戸カードへ移動
+          </a>
+        </div>
+      `;
+
+      this.infoWindow.setContent(html);
+      this.infoWindow.setPosition(pos);
+      this.infoWindow.open(this.map);
+    },
+
+    // -----------------------------
+    // カードへスクロール
+    // -----------------------------
+    scrollToHouse(id) {
+      this.$nextTick(() => {
+        const el = document.getElementById(`house-${id}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("focused-house");
+          setTimeout(() => el.classList.remove("focused-house"), 1500);
+        }
+      });
+    },
+
+    // -----------------------------
+    // 訪問履歴アコーディオン
+    // -----------------------------
+    sortedVRecord(records) {
+      if (!records) return [];
+      return [...records].sort((a, b) =>
+        (b.VisitDate || "").localeCompare(a.VisitDate || "")
+      );
+    },
+
+    isVisitHistoryOpen(id) {
+      return this.openVisitHistoryIds.has(id);
+    },
+
+    toggleVisitHistory(id) {
+      if (this.openVisitHistoryIds.has(id)) {
+        this.openVisitHistoryIds.delete(id);
+      } else {
+        this.openVisitHistoryIds.add(id);
+      }
+      this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
+    },
+
+    // -----------------------------
+    // 結果入力モーダル
+    // -----------------------------
+    openResultModal(house) {
+      this.selectedHouse = house;
+      this.resultForm.result = "";
+      this.resultForm.comment = "";
+      $("#resultModal").modal("show");
+    },
+
+    async submitResult() {
+      this.savingResult = true;
+
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
+
+      const payload = {
+        funcName: "upsertVisitRecord",
+        cardNo: this.cardNo,
+        childNo: this.childNo,
+        houseId: this.selectedHouse.ID,
+        result: this.resultForm.result,
+        comment: this.resultForm.comment,
+      };
+
+      await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      $("#resultModal").modal("hide");
+      this.savingResult = false;
+
+      await this.fetchChildDetail();
+      if (this.map) {
+        this.addAllMarkers(null);
+      }
+    },
+
+    // -----------------------------
+    // ページ遷移
+    // -----------------------------
+    goBackToMyPage() {
+      window.location.href = "./AssignmentList.html";
+    },
+
+    goHome() {
+      window.location.href = "./mainMenu.html";
+    },
+
+    async logout() {
+      try {
+        await firebase.auth().signOut();
+      } catch (e) {
+        console.error(e);
+      }
+      window.location.href = "./index.html";
+    },
+  },
+};
+
+window.childMapApp = Vue.createApp(ChildMapApp).mount("#childMapApp");
