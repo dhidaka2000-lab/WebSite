@@ -1,4 +1,4 @@
-// ChildMap.js（完全版：UI刷新・アイコン・住所生成・InfoWindow地図リンク・訪問ステータス色分け・安定版）
+// ChildMap.js（完全版：UI刷新・固定カラム・フォント+6px・アイコン・住所生成・InfoWindow地図リンク・訪問ステータス色分け・安定版）
 
 const ChildMapApp = {
   data() {
@@ -71,7 +71,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 住所生成（今回の仕様）
+    // 住所生成
     // -----------------------------
     getDisplayAddress(house) {
       if (!house) return "";
@@ -84,7 +84,6 @@ const ChildMapApp = {
         base = `${house.InputTownName || ""}${house.InputCho || ""}${house.InputBanchi || ""}`;
       }
 
-      // 建物名・部屋番号
       if (house.BuildingName || house.RoomNo) {
         base += ` ${house.BuildingName || ""}${house.RoomNo ? house.RoomNo + "号室" : ""}`;
       }
@@ -136,7 +135,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // Google Maps 読み込み（完全保証）
+    // Google Maps 読み込み
     // -----------------------------
     async loadGoogleMaps() {
       if (this.googleMapsLoaded && window.google?.maps) return;
@@ -226,6 +225,7 @@ const ChildMapApp = {
       button.style.padding = "6px 10px";
       button.style.borderRadius = "4px";
       button.style.cursor = "pointer";
+      button.style.fontSize = "18px";
 
       button.onclick = () => {
         navigator.geolocation.getCurrentPosition((pos) => {
@@ -300,7 +300,7 @@ const ChildMapApp = {
           label: {
             text: String(h.ID),
             color: "#333",
-            fontSize: "13px",
+            fontSize: "19px", // 13px + 6px
             fontWeight: "bold",
           },
         });
@@ -356,34 +356,34 @@ const ChildMapApp = {
 
       const html = `
         <div style="
-          font-size:15px;
-          max-width:240px;
-          padding:10px 12px;
+          font-size:21px;
+          max-width:260px;
+          padding:12px 14px;
           border-radius:10px;
           box-shadow:0 2px 8px rgba(0,0,0,0.15);
           line-height:1.5;
         ">
-          <div style="font-weight:bold; font-size:17px; margin-bottom:4px;">
+          <div style="font-weight:bold; font-size:23px; margin-bottom:6px;">
             ${house.FamilyName || "（表札名なし）"}${house.FamilyName ? "さん" : ""}
           </div>
 
-          <div style="color:#555; margin-bottom:4px; font-size:15px;">
+          <div style="color:#555; margin-bottom:6px; font-size:21px;">
             ${addr}
           </div>
 
-          <div style="font-size:13px; color:#777;">
+          <div style="font-size:19px; color:#777;">
             ステータス：${house.VisitStatus || "未訪問"}
           </div>
 
           ${
             lastMet
-              ? `<div style="font-size:13px; color:#007bff; margin-top:4px;">
+              ? `<div style="font-size:19px; color:#007bff; margin-top:6px;">
                    最後にお会いできた日：<strong>${lastMet}</strong>
                  </div>`
               : ""
           }
 
-          <hr style="margin:8px 0;">
+          <hr style="margin:10px 0;">
 
           <button
             onclick="childMapApp.scrollToHouse(${house.ID})"
@@ -394,9 +394,9 @@ const ChildMapApp = {
               color:white;
               border:none;
               border-radius:6px;
-              font-size:15px;
+              font-size:21px;
               cursor:pointer;
-              margin-bottom:6px;
+              margin-bottom:8px;
             "
           >
             ▶ この住戸カードへ移動
@@ -411,7 +411,7 @@ const ChildMapApp = {
                 background:#28a745;
                 color:white;
                 border-radius:6px;
-                font-size:13px;
+                font-size:19px;
                 text-decoration:none;
               "
             >Google Maps</a>
@@ -424,7 +424,7 @@ const ChildMapApp = {
                 background:#555;
                 color:white;
                 border-radius:6px;
-                font-size:13px;
+                font-size:19px;
                 text-decoration:none;
               "
             >Apple Maps</a>
