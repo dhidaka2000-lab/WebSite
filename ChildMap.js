@@ -1,4 +1,4 @@
-// ChildMap.js（2カラム＋地図アコーディオン＋色分けマーカー＋リッチInfoWindow＋アコーディオンカード）
+// ChildMap.js（2カラム＋地図アコーディオン＋色分けマーカー＋リッチInfoWindow＋訪問履歴アコーディオン）
 
 const ChildMapApp = {
   data() {
@@ -23,7 +23,6 @@ const ChildMapApp = {
       houses: [],
 
       openVisitHistoryIds: new Set(),
-      openHouseIds: new Set(),
 
       selectedHouse: null,
       resultForm: { result: "", comment: "" },
@@ -61,6 +60,9 @@ const ChildMapApp = {
   },
 
   methods: {
+    // -----------------------------
+    // URL パラメータ
+    // -----------------------------
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
       this.cardNo = params.get("cardNo");
@@ -68,6 +70,9 @@ const ChildMapApp = {
       this.loginUser = params.get("loginUser");
     },
 
+    // -----------------------------
+    // 子カード詳細取得
+    // -----------------------------
     async fetchChildDetail() {
       const user = firebase.auth().currentUser;
       const idToken = await user.getIdToken(true);
@@ -178,7 +183,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // マーカー色分け＋リッチInfoWindow
+    // マーカー色分け＋リッチ InfoWindow
     // -----------------------------
     addAllMarkers() {
       this.markers.forEach(m => m.setMap(null));
@@ -200,7 +205,6 @@ const ChildMapApp = {
 
         marker.addListener("click", () => {
           this.focusedHouseId = h.ID;
-          this.openHouseIds.add(h.ID);
 
           const latest = this.getLatestVisit(h.VRecord || []);
           const latestText = latest
@@ -277,7 +281,6 @@ const ChildMapApp = {
     // -----------------------------
     async focusOnMap(house) {
       this.focusedHouseId = house.ID;
-      this.openHouseIds.add(house.ID);
 
       if (!this.mapOpen) {
         this.mapOpen = true;
@@ -347,22 +350,6 @@ const ChildMapApp = {
         this.openVisitHistoryIds.add(id);
       }
       this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
-    },
-
-    // -----------------------------
-    // 住戸カードアコーディオン
-    // -----------------------------
-    isHouseOpen(id) {
-      return this.openHouseIds.has(id);
-    },
-
-    toggleHouseAccordion(id) {
-      if (this.openHouseIds.has(id)) {
-        this.openHouseIds.delete(id);
-      } else {
-        this.openHouseIds.add(id);
-      }
-      this.openHouseIds = new Set(this.openHouseIds);
     },
 
     // -----------------------------
