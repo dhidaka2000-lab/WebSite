@@ -23,6 +23,7 @@
       z-index: 2000;
     }
 
+    /* 住戸カード */
     .card-house {
       margin-bottom: 0.5rem;
       transition: background-color 0.3s ease;
@@ -32,6 +33,7 @@
       background-color: #fff8d6 !important;
     }
 
+    /* 訪問履歴タイムライン */
     .visit-record-timeline {
       border-left: 3px solid #6c757d;
       margin-left: 0.5rem;
@@ -66,6 +68,7 @@
       }
     }
 
+    /* ID ボタン */
     .house-no-btn {
       border-radius: 4px;
       padding: 4px 10px;
@@ -73,6 +76,48 @@
       border: 2px solid #333;
       background: white;
       color: #333;
+      font-size: 14px; /* +2pt */
+    }
+
+    /* ピル型ステータス */
+    .pill-status {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px; /* +2pt */
+      font-weight: bold;
+      display: inline-block;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* アイコン（8px） */
+    .icon-8 {
+      font-size: 8px;
+      margin-right: 4px;
+    }
+
+    /* 表札名 +2pt */
+    .family-name {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    /* 住所 +2pt */
+    .address-text {
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* 住戸カードの横並び（PC）＋折り返し（スマホ） */
+    .house-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .house-row > * {
+      margin-right: 4px;
     }
   </style>
 </head>
@@ -167,34 +212,85 @@
       class="card card-house"
       :class="{ 'focused-house': focusedId === house.ID }"
     >
-      <div class="card-header py-2 d-flex justify-content-between align-items-center">
+      <div class="card-header py-2">
 
-        <!-- 左：ID ボタン -->
-        <button class="house-no-btn mr-2" @click="scrollToMapAndFocus(house)">
-          {{ house.ID }}
-        </button>
+        <!-- 住戸カードの横並び（PC）＋折り返し（スマホ） -->
+        <div class="house-row">
 
-        <!-- 中央 -->
-        <div class="flex-grow-1">
-          <strong>{{ house.FamilyName || '（表札名なし）' }}さん</strong>
-          <div class="small text-muted">
-            {{ getDisplayAddress(house) || '住所未設定' }}
-          </div>
-        </div>
+          <!-- ID -->
+          <button class="house-no-btn" @click="scrollToMapAndFocus(house)">
+            {{ house.ID }}
+          </button>
 
-        <!-- 右 -->
-        <div class="text-right">
-          <span class="badge badge-secondary d-block mb-1">
+          <!-- NGFlag -->
+          <i v-if="house.NGFlag === '不可'" class="fas fa-ban icon-8" style="color:#cc0000;"></i>
+
+          <!-- YoungerGENFlag -->
+          <i
+            class="fas fa-user icon-8"
+            :style="{ color: (house.YoungerGENFlag === '若い世代に会えた' || house.YoungerGENFlag === '若い世代と推定') ? '#00aa55' : '#999' }"
+          ></i>
+
+          <!-- 表札名 -->
+          <span class="family-name">
+            {{ house.FamilyName ? house.FamilyName + 'さん' : '（表札名なし）' }}
+          </span>
+
+          <!-- TEL -->
+          <i
+            :class="house.TEL ? 'fas fa-phone icon-8' : 'fas fa-phone-slash icon-8'"
+            :style="{ color: house.TEL ? '#00aa55' : '#999' }"
+          ></i>
+
+          <!-- 建物種別 -->
+          <i
+            class="icon-8"
+            :class="{
+              'fas fa-home': house.BuildingCategory === '一戸建て',
+              'fas fa-building': house.BuildingCategory === 'ビル',
+              'fas fa-store': house.BuildingCategory === '店舗',
+              'fas fa-city': house.BuildingCategory === '集合住宅' || house.BuildingCategory === '文化住宅'
+            }"
+            style="color:#777;"
+          ></i>
+
+          <!-- 訪問ステータス（ピル） -->
+          <span
+            class="pill-status"
+            :style="{
+              background:
+                house.VisitStatus?.includes('済') || house.VisitStatus?.includes('在宅')
+                  ? '#00aa55'
+                  : house.VisitStatus?.includes('NG')
+                  ? '#cc0000'
+                  : house.VisitStatus?.includes('不在')
+                  ? '#ffd700'
+                  : '#999',
+              color: house.VisitStatus?.includes('不在') ? '#333' : 'white'
+            }"
+          >
             {{ house.VisitStatus || '未訪問' }}
           </span>
 
-          <button class="btn btn-sm btn-outline-primary mb-1" @click="openResultModal(house)">
+          <!-- 住所 -->
+          <span class="address-text">
+            {{ getDisplayAddress(house) || '住所未設定' }}
+          </span>
+
+          <!-- BadFlag -->
+          <span v-if="house.BadFlag === 'Good'" style="color:#00aa55; font-size:10px;">●✓</span>
+          <span v-if="house.BadFlag === 'Bad'" style="color:#cc0000; font-size:10px;">▲！</span>
+
+          <!-- 結果入力 -->
+          <button class="btn btn-sm btn-outline-primary" style="font-size:15px;" @click="openResultModal(house)">
             結果入力
           </button>
 
-          <button class="btn btn-sm btn-outline-secondary" @click="toggleVisitHistory(house.ID)">
-            訪問履歴 {{ isVisitHistoryOpen(house.ID) ? '▲' : '▼' }}
+          <!-- 履歴 -->
+          <button class="btn btn-sm btn-outline-secondary" style="font-size:15px;" @click="toggleVisitHistory(house.ID)">
+            {{ isVisitHistoryOpen(house.ID) ? '▲' : '▼' }}
           </button>
+
         </div>
       </div>
 
@@ -224,7 +320,7 @@
           </div>
 
           <div class="modal-body" v-if="selectedHouse">
-            <p class="small text-muted mb-1">
+            <p class="small text-muted mb-1" style="font-size:14px;">
               {{ getDisplayAddress(selectedHouse) }}
             </p>
 

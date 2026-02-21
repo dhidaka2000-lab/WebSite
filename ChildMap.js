@@ -1,4 +1,4 @@
-// ChildMap.js（完全版：住所統一・InfoWindowに地図アプリリンク・訪問ステータス色分け・安定版）
+// ChildMap.js（完全版：UI刷新・アイコン・住所生成・InfoWindow地図リンク・訪問ステータス色分け・安定版）
 
 const ChildMapApp = {
   data() {
@@ -76,15 +76,20 @@ const ChildMapApp = {
     getDisplayAddress(house) {
       if (!house) return "";
 
+      let base = "";
+
       if (house.AddressSW === "リストから選択") {
-        return `${house.CSVTownName || ""}${house.CSVCho || ""}${house.CSVBanchi || ""}`;
+        base = `${house.CSVTownName || ""}${house.CSVCho || ""}${house.CSVBanchi || ""}`;
+      } else if (house.AddressSW === "直接入力") {
+        base = `${house.InputTownName || ""}${house.InputCho || ""}${house.InputBanchi || ""}`;
       }
 
-      if (house.AddressSW === "直接入力") {
-        return `${house.InputTownName || ""}${house.InputCho || ""}${house.InputBanchi || ""}`;
+      // 建物名・部屋番号
+      if (house.BuildingName || house.RoomNo) {
+        base += ` ${house.BuildingName || ""}${house.RoomNo ? house.RoomNo + "号室" : ""}`;
       }
 
-      return "";
+      return base;
     },
 
     // -----------------------------
@@ -351,28 +356,28 @@ const ChildMapApp = {
 
       const html = `
         <div style="
-          font-size:13px;
+          font-size:15px;
           max-width:240px;
           padding:10px 12px;
           border-radius:10px;
           box-shadow:0 2px 8px rgba(0,0,0,0.15);
           line-height:1.5;
         ">
-          <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">
-            ${house.FamilyName || "（表札なし）"}さん
+          <div style="font-weight:bold; font-size:17px; margin-bottom:4px;">
+            ${house.FamilyName || "（表札名なし）"}${house.FamilyName ? "さん" : ""}
           </div>
 
-          <div style="color:#555; margin-bottom:4px;">
+          <div style="color:#555; margin-bottom:4px; font-size:15px;">
             ${addr}
           </div>
 
-          <div style="font-size:12px; color:#777;">
+          <div style="font-size:13px; color:#777;">
             ステータス：${house.VisitStatus || "未訪問"}
           </div>
 
           ${
             lastMet
-              ? `<div style="font-size:12px; color:#007bff; margin-top:4px;">
+              ? `<div style="font-size:13px; color:#007bff; margin-top:4px;">
                    最後にお会いできた日：<strong>${lastMet}</strong>
                  </div>`
               : ""
@@ -389,7 +394,7 @@ const ChildMapApp = {
               color:white;
               border:none;
               border-radius:6px;
-              font-size:13px;
+              font-size:15px;
               cursor:pointer;
               margin-bottom:6px;
             "
@@ -406,7 +411,7 @@ const ChildMapApp = {
                 background:#28a745;
                 color:white;
                 border-radius:6px;
-                font-size:12px;
+                font-size:13px;
                 text-decoration:none;
               "
             >Google Maps</a>
@@ -419,7 +424,7 @@ const ChildMapApp = {
                 background:#555;
                 color:white;
                 border-radius:6px;
-                font-size:12px;
+                font-size:13px;
                 text-decoration:none;
               "
             >Apple Maps</a>
