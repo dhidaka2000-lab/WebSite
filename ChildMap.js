@@ -1,4 +1,4 @@
-// ChildMap.js（IDボタン連動＋全件黄色●＋選択だけ赤ピン＋IDラベル＋InfoWindow最新3件＋リンクでカードへ移動）
+// ChildMap.js（IDボタン連動＋全件黄色●＋選択だけ赤ピン＋IDラベル＋InfoWindowリンク＋現在地ボタン復活）
 
 const ChildMapApp = {
   data() {
@@ -179,7 +179,44 @@ const ChildMapApp = {
       this.infoWindow = new google.maps.InfoWindow();
 
       this.addAllMarkers(null);
-      this.addCurrentLocationButton();
+      this.addCurrentLocationButton();   // ★ 復活
+    },
+
+    // -----------------------------
+    // 現在地ボタン（復活）
+    // -----------------------------
+    addCurrentLocationButton() {
+      const controlDiv = document.createElement("div");
+      controlDiv.style.margin = "10px";
+
+      const button = document.createElement("button");
+      button.textContent = "現在地";
+      button.style.background = "#fff";
+      button.style.border = "2px solid #666";
+      button.style.padding = "6px 10px";
+      button.style.borderRadius = "4px";
+      button.style.cursor = "pointer";
+
+      button.onclick = () => {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const loc = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+
+          this.map.panTo(loc);
+          this.map.setZoom(17);
+
+          new google.maps.Marker({
+            position: loc,
+            map: this.map,
+            icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+          });
+        });
+      };
+
+      controlDiv.appendChild(button);
+      this.map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(controlDiv);
     },
 
     // -----------------------------
@@ -226,7 +263,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // InfoWindow（最新3件＋カードへ移動リンク）
+    // InfoWindow（最新3件は表示しない）
     // -----------------------------
     async focusOnMap(house) {
       this.focusedId = house.ID;
@@ -249,27 +286,11 @@ const ChildMapApp = {
       this.map.panTo(pos);
       this.map.setZoom(17);
 
-      // 最新3件
-      const latest3 = (house.VRecord || [])
-        .sort((a, b) => (b.VisitDate || "").localeCompare(a.VisitDate || ""))
-        .slice(0, 3);
-
-      const historyHtml = latest3.map(r => `
-        <div>
-          <strong>${r.VisitDate}</strong> / ${r.Result || "-"}（${r.Minister || "-"}）
-          <div class="small text-muted">${r.Comment || ""}</div>
-        </div>
-      `).join("");
-
       const html = `
         <div style="font-size:13px; max-width:240px;">
           <strong>${house.FamilyName || "（表札なし）"}さん</strong><br>
           <span>${house.Address || ""}</span><br>
           <span>ステータス: ${house.VisitStatus || "未訪問"}</span><br>
-
-          <hr style="margin:6px 0;">
-          <div><strong>最新訪問（3件）</strong></div>
-          ${historyHtml || "履歴なし"}
 
           <hr style="margin:6px 0;">
           <a href="javascript:void(0)" onclick="childMapApp.scrollToHouse(${house.ID})">
