@@ -1,4 +1,4 @@
-// ChildMap.js（2カラム＋地図アコーディオン＋色分けマーカー＋リッチInfoWindow＋訪問履歴アコーディオン）
+// ChildMap.js（1カラム＋全件プロット＋選択時だけ赤ピン＋InfoWindow＋訪問履歴アコーディオン）
 
 const ChildMapApp = {
   data() {
@@ -157,7 +157,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 地図初期化
+    // 地図初期化（全件プロット）
     // -----------------------------
     async initMap() {
       await this.loadGoogleMaps();
@@ -178,24 +178,31 @@ const ChildMapApp = {
 
       this.infoWindow = new google.maps.InfoWindow();
 
-      this.addAllMarkers();
+      this.addAllMarkers(null); // ← 初期状態は全件グレー
       this.addCurrentLocationButton();
     },
 
     // -----------------------------
-    // マーカー色分け＋リッチ InfoWindow
+    // 全件プロット（選択時だけ赤ピン）
     // -----------------------------
-    addAllMarkers() {
+    addAllMarkers(selectedId) {
       this.markers.forEach(m => m.setMap(null));
       this.markers = [];
 
       this.houses.forEach((h) => {
         if (!h.CSVLat || !h.CSVLng) return;
 
-        const visited = !!h.VisitStatus;
-        const icon = visited
+        const isSelected = h.ID === selectedId;
+
+        const icon = isSelected
           ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
-          : "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
+          : {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 6,
+              fillColor: "#888",
+              fillOpacity: 1,
+              strokeWeight: 0,
+            };
 
         const marker = new google.maps.Marker({
           position: { lat: Number(h.CSVLat), lng: Number(h.CSVLng) },
@@ -204,33 +211,61 @@ const ChildMapApp = {
         });
 
         marker.addListener("click", () => {
-          this.focusedHouseId = h.ID;
-
-          const latest = this.getLatestVisit(h.VRecord || []);
-          const latestText = latest
-            ? `${latest.VisitDate} / ${latest.Result || "-"}`
-            : "訪問履歴なし";
-
-          const html = `
-            <div style="font-size:13px; max-width:220px;">
-              <strong>${h.FamilyName || "（表札なし）"}さん</strong><br>
-              <span>${h.Address || ""}</span><br>
-              <span>ステータス: ${h.VisitStatus || "未訪問"}</span><br>
-              <span>最新訪問: ${latestText}</span>
-            </div>
-          `;
-
-          this.infoWindow.setContent(html);
-          this.infoWindow.open(this.map, marker);
-
-          this.map.panTo(marker.getPosition());
-          this.scrollToHouse(h.ID);
+          this.focusOnMap(h);
         });
 
         this.markers.push(marker);
       });
     },
 
+    // -----------------------------
+    // カード側から地図へフォーカス（赤ピン）
+    // -----------------------------
+    async focusOnMap(house) {
+      this.focusedHouseId = house.ID;
+
+      if (!this.mapOpen) {
+        this.mapOpen = true;
+        await this.$nextTick();
+        if (!this.map) {
+          await this.initMap();
+        }
+      }
+
+      // ★ 全件再描画（選択だけ赤）
+      this.addAllMarkers(house.ID);
+
+      const pos = {
+        lat: Number(house.CSVLat),
+        lng: Number(house.CSVLng),
+      };
+
+      this.map.panTo(pos);
+      this.map.setZoom(17);
+
+      const latest = this.getLatestVisit(house.VRecord || []);
+      const latestText = latest
+        ? `${latest.VisitDate} / ${latest.Result || "-"}`
+        : "訪問履歴なし";
+
+      const html = `
+        <div style="font-size:13px; max-width:220px;">
+          <strong>${house.FamilyName || "（表札なし）"}さん</strong><br>
+          <span>${house.Address || ""}</span><br>
+          <span>ステータス: ${house.VisitStatus || "未訪問"}</span><br>
+          <span>最新訪問: ${latestText}</span>
+        </div>
+      `;
+      this.infoWindow.setContent(html);
+      this.infoWindow.setPosition(pos);
+      this.infoWindow.open(this.map);
+
+      this.scrollToHouse(house.ID);
+    },
+
+    // -----------------------------
+    // 最新訪問取得
+    // -----------------------------
     getLatestVisit(records) {
       if (!records || records.length === 0) return null;
       const sorted = [...records].sort((a, b) =>
@@ -277,47 +312,8 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // カード側から地図へフォーカス
+    // カードへスクロール
     // -----------------------------
-    async focusOnMap(house) {
-      this.focusedHouseId = house.ID;
-
-      if (!this.mapOpen) {
-        this.mapOpen = true;
-        await this.$nextTick();
-        if (!this.map) {
-          await this.initMap();
-        }
-      }
-
-      const targetMarker = this.markers.find(
-        (m) =>
-          m.getPosition().lat() === Number(house.CSVLat) &&
-          m.getPosition().lng() === Number(house.CSVLng)
-      );
-
-      if (targetMarker) {
-        this.map.panTo(targetMarker.getPosition());
-        this.map.setZoom(17);
-
-        const latest = this.getLatestVisit(house.VRecord || []);
-        const latestText = latest
-          ? `${latest.VisitDate} / ${latest.Result || "-"}`
-          : "訪問履歴なし";
-
-        const html = `
-          <div style="font-size:13px; max-width:220px;">
-            <strong>${house.FamilyName || "（表札なし）"}さん</strong><br>
-            <span>${house.Address || ""}</span><br>
-            <span>ステータス: ${house.VisitStatus || "未訪問"}</span><br>
-            <span>最新訪問: ${latestText}</span>
-          </div>
-        `;
-        this.infoWindow.setContent(html);
-        this.infoWindow.open(this.map, targetMarker);
-      }
-    },
-
     scrollToHouse(houseId) {
       this.$nextTick(() => {
         const el = document.getElementById(`house-${houseId}`);
@@ -330,7 +326,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 訪問履歴タイムライン
+    // 訪問履歴アコーディオン
     // -----------------------------
     sortedVRecord(records) {
       if (!records) return [];
@@ -391,7 +387,7 @@ const ChildMapApp = {
 
       await this.fetchChildDetail();
       if (this.map) {
-        this.addAllMarkers();
+        this.addAllMarkers(null);
       }
     },
 
