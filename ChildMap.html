@@ -71,6 +71,15 @@
         height: 260px;
       }
     }
+
+    .house-no-btn {
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-weight: bold;
+      border: 2px solid #333;
+      background: white;
+      color: #333;
+    }
   </style>
 </head>
 
@@ -156,15 +165,26 @@
       class="card card-house"
       :class="{ 'focused-house': focusedHouseId === house.ID }"
     >
-      <!-- ★ カードヘッダー（3ボタン常時表示） -->
+      <!-- ★ カードヘッダー（左に housing_no ボタン、右に2ボタン） -->
       <div class="card-header py-2 d-flex justify-content-between align-items-center">
-        <div>
+
+        <!-- 左：housing_no ボタン -->
+        <button
+          class="house-no-btn mr-2"
+          @click="focusOnMap(house)"
+        >
+          {{ house.HousingNo }}
+        </button>
+
+        <!-- 中央：世帯名＋住所 -->
+        <div class="flex-grow-1">
           <strong>{{ house.FamilyName || '（表札名なし）' }}さん</strong>
           <div class="small text-muted">
             {{ house.Address || '住所未設定' }}
           </div>
         </div>
 
+        <!-- 右：ステータス＋結果入力＋訪問履歴 -->
         <div class="text-right">
           <span class="badge badge-secondary d-block mb-1">
             {{ house.VisitStatus || '未訪問' }}
@@ -178,13 +198,6 @@
           </button>
 
           <button
-            class="btn btn-sm btn-outline-success mb-1"
-            @click="focusOnMap(house)"
-          >
-            地図で表示
-          </button>
-
-          <button
             class="btn btn-sm btn-outline-secondary"
             @click="toggleVisitHistory(house.ID)"
           >
@@ -193,7 +206,7 @@
         </div>
       </div>
 
-      <!-- ★ アコーディオン部分（訪問履歴だけ） -->
+      <!-- 訪問履歴アコーディオン -->
       <div v-show="isVisitHistoryOpen(house.ID)" class="card-body py-2">
         <div v-if="house.VRecord && house.VRecord.length > 0" class="visit-record-timeline">
           <div

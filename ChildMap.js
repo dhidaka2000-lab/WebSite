@@ -1,4 +1,4 @@
-// ChildMap.js（1カラム＋全件プロット＋選択時だけ赤ピン＋InfoWindow＋訪問履歴アコーディオン）
+// ChildMap.js（1カラム＋全件プロット＋選択だけ赤ピン＋InfoWindow＋訪問履歴アコーディオン）
 
 const ChildMapApp = {
   data() {
@@ -178,7 +178,7 @@ const ChildMapApp = {
 
       this.infoWindow = new google.maps.InfoWindow();
 
-      this.addAllMarkers(null); // ← 初期状態は全件グレー
+      this.addAllMarkers(null); // 初期状態は全件グレー
       this.addCurrentLocationButton();
     },
 
@@ -219,7 +219,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // カード側から地図へフォーカス（赤ピン）
+    // housing_no ボタン → 地図フォーカス
     // -----------------------------
     async focusOnMap(house) {
       this.focusedHouseId = house.ID;
