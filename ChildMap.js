@@ -1,4 +1,4 @@
-// ChildMap.js（IDボタン連動＋全件黄色●＋選択だけ赤ピン＋IDラベル＋InfoWindowリンク＋現在地ボタン復活）
+// ChildMap.js（安定版：Google Maps 読み込み保証＋IDボタン連動＋黄色●1.5倍＋赤ピン＋InfoWindowモダンUI＋現在地ボタン＋地図高さ変更）
 
 const ChildMapApp = {
   data() {
@@ -108,24 +108,16 @@ const ChildMapApp = {
 
       if (this.mapOpen) {
         this.$nextTick(async () => {
-          if (!this.map) {
-            await this.initMap();
-          } else {
-            google.maps.event.trigger(this.map, "resize");
-            this.map.setCenter(this.map.getCenter());
-          }
+          await this.ensureMapInitialized();
         });
       }
     },
 
     // -----------------------------
-    // Google Maps ロード
+    // Google Maps 読み込み（完全保証版）
     // -----------------------------
     async loadGoogleMaps() {
-      if (this.googleMapsLoaded || window.google?.maps) {
-        this.googleMapsLoaded = true;
-        return;
-      }
+      if (this.googleMapsLoaded && window.google?.maps) return;
 
       const user = firebase.auth().currentUser;
       const idToken = await user.getIdToken(true);
@@ -143,24 +135,49 @@ const ChildMapApp = {
 
       const { mapUrl } = await urlRes.json();
 
-      await new Promise((resolve) => {
+      console.log("Google Maps URL:", mapUrl);
+
+      if (!mapUrl) {
+        console.error("Google Maps URL が取得できませんでした");
+        throw new Error("Google Maps URL が空です");
+      }
+
+      if (window.google?.maps) {
+        this.googleMapsLoaded = true;
+        return;
+      }
+
+      await new Promise((resolve, reject) => {
         const script = document.createElement("script");
         script.src = mapUrl;
         script.async = true;
         script.defer = true;
+
         script.onload = () => {
+          console.log("Google Maps script loaded");
           this.googleMapsLoaded = true;
           resolve();
         };
+
+        script.onerror = () => {
+          console.error("Google Maps script failed to load");
+          reject(new Error("Google Maps script failed to load"));
+        };
+
         document.head.appendChild(script);
       });
     },
 
     // -----------------------------
-    // 地図初期化
+    // initMap() の安定版
     // -----------------------------
-    async initMap() {
+    async ensureMapInitialized() {
       await this.loadGoogleMaps();
+
+      if (this.map) {
+        google.maps.event.trigger(this.map, "resize");
+        return;
+      }
 
       const first = this.houses[0];
       const center = first?.CSVLat
@@ -179,11 +196,11 @@ const ChildMapApp = {
       this.infoWindow = new google.maps.InfoWindow();
 
       this.addAllMarkers(null);
-      this.addCurrentLocationButton();   // ★ 復活
+      this.addCurrentLocationButton();
     },
 
     // -----------------------------
-    // 現在地ボタン（復活）
+    // 現在地ボタン
     // -----------------------------
     addCurrentLocationButton() {
       const controlDiv = document.createElement("div");
@@ -220,7 +237,23 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 全件プロット（非選択＝黄色●、選択＝赤ピン）
+    // 地図の高さ変更
+    // -----------------------------
+    setMapHeight(size) {
+      const el = document.getElementById("mapContainer");
+      if (!el) return;
+
+      if (size === "small") el.style.height = "220px";
+      if (size === "medium") el.style.height = "360px";
+      if (size === "large") el.style.height = "520px";
+
+      if (this.map) {
+        google.maps.event.trigger(this.map, "resize");
+      }
+    },
+
+    // -----------------------------
+    // 全件プロット（黄色●1.5倍＋IDラベル）
     // -----------------------------
     addAllMarkers(selectedId) {
       this.markers.forEach(m => m.setMap(null));
@@ -235,8 +268,8 @@ const ChildMapApp = {
           ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
           : {
               path: google.maps.SymbolPath.CIRCLE,
-              scale: 7,
-              fillColor: "#FFD700",   // ★ 黄色
+              scale: 10.5,   // ★ 1.5倍
+              fillColor: "#FFD700",
               fillOpacity: 1,
               strokeWeight: 1,
               strokeColor: "#CCAA00"
@@ -249,13 +282,13 @@ const ChildMapApp = {
           label: {
             text: String(h.ID),
             color: isSelected ? "#d00" : "#555",
-            fontSize: "12px",
+            fontSize: "13px",
             fontWeight: "bold",
           },
         });
 
         marker.addListener("click", () => {
-          this.focusOnMap(h);   // InfoWindow を開くだけ
+          this.focusOnMap(h);
         });
 
         this.markers.push(marker);
@@ -263,18 +296,12 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // InfoWindow（最新3件は表示しない）
+    // InfoWindow（モダンデザイン）
     // -----------------------------
     async focusOnMap(house) {
       this.focusedId = house.ID;
 
-      if (!this.mapOpen) {
-        this.mapOpen = true;
-        await this.$nextTick();
-        if (!this.map) {
-          await this.initMap();
-        }
-      }
+      await this.ensureMapInitialized();
 
       this.addAllMarkers(house.ID);
 
@@ -287,21 +314,65 @@ const ChildMapApp = {
       this.map.setZoom(17);
 
       const html = `
-        <div style="font-size:13px; max-width:240px;">
-          <strong>${house.FamilyName || "（表札なし）"}さん</strong><br>
-          <span>${house.Address || ""}</span><br>
-          <span>ステータス: ${house.VisitStatus || "未訪問"}</span><br>
+        <div style="
+          font-size:13px;
+          max-width:240px;
+          padding:10px 12px;
+          border-radius:10px;
+          box-shadow:0 2px 8px rgba(0,0,0,0.15);
+          line-height:1.5;
+        ">
+          <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">
+            ${house.FamilyName || "（表札なし）"}さん
+          </div>
 
-          <hr style="margin:6px 0;">
-          <a href="javascript:void(0)" onclick="childMapApp.scrollToHouse(${house.ID})">
+          <div style="color:#555; margin-bottom:4px;">
+            ${house.Address || ""}
+          </div>
+
+          <div style="font-size:12px; color:#777;">
+            ステータス：${house.VisitStatus || "未訪問"}
+          </div>
+
+          <hr style="margin:8px 0;">
+
+          <button
+            onclick="childMapApp.scrollToHouse(${house.ID})"
+            style="
+              width:100%;
+              padding:6px 0;
+              background:#007bff;
+              color:white;
+              border:none;
+              border-radius:6px;
+              font-size:13px;
+              cursor:pointer;
+            "
+          >
             ▶ この住戸カードへ移動
-          </a>
+          </button>
         </div>
       `;
 
       this.infoWindow.setContent(html);
       this.infoWindow.setPosition(pos);
       this.infoWindow.open(this.map);
+    },
+
+    // -----------------------------
+    // ID ボタン → 地図へスクロール → ピン表示
+    // -----------------------------
+    scrollToMapAndFocus(house) {
+      if (!this.mapOpen) this.mapOpen = true;
+
+      this.$nextTick(() => {
+        const mapEl = document.getElementById("mapContainer");
+        mapEl.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        setTimeout(() => {
+          this.focusOnMap(house);
+        }, 400);
+      });
     },
 
     // -----------------------------
@@ -315,26 +386,6 @@ const ChildMapApp = {
           el.classList.add("focused-house");
           setTimeout(() => el.classList.remove("focused-house"), 1500);
         }
-      });
-    },
-
-    scrollToMapAndFocus(house) {
-      // 地図アコーディオンを開く
-      if (!this.mapOpen) {
-        this.mapOpen = true;
-      }
-
-      // 地図へスクロール
-      this.$nextTick(() => {
-        const mapEl = document.getElementById("mapContainer");
-        if (mapEl) {
-          mapEl.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-
-        // スクロール後にピンを立てる
-        setTimeout(() => {
-          this.focusOnMap(house);
-        }, 400);
       });
     },
 
