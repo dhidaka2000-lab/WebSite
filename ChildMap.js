@@ -1,4 +1,4 @@
-// ChildMap.js（安定版：Google Maps 読み込み保証＋IDボタン連動＋黄色●1.5倍＋赤ピン＋InfoWindowモダンUI＋現在地ボタン＋地図高さ変更）
+// ChildMap.js（完全版：住所統一・InfoWindowに地図アプリリンク・訪問ステータス色分け・安定版）
 
 const ChildMapApp = {
   data() {
@@ -38,9 +38,9 @@ const ChildMapApp = {
       if (!this.searchQuery) return this.houses;
       const q = this.searchQuery.toLowerCase();
       return this.houses.filter((h) =>
-        (h.Address || "").toLowerCase().includes(q) ||
         (h.FamilyName || "").toLowerCase().includes(q) ||
-        (h.BuildingName || "").toLowerCase().includes(q)
+        (h.BuildingName || "").toLowerCase().includes(q) ||
+        this.getDisplayAddress(h).toLowerCase().includes(q)
       );
     },
   },
@@ -68,6 +68,23 @@ const ChildMapApp = {
       this.cardNo = params.get("cardNo");
       this.childNo = params.get("childNo");
       this.loginUser = params.get("loginUser");
+    },
+
+    // -----------------------------
+    // 住所生成（今回の仕様）
+    // -----------------------------
+    getDisplayAddress(house) {
+      if (!house) return "";
+
+      if (house.AddressSW === "リストから選択") {
+        return `${house.CSVTownName || ""}${house.CSVCho || ""}${house.CSVBanchi || ""}`;
+      }
+
+      if (house.AddressSW === "直接入力") {
+        return `${house.InputTownName || ""}${house.InputCho || ""}${house.InputBanchi || ""}`;
+      }
+
+      return "";
     },
 
     // -----------------------------
@@ -114,7 +131,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // Google Maps 読み込み（完全保証版）
+    // Google Maps 読み込み（完全保証）
     // -----------------------------
     async loadGoogleMaps() {
       if (this.googleMapsLoaded && window.google?.maps) return;
@@ -135,12 +152,7 @@ const ChildMapApp = {
 
       const { mapUrl } = await urlRes.json();
 
-      console.log("Google Maps URL:", mapUrl);
-
-      if (!mapUrl) {
-        console.error("Google Maps URL が取得できませんでした");
-        throw new Error("Google Maps URL が空です");
-      }
+      if (!mapUrl) throw new Error("Google Maps URL が取得できません");
 
       if (window.google?.maps) {
         this.googleMapsLoaded = true;
@@ -154,22 +166,18 @@ const ChildMapApp = {
         script.defer = true;
 
         script.onload = () => {
-          console.log("Google Maps script loaded");
           this.googleMapsLoaded = true;
           resolve();
         };
 
-        script.onerror = () => {
-          console.error("Google Maps script failed to load");
-          reject(new Error("Google Maps script failed to load"));
-        };
+        script.onerror = () => reject(new Error("Google Maps script failed"));
 
         document.head.appendChild(script);
       });
     },
 
     // -----------------------------
-    // initMap() の安定版
+    // initMap（安定版）
     // -----------------------------
     async ensureMapInitialized() {
       await this.loadGoogleMaps();
@@ -247,13 +255,11 @@ const ChildMapApp = {
       if (size === "medium") el.style.height = "360px";
       if (size === "large") el.style.height = "520px";
 
-      if (this.map) {
-        google.maps.event.trigger(this.map, "resize");
-      }
+      if (this.map) google.maps.event.trigger(this.map, "resize");
     },
 
     // -----------------------------
-    // 全件プロット（黄色●1.5倍＋IDラベル）
+    // マーカー色（訪問ステータス）
     // -----------------------------
     addAllMarkers(selectedId) {
       this.markers.forEach(m => m.setMap(null));
@@ -262,18 +268,25 @@ const ChildMapApp = {
       this.houses.forEach((h) => {
         if (!h.CSVLat || !h.CSVLng) return;
 
-        const isSelected = h.ID === selectedId;
+        let color = "#FFD700"; // 不在（黄）
 
-        const icon = isSelected
-          ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
-          : {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10.5,   // ★ 1.5倍
-              fillColor: "#FFD700",
-              fillOpacity: 1,
-              strokeWeight: 1,
-              strokeColor: "#CCAA00"
-            };
+        const status = (h.VisitStatus || "").trim();
+
+        if (status.includes("済") || status.includes("在宅")) {
+          color = "#00AA55"; // 緑
+        }
+        if (status.includes("NG")) {
+          color = "#CC0000"; // 赤
+        }
+
+        const icon = {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10.5,
+          fillColor: color,
+          fillOpacity: 1,
+          strokeWeight: 1,
+          strokeColor: "#333"
+        };
 
         const marker = new google.maps.Marker({
           position: { lat: Number(h.CSVLat), lng: Number(h.CSVLng) },
@@ -281,7 +294,7 @@ const ChildMapApp = {
           icon,
           label: {
             text: String(h.ID),
-            color: isSelected ? "#d00" : "#555",
+            color: "#333",
             fontSize: "13px",
             fontWeight: "bold",
           },
@@ -296,13 +309,30 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // InfoWindow（モダンデザイン）
+    // 最後に会えた日付
+    // -----------------------------
+    getLastMetDate(records) {
+      if (!records || records.length === 0) return null;
+
+      const okWords = ["済", "在宅", "会えた"];
+
+      const met = records.filter(r =>
+        okWords.some(w => (r.Result || "").includes(w))
+      );
+
+      if (met.length === 0) return null;
+
+      met.sort((a, b) => (b.VisitDate || "").localeCompare(a.VisitDate || ""));
+      return met[0].VisitDate;
+    },
+
+    // -----------------------------
+    // InfoWindow（地図アプリリンク付き）
     // -----------------------------
     async focusOnMap(house) {
       this.focusedId = house.ID;
 
       await this.ensureMapInitialized();
-
       this.addAllMarkers(house.ID);
 
       const pos = {
@@ -312,6 +342,12 @@ const ChildMapApp = {
 
       this.map.panTo(pos);
       this.map.setZoom(17);
+
+      const addr = this.getDisplayAddress(house);
+      const lastMet = this.getLastMetDate(house.VRecord);
+
+      const gmapUrl = `https://www.google.com/maps?q=${pos.lat},${pos.lng}`;
+      const amapUrl = `https://maps.apple.com/?ll=${pos.lat},${pos.lng}`;
 
       const html = `
         <div style="
@@ -327,12 +363,20 @@ const ChildMapApp = {
           </div>
 
           <div style="color:#555; margin-bottom:4px;">
-            ${house.Address || ""}
+            ${addr}
           </div>
 
           <div style="font-size:12px; color:#777;">
             ステータス：${house.VisitStatus || "未訪問"}
           </div>
+
+          ${
+            lastMet
+              ? `<div style="font-size:12px; color:#007bff; margin-top:4px;">
+                   最後にお会いできた日：<strong>${lastMet}</strong>
+                 </div>`
+              : ""
+          }
 
           <hr style="margin:8px 0;">
 
@@ -347,10 +391,39 @@ const ChildMapApp = {
               border-radius:6px;
               font-size:13px;
               cursor:pointer;
+              margin-bottom:6px;
             "
           >
             ▶ この住戸カードへ移動
           </button>
+
+          <div style="display:flex; gap:6px;">
+            <a href="${gmapUrl}" target="_blank"
+              style="
+                flex:1;
+                text-align:center;
+                padding:6px 0;
+                background:#28a745;
+                color:white;
+                border-radius:6px;
+                font-size:12px;
+                text-decoration:none;
+              "
+            >Google Maps</a>
+
+            <a href="${amapUrl}" target="_blank"
+              style="
+                flex:1;
+                text-align:center;
+                padding:6px 0;
+                background:#555;
+                color:white;
+                border-radius:6px;
+                font-size:12px;
+                text-decoration:none;
+              "
+            >Apple Maps</a>
+          </div>
         </div>
       `;
 

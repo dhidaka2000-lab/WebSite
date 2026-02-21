@@ -5,7 +5,9 @@
   <title>子カード詳細</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- Bootstrap 4 CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
 
   <style>
@@ -52,7 +54,7 @@
       background-color: #6c757d;
     }
 
-    /* ★ 地図の高さ（初期値：中） */
+    /* 地図の高さ（初期値：中） */
     #mapContainer {
       width: 100%;
       height: 360px;
@@ -78,6 +80,7 @@
 <body class="bg-light">
   <div id="childMapApp" v-cloak class="container-fluid py-2">
 
+    <!-- ローディング -->
     <div v-if="loading" class="loading-overlay">
       <i class="fas fa-spinner fa-4x fa-spin text-secondary"></i>
     </div>
@@ -136,7 +139,7 @@
       <div v-show="mapOpen" class="p-0" style="overflow:hidden;">
         <div id="mapContainer"></div>
 
-        <!-- ★ 地図高さ変更ボタン -->
+        <!-- 地図高さ変更ボタン -->
         <div class="btn-group m-2" role="group">
           <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('small')">小</button>
           <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('medium')">中</button>
@@ -174,7 +177,9 @@
         <!-- 中央 -->
         <div class="flex-grow-1">
           <strong>{{ house.FamilyName || '（表札名なし）' }}さん</strong>
-          <div class="small text-muted">{{ house.Address || '住所未設定' }}</div>
+          <div class="small text-muted">
+            {{ getDisplayAddress(house) || '住所未設定' }}
+          </div>
         </div>
 
         <!-- 右 -->
@@ -198,7 +203,7 @@
         <div v-if="house.VRecord && house.VRecord.length > 0" class="visit-record-timeline">
           <div v-for="rec in sortedVRecord(house.VRecord)" :key="rec.ID" class="visit-record-item">
             <div class="small">
-              <strong>{{ rec.VisitDate || '-' }}</strong>（{{ rec.Minister || '-' }}）
+              <strong>{{ rec.VisitDate || '-' }}</strong>
             </div>
             <div class="small">結果: {{ rec.Result || '-' }}</div>
             <div class="small text-muted">メモ: {{ rec.Comment || '-' }}</div>
@@ -219,7 +224,9 @@
           </div>
 
           <div class="modal-body" v-if="selectedHouse">
-            <p class="small text-muted mb-1">{{ selectedHouse.Address }}</p>
+            <p class="small text-muted mb-1">
+              {{ getDisplayAddress(selectedHouse) }}
+            </p>
 
             <div class="form-group">
               <label>結果</label>
@@ -252,10 +259,14 @@
 
   </div>
 
+  <!-- Vue -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <!-- Bootstrap 4 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
@@ -267,6 +278,7 @@
     });
   </script>
 
+  <!-- ChildMap 本体 -->
   <script src="./ChildMap.js"></script>
 </body>
 </html>
