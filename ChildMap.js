@@ -1,4 +1,4 @@
-// ChildMap.js（Supabase＋Worker＋Google Maps 安定版）
+// ChildMap.js（2カラム＋地図アコーディオン＋色分けマーカー＋リッチInfoWindow＋アコーディオンカード）
 
 const ChildMapApp = {
   data() {
@@ -7,8 +7,12 @@ const ChildMapApp = {
       savingResult: false,
 
       map: null,
-      selectedHouse: null,
+      markers: [],
+      infoWindow: null,
       googleMapsLoaded: false,
+
+      mapOpen: false,
+      focusedHouseId: null,
 
       cardNo: null,
       childNo: null,
@@ -19,10 +23,10 @@ const ChildMapApp = {
       houses: [],
 
       openVisitHistoryIds: new Set(),
-      resultForm: {
-        result: "",
-        comment: "",
-      },
+      openHouseIds: new Set(),
+
+      selectedHouse: null,
+      resultForm: { result: "", comment: "" },
 
       searchQuery: "",
 
@@ -32,9 +36,7 @@ const ChildMapApp = {
 
   computed: {
     filteredHouses() {
-      if (!this.houses) return [];
       if (!this.searchQuery) return this.houses;
-
       const q = this.searchQuery.toLowerCase();
       return this.houses.filter((h) =>
         (h.Address || "").toLowerCase().includes(q) ||
@@ -55,13 +57,6 @@ const ChildMapApp = {
       }
       await this.fetchChildDetail();
       this.loading = false;
-    });
-
-    // ★ モーダルが開いた瞬間に地図を描画
-    $('#mapModal').on('shown.bs.modal', () => {
-      if (this.selectedHouse) {
-        this.initMapAfterModal();
-      }
     });
   },
 
@@ -93,12 +88,256 @@ const ChildMapApp = {
       });
 
       const data = await res.json();
-
       if (data.status === "success") {
         this.cardInfo = data.cardInfo;
         this.childInfo = data.childInfo;
         this.houses = data.houses;
       }
+    },
+
+    // -----------------------------
+    // 地図アコーディオン
+    // -----------------------------
+    toggleMap() {
+      this.mapOpen = !this.mapOpen;
+
+      if (this.mapOpen) {
+        this.$nextTick(async () => {
+          if (!this.map) {
+            await this.initMap();
+          } else {
+            google.maps.event.trigger(this.map, "resize");
+            this.map.setCenter(this.map.getCenter());
+          }
+        });
+      }
+    },
+
+    // -----------------------------
+    // Google Maps ロード
+    // -----------------------------
+    async loadGoogleMaps() {
+      if (this.googleMapsLoaded || window.google?.maps) {
+        this.googleMapsLoaded = true;
+        return;
+      }
+
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
+
+      const payload = { funcName: "getGoogleMapsUrl" };
+
+      const urlRes = await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const { mapUrl } = await urlRes.json();
+
+      await new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = mapUrl;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          this.googleMapsLoaded = true;
+          resolve();
+        };
+        document.head.appendChild(script);
+      });
+    },
+
+    // -----------------------------
+    // 地図初期化
+    // -----------------------------
+    async initMap() {
+      await this.loadGoogleMaps();
+
+      const first = this.houses[0];
+      const center = first?.CSVLat
+        ? { lat: Number(first.CSVLat), lng: Number(first.CSVLng) }
+        : { lat: 34.6937, lng: 135.5023 };
+
+      this.map = new google.maps.Map(
+        document.getElementById("mapContainer"),
+        {
+          center,
+          zoom: 16,
+          mapTypeControl: false,
+        }
+      );
+
+      this.infoWindow = new google.maps.InfoWindow();
+
+      this.addAllMarkers();
+      this.addCurrentLocationButton();
+    },
+
+    // -----------------------------
+    // マーカー色分け＋リッチInfoWindow
+    // -----------------------------
+    addAllMarkers() {
+      this.markers.forEach(m => m.setMap(null));
+      this.markers = [];
+
+      this.houses.forEach((h) => {
+        if (!h.CSVLat || !h.CSVLng) return;
+
+        const visited = !!h.VisitStatus;
+        const icon = visited
+          ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+          : "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
+
+        const marker = new google.maps.Marker({
+          position: { lat: Number(h.CSVLat), lng: Number(h.CSVLng) },
+          map: this.map,
+          icon,
+        });
+
+        marker.addListener("click", () => {
+          this.focusedHouseId = h.ID;
+          this.openHouseIds.add(h.ID);
+
+          const latest = this.getLatestVisit(h.VRecord || []);
+          const latestText = latest
+            ? `${latest.VisitDate} / ${latest.Result || "-"}`
+            : "訪問履歴なし";
+
+          const html = `
+            <div style="font-size:13px; max-width:220px;">
+              <strong>${h.FamilyName || "（表札なし）"}さん</strong><br>
+              <span>${h.Address || ""}</span><br>
+              <span>ステータス: ${h.VisitStatus || "未訪問"}</span><br>
+              <span>最新訪問: ${latestText}</span>
+            </div>
+          `;
+
+          this.infoWindow.setContent(html);
+          this.infoWindow.open(this.map, marker);
+
+          this.map.panTo(marker.getPosition());
+          this.scrollToHouse(h.ID);
+        });
+
+        this.markers.push(marker);
+      });
+    },
+
+    getLatestVisit(records) {
+      if (!records || records.length === 0) return null;
+      const sorted = [...records].sort((a, b) =>
+        (b.VisitDate || "").localeCompare(a.VisitDate || "")
+      );
+      return sorted[0];
+    },
+
+    // -----------------------------
+    // 現在地ボタン
+    // -----------------------------
+    addCurrentLocationButton() {
+      const controlDiv = document.createElement("div");
+      controlDiv.style.margin = "10px";
+
+      const button = document.createElement("button");
+      button.textContent = "現在地";
+      button.style.background = "#fff";
+      button.style.border = "2px solid #666";
+      button.style.padding = "6px 10px";
+      button.style.borderRadius = "4px";
+      button.style.cursor = "pointer";
+
+      button.onclick = () => {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const loc = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+
+          this.map.panTo(loc);
+          this.map.setZoom(17);
+
+          new google.maps.Marker({
+            position: loc,
+            map: this.map,
+            icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+          });
+        });
+      };
+
+      controlDiv.appendChild(button);
+      this.map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(controlDiv);
+    },
+
+    // -----------------------------
+    // カード側から地図へフォーカス
+    // -----------------------------
+    async focusOnMap(house) {
+      this.focusedHouseId = house.ID;
+      this.openHouseIds.add(house.ID);
+
+      if (!this.mapOpen) {
+        this.mapOpen = true;
+        await this.$nextTick();
+        if (!this.map) {
+          await this.initMap();
+        }
+      }
+
+      const targetMarker = this.markers.find(
+        (m) =>
+          m.getPosition().lat() === Number(house.CSVLat) &&
+          m.getPosition().lng() === Number(house.CSVLng)
+      );
+
+      if (targetMarker) {
+        this.map.panTo(targetMarker.getPosition());
+        this.map.setZoom(17);
+
+        const latest = this.getLatestVisit(house.VRecord || []);
+        const latestText = latest
+          ? `${latest.VisitDate} / ${latest.Result || "-"}`
+          : "訪問履歴なし";
+
+        const html = `
+          <div style="font-size:13px; max-width:220px;">
+            <strong>${house.FamilyName || "（表札なし）"}さん</strong><br>
+            <span>${house.Address || ""}</span><br>
+            <span>ステータス: ${house.VisitStatus || "未訪問"}</span><br>
+            <span>最新訪問: ${latestText}</span>
+          </div>
+        `;
+        this.infoWindow.setContent(html);
+        this.infoWindow.open(this.map, targetMarker);
+      }
+    },
+
+    scrollToHouse(houseId) {
+      this.$nextTick(() => {
+        const el = document.getElementById(`house-${houseId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("focused-house");
+          setTimeout(() => el.classList.remove("focused-house"), 1500);
+        }
+      });
+    },
+
+    // -----------------------------
+    // 訪問履歴タイムライン
+    // -----------------------------
+    sortedVRecord(records) {
+      if (!records) return [];
+      return [...records].sort((a, b) =>
+        (b.VisitDate || "").localeCompare(a.VisitDate || "")
+      );
+    },
+
+    isVisitHistoryOpen(id) {
+      return this.openVisitHistoryIds.has(id);
     },
 
     toggleVisitHistory(id) {
@@ -110,10 +349,25 @@ const ChildMapApp = {
       this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
     },
 
-    isVisitHistoryOpen(id) {
-      return this.openVisitHistoryIds.has(id);
+    // -----------------------------
+    // 住戸カードアコーディオン
+    // -----------------------------
+    isHouseOpen(id) {
+      return this.openHouseIds.has(id);
     },
 
+    toggleHouseAccordion(id) {
+      if (this.openHouseIds.has(id)) {
+        this.openHouseIds.delete(id);
+      } else {
+        this.openHouseIds.add(id);
+      }
+      this.openHouseIds = new Set(this.openHouseIds);
+    },
+
+    // -----------------------------
+    // 結果入力モーダル
+    // -----------------------------
     openResultModal(house) {
       this.selectedHouse = house;
       this.resultForm.result = "";
@@ -149,70 +403,14 @@ const ChildMapApp = {
       this.savingResult = false;
 
       await this.fetchChildDetail();
-    },
-
-    // -----------------------------
-    // Google Maps（認証付きロード）
-    // -----------------------------
-    async loadGoogleMaps() {
-      if (this.googleMapsLoaded) return;
-
-      const user = firebase.auth().currentUser;
-      const idToken = await user.getIdToken(true);
-
-      const payload = { funcName: "getGoogleMapsUrl" };
-
-      const urlRes = await fetch(this.apiEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + idToken,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const { mapUrl } = await urlRes.json();
-
-      await new Promise((resolve) => {
-        const script = document.createElement("script");
-        script.src = mapUrl;
-        script.onload = resolve;
-        document.head.appendChild(script);
-      });
-
-      this.googleMapsLoaded = true;
-    },
-
-    async openMapModal(house) {
-      this.selectedHouse = house;
-      $("#mapModal").modal("show");
-    },
-
-    async initMapAfterModal() {
-      await this.loadGoogleMaps();
-
-      const lat = Number(this.selectedHouse.CSVLat);
-      const lng = Number(this.selectedHouse.CSVLng);
-
-      if (!lat || !lng) {
-        console.warn("座標がありません:", this.selectedHouse);
-        return;
+      if (this.map) {
+        this.addAllMarkers();
       }
-
-      this.map = new google.maps.Map(
-        document.getElementById("mapModalContainer"),
-        {
-          center: { lat, lng },
-          zoom: 18,
-        }
-      );
-
-      new google.maps.Marker({
-        position: { lat, lng },
-        map: this.map,
-      });
     },
 
+    // -----------------------------
+    // ページ遷移
+    // -----------------------------
     goBackToMyPage() {
       window.location.href = "./AssignmentList.html";
     },
