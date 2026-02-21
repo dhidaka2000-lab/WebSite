@@ -1,4 +1,4 @@
-// ChildMap.js（完全版：UI刷新・固定カラム・フォント+6px・アイコン・住所生成・InfoWindow地図リンク・訪問ステータス色分け・安定版）
+// ChildMap.js（完全版：住所2行構成・固定カラム幅・フォント+6px・アイコン+6px・InfoWindow地図リンク）
 
 const ChildMapApp = {
   data() {
@@ -71,24 +71,33 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 住所生成
+    // 住所を 2 行に分割して返す
     // -----------------------------
-    getDisplayAddress(house) {
-      if (!house) return "";
+    getAddressLines(house) {
+      if (!house) return { line1: "", line2: "" };
 
-      let base = "";
+      let line1 = "";
+      let line2 = "";
 
+      // 1行目：町名＋丁目＋番地
       if (house.AddressSW === "リストから選択") {
-        base = `${house.CSVTownName || ""}${house.CSVCho || ""}${house.CSVBanchi || ""}`;
+        line1 = `${house.CSVTownName || ""}${house.CSVCho || ""}${house.CSVBanchi || ""}`;
       } else if (house.AddressSW === "直接入力") {
-        base = `${house.InputTownName || ""}${house.InputCho || ""}${house.InputBanchi || ""}`;
+        line1 = `${house.InputTownName || ""}${house.InputCho || ""}${house.InputBanchi || ""}`;
       }
 
+      // 2行目：建物名＋部屋番号
       if (house.BuildingName || house.RoomNo) {
-        base += ` ${house.BuildingName || ""}${house.RoomNo ? house.RoomNo + "号室" : ""}`;
+        line2 = `${house.BuildingName || ""}${house.RoomNo ? house.RoomNo + "号室" : ""}`;
       }
 
-      return base;
+      return { line1, line2 };
+    },
+
+    // 検索用（1行にまとめた住所）
+    getDisplayAddress(house) {
+      const a = this.getAddressLines(house);
+      return a.line1 + (a.line2 ? " " + a.line2 : "");
     },
 
     // -----------------------------
@@ -181,7 +190,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // initMap（安定版）
+    // initMap
     // -----------------------------
     async ensureMapInitialized() {
       await this.loadGoogleMaps();
@@ -225,7 +234,7 @@ const ChildMapApp = {
       button.style.padding = "6px 10px";
       button.style.borderRadius = "4px";
       button.style.cursor = "pointer";
-      button.style.fontSize = "18px";
+      button.style.fontSize = "20px";
 
       button.onclick = () => {
         navigator.geolocation.getCurrentPosition((pos) => {
@@ -264,7 +273,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // マーカー色（訪問ステータス）
+    // マーカー色
     // -----------------------------
     addAllMarkers(selectedId) {
       this.markers.forEach(m => m.setMap(null));
@@ -273,7 +282,7 @@ const ChildMapApp = {
       this.houses.forEach((h) => {
         if (!h.CSVLat || !h.CSVLng) return;
 
-        let color = "#FFD700"; // 不在（黄）
+        let color = "#FFD700"; // 不在
 
         const status = (h.VisitStatus || "").trim();
 
@@ -300,7 +309,7 @@ const ChildMapApp = {
           label: {
             text: String(h.ID),
             color: "#333",
-            fontSize: "19px", // 13px + 6px
+            fontSize: "19px",
             fontWeight: "bold",
           },
         });
@@ -332,7 +341,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // InfoWindow（地図アプリリンク付き）
+    // InfoWindow（住所2行構成）
     // -----------------------------
     async focusOnMap(house) {
       this.focusedId = house.ID;
@@ -348,7 +357,7 @@ const ChildMapApp = {
       this.map.panTo(pos);
       this.map.setZoom(17);
 
-      const addr = this.getDisplayAddress(house);
+      const addr = this.getAddressLines(house);
       const lastMet = this.getLastMetDate(house.VRecord);
 
       const gmapUrl = `https://www.google.com/maps?q=${pos.lat},${pos.lng}`;
@@ -367,11 +376,16 @@ const ChildMapApp = {
             ${house.FamilyName || "（表札名なし）"}${house.FamilyName ? "さん" : ""}
           </div>
 
-          <div style="color:#555; margin-bottom:6px; font-size:21px;">
-            ${addr}
+          <div style="color:#555; font-size:21px;">
+            ${addr.line1}
           </div>
+          ${
+            addr.line2
+              ? `<div style="color:#555; font-size:21px;">${addr.line2}</div>`
+              : ""
+          }
 
-          <div style="font-size:19px; color:#777;">
+          <div style="font-size:19px; color:#777; margin-top:6px;">
             ステータス：${house.VisitStatus || "未訪問"}
           </div>
 
