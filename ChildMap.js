@@ -1,4 +1,4 @@
-// ChildMap.js（IDボタン連動＋全件灰色●＋選択だけ赤ピン＋InfoWindow＋訪問履歴アコーディオン）
+// ChildMap.js（IDボタン連動＋全件灰色●＋選択だけ赤ピン＋IDラベル＋InfoWindow最新3件＋訪問履歴アコーディオン）
 
 const ChildMapApp = {
   data() {
@@ -12,7 +12,7 @@ const ChildMapApp = {
       googleMapsLoaded: false,
 
       mapOpen: false,
-      focusedId: null,   // ← ★ house.ID を使う
+      focusedId: null,
 
       cardNo: null,
       childNo: null,
@@ -60,9 +60,6 @@ const ChildMapApp = {
   },
 
   methods: {
-    // -----------------------------
-    // URL パラメータ
-    // -----------------------------
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
       this.cardNo = params.get("cardNo");
@@ -70,9 +67,6 @@ const ChildMapApp = {
       this.loginUser = params.get("loginUser");
     },
 
-    // -----------------------------
-    // 子カード詳細取得
-    // -----------------------------
     async fetchChildDetail() {
       const user = firebase.auth().currentUser;
       const idToken = await user.getIdToken(true);
@@ -100,9 +94,6 @@ const ChildMapApp = {
       }
     },
 
-    // -----------------------------
-    // 地図アコーディオン
-    // -----------------------------
     toggleMap() {
       this.mapOpen = !this.mapOpen;
 
@@ -118,9 +109,6 @@ const ChildMapApp = {
       }
     },
 
-    // -----------------------------
-    // Google Maps ロード
-    // -----------------------------
     async loadGoogleMaps() {
       if (this.googleMapsLoaded || window.google?.maps) {
         this.googleMapsLoaded = true;
@@ -156,9 +144,6 @@ const ChildMapApp = {
       });
     },
 
-    // -----------------------------
-    // 地図初期化（全件プロット）
-    // -----------------------------
     async initMap() {
       await this.loadGoogleMaps();
 
@@ -178,13 +163,11 @@ const ChildMapApp = {
 
       this.infoWindow = new google.maps.InfoWindow();
 
-      this.addAllMarkers(null); // 初期状態は全件グレー
+      this.addAllMarkers(null);
       this.addCurrentLocationButton();
     },
 
-    // -----------------------------
-    // 全件プロット（選択時だけ赤ピン）
-    // -----------------------------
+    // ★ マーカーに ID ラベルを付ける
     addAllMarkers(selectedId) {
       this.markers.forEach(m => m.setMap(null));
       this.markers = [];
@@ -208,209 +191,21 @@ const ChildMapApp = {
           position: { lat: Number(h.CSVLat), lng: Number(h.CSVLng) },
           map: this.map,
           icon,
+          label: {
+            text: String(h.ID),
+            color: isSelected ? "#d00" : "#555",
+            fontSize: "12px",
+            fontWeight: "bold",
+          },
         });
 
         marker.addListener("click", () => {
           this.focusOnMap(h);
+          this.scrollToHouse(h.ID);
         });
 
         this.markers.push(marker);
       });
     },
 
-    // -----------------------------
-    // ID ボタン → 地図フォーカス
-    // -----------------------------
-    async focusOnMap(house) {
-      this.focusedId = house.ID;
-
-      if (!this.mapOpen) {
-        this.mapOpen = true;
-        await this.$nextTick();
-        if (!this.map) {
-          await this.initMap();
-        }
-      }
-
-      // ★ 全件再描画（選択だけ赤）
-      this.addAllMarkers(house.ID);
-
-      const pos = {
-        lat: Number(house.CSVLat),
-        lng: Number(house.CSVLng),
-      };
-
-      this.map.panTo(pos);
-      this.map.setZoom(17);
-
-      const latest = this.getLatestVisit(house.VRecord || []);
-      const latestText = latest
-        ? `${latest.VisitDate} / ${latest.Result || "-"}`
-        : "訪問履歴なし";
-
-      const html = `
-        <div style="font-size:13px; max-width:220px;">
-          <strong>${house.FamilyName || "（表札なし）"}さん</strong><br>
-          <span>${house.Address || ""}</span><br>
-          <span>ステータス: ${house.VisitStatus || "未訪問"}</span><br>
-          <span>最新訪問: ${latestText}</span>
-        </div>
-      `;
-      this.infoWindow.setContent(html);
-      this.infoWindow.setPosition(pos);
-      this.infoWindow.open(this.map);
-
-      this.scrollToHouse(house.ID);
-    },
-
-    // -----------------------------
-    // 最新訪問取得
-    // -----------------------------
-    getLatestVisit(records) {
-      if (!records || records.length === 0) return null;
-      const sorted = [...records].sort((a, b) =>
-        (b.VisitDate || "").localeCompare(a.VisitDate || "")
-      );
-      return sorted[0];
-    },
-
-    // -----------------------------
-    // 現在地ボタン
-    // -----------------------------
-    addCurrentLocationButton() {
-      const controlDiv = document.createElement("div");
-      controlDiv.style.margin = "10px";
-
-      const button = document.createElement("button");
-      button.textContent = "現在地";
-      button.style.background = "#fff";
-      button.style.border = "2px solid #666";
-      button.style.padding = "6px 10px";
-      button.style.borderRadius = "4px";
-      button.style.cursor = "pointer";
-
-      button.onclick = () => {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          const loc = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          };
-
-          this.map.panTo(loc);
-          this.map.setZoom(17);
-
-          new google.maps.Marker({
-            position: loc,
-            map: this.map,
-            icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
-          });
-        });
-      };
-
-      controlDiv.appendChild(button);
-      this.map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(controlDiv);
-    },
-
-    // -----------------------------
-    // カードへスクロール
-    // -----------------------------
-    scrollToHouse(id) {
-      this.$nextTick(() => {
-        const el = document.getElementById(`house-${id}`);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-          el.classList.add("focused-house");
-          setTimeout(() => el.classList.remove("focused-house"), 1500);
-        }
-      });
-    },
-
-    // -----------------------------
-    // 訪問履歴アコーディオン
-    // -----------------------------
-    sortedVRecord(records) {
-      if (!records) return [];
-      return [...records].sort((a, b) =>
-        (b.VisitDate || "").localeCompare(a.VisitDate || "")
-      );
-    },
-
-    isVisitHistoryOpen(id) {
-      return this.openVisitHistoryIds.has(id);
-    },
-
-    toggleVisitHistory(id) {
-      if (this.openVisitHistoryIds.has(id)) {
-        this.openVisitHistoryIds.delete(id);
-      } else {
-        this.openVisitHistoryIds.add(id);
-      }
-      this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
-    },
-
-    // -----------------------------
-    // 結果入力モーダル
-    // -----------------------------
-    openResultModal(house) {
-      this.selectedHouse = house;
-      this.resultForm.result = "";
-      this.resultForm.comment = "";
-      $("#resultModal").modal("show");
-    },
-
-    async submitResult() {
-      this.savingResult = true;
-
-      const user = firebase.auth().currentUser;
-      const idToken = await user.getIdToken(true);
-
-      const payload = {
-        funcName: "upsertVisitRecord",
-        cardNo: this.cardNo,
-        childNo: this.childNo,
-        houseId: this.selectedHouse.ID,
-        result: this.resultForm.result,
-        comment: this.resultForm.comment,
-      };
-
-      await fetch(this.apiEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + idToken,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      $("#resultModal").modal("hide");
-      this.savingResult = false;
-
-      await this.fetchChildDetail();
-      if (this.map) {
-        this.addAllMarkers(null);
-      }
-    },
-
-    // -----------------------------
-    // ページ遷移
-    // -----------------------------
-    goBackToMyPage() {
-      window.location.href = "./AssignmentList.html";
-    },
-
-    goHome() {
-      window.location.href = "./mainMenu.html";
-    },
-
-    async logout() {
-      try {
-        await firebase.auth().signOut();
-      } catch (e) {
-        console.error(e);
-      }
-      window.location.href = "./index.html";
-    },
-  },
-};
-
-window.childMapApp = Vue.createApp(ChildMapApp).mount("#childMapApp");
+    //
