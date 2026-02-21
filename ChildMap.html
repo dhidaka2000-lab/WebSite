@@ -310,18 +310,18 @@
             </span>
           </div>
 
+          <!-- BadFlag -->
+          <div class="col-bad">
+            <i v-if="house.BadFlag === 'Good'" class="fas fa-check-circle" style="color:#00aa55; font-size:20px;"></i>
+            <i v-if="house.BadFlag === 'Bad'" class="fas fa-exclamation-triangle" style="color:#cc0000; font-size:20px;"></i>
+          </div>
+          
           <!-- 住所（2行構成） -->
           <div class="col-address">
             <span class="address-text">{{ getAddressLines(house).line1 }}</span>
             <span class="address-text" v-if="getAddressLines(house).line2">
               {{ getAddressLines(house).line2 }}
             </span>
-          </div>
-
-          <!-- BadFlag -->
-          <div class="col-bad">
-            <i v-if="house.BadFlag === 'Good'" class="fas fa-check-circle" style="color:#00aa55; font-size:20px;"></i>
-            <i v-if="house.BadFlag === 'Bad'" class="fas fa-exclamation-triangle" style="color:#cc0000; font-size:20px;"></i>
           </div>
 
           <!-- 結果入力 -->
