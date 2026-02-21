@@ -163,17 +163,17 @@
       :key="house.ID"
       :id="`house-${house.ID}`"
       class="card card-house"
-      :class="{ 'focused-house': focusedHouseId === house.ID }"
+      :class="{ 'focused-house': focusedId === house.ID }"
     >
-      <!-- ★ カードヘッダー（左に housing_no ボタン、右に2ボタン） -->
+      <!-- ★ カードヘッダー（左に ID ボタン、右に2ボタン） -->
       <div class="card-header py-2 d-flex justify-content-between align-items-center">
 
-        <!-- 左：housing_no ボタン -->
+        <!-- 左：ID ボタン -->
         <button
           class="house-no-btn mr-2"
           @click="focusOnMap(house)"
         >
-          {{ house.HousingNo }}
+          {{ house.ID }}
         </button>
 
         <!-- 中央：世帯名＋住所 -->

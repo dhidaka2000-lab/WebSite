@@ -1,4 +1,4 @@
-// ChildMap.js（1カラム＋全件プロット＋選択だけ赤ピン＋InfoWindow＋訪問履歴アコーディオン）
+// ChildMap.js（IDボタン連動＋全件灰色●＋選択だけ赤ピン＋InfoWindow＋訪問履歴アコーディオン）
 
 const ChildMapApp = {
   data() {
@@ -12,7 +12,7 @@ const ChildMapApp = {
       googleMapsLoaded: false,
 
       mapOpen: false,
-      focusedHouseId: null,
+      focusedId: null,   // ← ★ house.ID を使う
 
       cardNo: null,
       childNo: null,
@@ -219,10 +219,10 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // housing_no ボタン → 地図フォーカス
+    // ID ボタン → 地図フォーカス
     // -----------------------------
     async focusOnMap(house) {
-      this.focusedHouseId = house.ID;
+      this.focusedId = house.ID;
 
       if (!this.mapOpen) {
         this.mapOpen = true;
@@ -314,9 +314,9 @@ const ChildMapApp = {
     // -----------------------------
     // カードへスクロール
     // -----------------------------
-    scrollToHouse(houseId) {
+    scrollToHouse(id) {
       this.$nextTick(() => {
-        const el = document.getElementById(`house-${houseId}`);
+        const el = document.getElementById(`house-${id}`);
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
           el.classList.add("focused-house");
