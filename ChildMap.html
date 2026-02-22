@@ -89,7 +89,7 @@
       border: 2px solid #333;
       background: white;
       color: #333;
-      font-size: 20px; /* +6px */
+      font-size: 20px;
       width: 100%;
     }
 
@@ -97,25 +97,25 @@
     .pill-status {
       padding: 4px 10px;
       border-radius: 999px;
-      font-size: 18px; /* +6px */
+      font-size: 18px;
       font-weight: bold;
       display: inline-block;
       width: 100%;
     }
 
-    /* アイコン（8px → 14px） */
+    /* アイコン */
     .icon-8 {
       font-size: 14px;
       margin-right: 4px;
     }
 
-    /* 表札名 +6px */
+    /* 表札名 */
     .family-name {
       font-size: 20px;
       font-weight: bold;
     }
 
-    /* 住所 +6px */
+    /* 住所 */
     .address-text {
       font-size: 20px;
       color: #555;
@@ -143,6 +143,15 @@
       box-shadow: none !important;
       font-size: 20px;
     }
+
+    /* 子カード情報（横並び） */
+    .child-info-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      font-size: 20px;
+      align-items: center;
+    }
   </style>
 </head>
 
@@ -154,47 +163,48 @@
       <i class="fas fa-spinner fa-4x fa-spin text-secondary"></i>
     </div>
 
-    <!-- ヘッダー -->
+    <!-- ヘッダー（終了削除・ホーム右端・タイトル位置調整） -->
     <header class="sticky-top bg-white mb-2 py-2 border-bottom">
       <div class="d-flex justify-content-between align-items-center">
 
-        <div class="d-flex">
+        <!-- 左：戻る -->
+        <div class="d-flex align-items-center">
           <button class="btn btn-link p-0 text-center mr-3" @click="goBackToMyPage">
             <div><i class="fas fa-arrow-circle-left fa-2x"></i></div>
             <div class="small">戻る</div>
           </button>
 
-          <button class="btn btn-link p-0 text-center mr-3" @click="goHome">
+          <!-- タイトル（戻るボタンから36px右） -->
+          <div style="margin-left:36px;">
+            <div class="small text-muted">
+              区域カード {{ childInfo?.CardNo ?? '' }} - {{ childInfo?.ChildNo ?? '' }}
+            </div>
+            <div class="font-weight-bold" style="font-size:20px;">
+              {{ childInfo?.Block || '-' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 右：ホーム -->
+        <div>
+          <button class="btn btn-link p-0 text-center" @click="goHome">
             <div><i class="fas fa-home fa-2x"></i></div>
             <div class="small">ホーム</div>
           </button>
-
-          <button class="btn btn-link p-0 text-center" @click="logout">
-            <div><i class="fas fa-door-open fa-2x"></i></div>
-            <div class="small">終了</div>
-          </button>
-        </div>
-
-        <div class="text-right">
-          <div class="small text-muted">
-            区域カード {{ childInfo?.CardNo ?? '' }} - {{ childInfo?.ChildNo ?? '' }}
-          </div>
-          <div class="font-weight-bold">
-            {{ childInfo?.Block || '子カード' }}
-          </div>
         </div>
 
       </div>
     </header>
 
-    <!-- 子カード情報 -->
+    <!-- 子カード情報（横一列） -->
     <div class="card mb-2">
       <div class="card-body py-2">
-        <h5 class="card-title mb-1">子カード情報</h5>
-        <p class="mb-1"><strong>区域カード:</strong> {{ childInfo?.CardNo ?? '' }} - {{ childInfo?.ChildNo ?? '' }}</p>
-        <p class="mb-1"><strong>子カード名:</strong> {{ childInfo?.Block || '-' }}</p>
-        <p class="mb-1"><strong>奉仕者名:</strong> {{ childInfo?.Minister || '-' }}</p>
-        <p class="mb-0"><strong>返却期日:</strong> {{ childInfo?.LimitDate || '-' }}</p>
+        <div class="child-info-row">
+          <div><strong>区域カード:</strong> {{ childInfo?.CardNo ?? '' }}-{{ childInfo?.ChildNo ?? '' }}</div>
+          <div><strong>子カード名:</strong> {{ childInfo?.Block || '-' }}</div>
+          <div><strong>奉仕者名:</strong> {{ ministerName }}</div>
+          <div><strong>返却期日:</strong> {{ childInfo?.LimitDate || '-' }}</div>
+        </div>
       </div>
     </div>
 
@@ -246,11 +256,6 @@
             <button class="house-no-btn" @click="scrollToMapAndFocus(house)">
               {{ house.ID }}
             </button>
-          </div>
-
-          <!-- NGFlag -->
-          <div class="col-ng">
-            <i v-if="house.NGFlag === '不可'" class="fas fa-ban icon-8" style="color:#cc0000;"></i>
           </div>
 
           <!-- YoungerGENFlag -->
@@ -310,18 +315,23 @@
             </span>
           </div>
 
-          <!-- BadFlag -->
-          <div class="col-bad">
-            <i v-if="house.BadFlag === 'Good'" class="fas fa-check-circle" style="color:#00aa55; font-size:20px;"></i>
-            <i v-if="house.BadFlag === 'Bad'" class="fas fa-exclamation-triangle" style="color:#cc0000; font-size:20px;"></i>
+          <!-- NGFlag（ピルの後ろへ移動） -->
+          <div class="col-ng">
+            <i v-if="house.NGFlag === '不可'" class="fas fa-ban icon-8" style="color:#cc0000;"></i>
           </div>
-          
+
           <!-- 住所（2行構成） -->
           <div class="col-address">
             <span class="address-text">{{ getAddressLines(house).line1 }}</span>
             <span class="address-text" v-if="getAddressLines(house).line2">
               {{ getAddressLines(house).line2 }}
             </span>
+          </div>
+
+          <!-- BadFlag -->
+          <div class="col-bad">
+            <i v-if="house.BadFlag === 'Good'" class="fas fa-check-circle" style="color:#00aa55; font-size:20px;"></i>
+            <i v-if="house.BadFlag === 'Bad'" class="fas fa-exclamation-triangle" style="color:#cc0000; font-size:20px;"></i>
           </div>
 
           <!-- 結果入力 -->

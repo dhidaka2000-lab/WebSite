@@ -1,4 +1,4 @@
-// ChildMap.js（完全版：住所2行構成・固定カラム幅・フォント+6px・アイコン+6px・InfoWindow地図リンク）
+// ChildMap.js（完全版：住所2行構成・cho/banchiハイフン・user_master対応・InfoWindow -3px）
 
 const ChildMapApp = {
   data() {
@@ -21,6 +21,7 @@ const ChildMapApp = {
       cardInfo: {},
       childInfo: {},
       houses: [],
+      userMaster: [],   // ← user_master を保持
 
       openVisitHistoryIds: new Set(),
 
@@ -43,6 +44,15 @@ const ChildMapApp = {
         this.getDisplayAddress(h).toLowerCase().includes(q)
       );
     },
+
+    // 奉仕者名（user_master から取得）
+    ministerName() {
+      if (!this.childInfo?.Minister) return "-";
+      const m = this.userMaster.find(
+        u => String(u.ID) === String(this.childInfo.Minister)
+      );
+      return m ? m.UserName : "-";
+    }
   },
 
   mounted() {
@@ -71,7 +81,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 住所を 2 行に分割して返す
+    // 住所を 2 行に分割（cho と banchi の間はハイフン）
     // -----------------------------
     getAddressLines(house) {
       if (!house) return { line1: "", line2: "" };
@@ -79,11 +89,17 @@ const ChildMapApp = {
       let line1 = "";
       let line2 = "";
 
-      // 1行目：町名＋丁目＋番地
+      // 1行目：町名 + 丁目 + 番地（cho と banchi の間はハイフン）
       if (house.AddressSW === "リストから選択") {
-        line1 = `${house.CSVTownName || ""}${house.CSVCho || ""}${house.CSVBanchi || ""}`;
+        const cho = house.CSVCho || "";
+        const banchi = house.CSVBanchi || "";
+        const hyphen = cho && banchi ? "-" : "";
+        line1 = `${house.CSVTownName || ""}${cho}${hyphen}${banchi}`;
       } else if (house.AddressSW === "直接入力") {
-        line1 = `${house.InputTownName || ""}${house.InputCho || ""}${house.InputBanchi || ""}`;
+        const cho = house.InputCho || "";
+        const banchi = house.InputBanchi || "";
+        const hyphen = cho && banchi ? "-" : "";
+        line1 = `${house.InputTownName || ""}${cho}${hyphen}${banchi}`;
       }
 
       // 2行目：建物名＋部屋番号
@@ -101,7 +117,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 子カード詳細取得
+    // 子カード詳細取得（user_master を含む）
     // -----------------------------
     async fetchChildDetail() {
       const user = firebase.auth().currentUser;
@@ -127,6 +143,7 @@ const ChildMapApp = {
         this.cardInfo = data.cardInfo;
         this.childInfo = data.childInfo;
         this.houses = data.houses;
+        this.userMaster = data.userMaster || [];   // ← ここで user_master を受け取る
       }
     },
 
@@ -220,6 +237,12 @@ const ChildMapApp = {
       this.addCurrentLocationButton();
     },
 
+          this.infoWindow = new google.maps.InfoWindow();
+
+      this.addAllMarkers(null);
+      this.addCurrentLocationButton();
+    },
+
     // -----------------------------
     // 現在地ボタン
     // -----------------------------
@@ -234,7 +257,7 @@ const ChildMapApp = {
       button.style.padding = "6px 10px";
       button.style.borderRadius = "4px";
       button.style.cursor = "pointer";
-      button.style.fontSize = "20px";
+      button.style.fontSize = "17px"; // -3px
 
       button.onclick = () => {
         navigator.geolocation.getCurrentPosition((pos) => {
@@ -309,7 +332,7 @@ const ChildMapApp = {
           label: {
             text: String(h.ID),
             color: "#333",
-            fontSize: "19px",
+            fontSize: "16px", // -3px
             fontWeight: "bold",
           },
         });
@@ -341,7 +364,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // InfoWindow（住所2行構成）
+    // InfoWindow（フォント -3px）
     // -----------------------------
     async focusOnMap(house) {
       this.focusedId = house.ID;
@@ -365,33 +388,33 @@ const ChildMapApp = {
 
       const html = `
         <div style="
-          font-size:21px;
+          font-size:18px;
           max-width:260px;
           padding:12px 14px;
           border-radius:10px;
           box-shadow:0 2px 8px rgba(0,0,0,0.15);
           line-height:1.5;
         ">
-          <div style="font-weight:bold; font-size:23px; margin-bottom:6px;">
+          <div style="font-weight:bold; font-size:20px; margin-bottom:6px;">
             ${house.FamilyName || "（表札名なし）"}${house.FamilyName ? "さん" : ""}
           </div>
 
-          <div style="color:#555; font-size:21px;">
+          <div style="color:#555; font-size:18px;">
             ${addr.line1}
           </div>
           ${
             addr.line2
-              ? `<div style="color:#555; font-size:21px;">${addr.line2}</div>`
+              ? `<div style="color:#555; font-size:18px;">${addr.line2}</div>`
               : ""
           }
 
-          <div style="font-size:19px; color:#777; margin-top:6px;">
+          <div style="font-size:16px; color:#777; margin-top:6px;">
             ステータス：${house.VisitStatus || "未訪問"}
           </div>
 
           ${
             lastMet
-              ? `<div style="font-size:19px; color:#007bff; margin-top:6px;">
+              ? `<div style="font-size:16px; color:#007bff; margin-top:6px;">
                    最後にお会いできた日：<strong>${lastMet}</strong>
                  </div>`
               : ""
@@ -408,7 +431,7 @@ const ChildMapApp = {
               color:white;
               border:none;
               border-radius:6px;
-              font-size:21px;
+              font-size:18px;
               cursor:pointer;
               margin-bottom:8px;
             "
@@ -425,7 +448,7 @@ const ChildMapApp = {
                 background:#28a745;
                 color:white;
                 border-radius:6px;
-                font-size:19px;
+                font-size:16px;
                 text-decoration:none;
               "
             >Google Maps</a>
@@ -438,7 +461,7 @@ const ChildMapApp = {
                 background:#555;
                 color:white;
                 border-radius:6px;
-                font-size:19px;
+                font-size:16px;
                 text-decoration:none;
               "
             >Apple Maps</a>
