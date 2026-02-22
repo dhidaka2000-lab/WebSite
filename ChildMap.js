@@ -681,8 +681,8 @@ const ChildMapApp = {
         // visit_record（平文）
         card_no: this.cardInfo.CardNo,
         child_no: this.childInfo.ChildNo,
-        housing_no: this.selectedHouse.ID,
-        id: this.selectedHouse.ID,   // ★ 追加（Worker が必要としている）
+        housing_no: this.selectedHouse.housing_no,  // ★ 修正
+        id: this.selectedHouse.housing_no,          // ★ Worker が必要としている
 
         visit_date: this.resultForm.visit_date,
 
@@ -696,10 +696,8 @@ const ChildMapApp = {
         term: this.childInfo.ChildTerm,
 
         // detail UPDATE（ng_flag + VisitStatus）
-        detailUpdate: {   // ★ 修正（detail_update → detailUpdate）
-          card_no: this.cardInfo.CardNo,
-          child_no: this.childInfo.ChildNo,
-          id: this.selectedHouse.ID,
+        detailUpdate: {   // ★ camelCase に統一
+          row_id: this.selectedHouse.row_id,        // ★ 主キー
           ng_flag: this.resultForm.ng_flag,
           visit_status: visitStatus
         }
