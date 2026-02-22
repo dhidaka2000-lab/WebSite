@@ -237,12 +237,6 @@ const ChildMapApp = {
       this.addCurrentLocationButton();
     },
 
-          this.infoWindow = new google.maps.InfoWindow();
-
-      this.addAllMarkers(null);
-      this.addCurrentLocationButton();
-    },
-
     // -----------------------------
     // 現在地ボタン
     // -----------------------------
