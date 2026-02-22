@@ -1,4 +1,8 @@
-// ChildMap.js（完全版：住所2行構成・cho/banchiハイフン・user_master対応・InfoWindow -3px）
+// ChildMap.js（完全版）
+// ・住所2行構成（cho-banchiはハイフン）
+// ・user_masterからministerName取得
+// ・InfoWindowフォント -3px
+// ・結果入力モーダル：visit_record + detail 更新仕様対応
 
 const ChildMapApp = {
   data() {
@@ -21,12 +25,19 @@ const ChildMapApp = {
       cardInfo: {},
       childInfo: {},
       houses: [],
-      userMaster: [],   // ← user_master を保持
+      userMaster: [],
 
       openVisitHistoryIds: new Set(),
 
       selectedHouse: null,
-      resultForm: { result: "", comment: "" },
+      resultForm: {
+        visitDate: "",
+        time: "",
+        field: "訪問",
+        result: "",
+        note: "",
+        ng_flag: ""
+      },
 
       searchQuery: "",
 
@@ -52,7 +63,35 @@ const ChildMapApp = {
         u => String(u.ID) === String(this.childInfo.Minister)
       );
       return m ? m.UserName : "-";
-    }
+    },
+
+    // 方法の選択肢
+    methodOptions() {
+      return [
+        { value: "訪問", label: "訪問" },
+        { value: "ｷｬﾝﾍﾟｰﾝ", label: "キャンペーン" },
+        { value: "手紙", label: "手紙" },
+        { value: "電話", label: "電話" },
+        { value: "その他", label: "その他" },
+      ];
+    },
+
+    // 方法に応じた結果の選択肢
+    resultOptions() {
+      const f = this.resultForm.field;
+      if (f === "訪問") {
+        return ["不在", "済"];
+      } else if (f === "ｷｬﾝﾍﾟｰﾝ") {
+        return ["不在", "済", "済(投函)", "済(留守録)", "その他"];
+      } else if (f === "手紙") {
+        return ["不在", "済(投函)"];
+      } else if (f === "電話") {
+        return ["不在", "済", "済(留守録)"];
+      } else if (f === "その他") {
+        return ["不在", "済", "済(投函)", "済(留守録)", "その他"];
+      }
+      return [];
+    },
   },
 
   mounted() {
@@ -89,7 +128,6 @@ const ChildMapApp = {
       let line1 = "";
       let line2 = "";
 
-      // 1行目：町名 + 丁目 + 番地（cho と banchi の間はハイフン）
       if (house.AddressSW === "リストから選択") {
         const cho = house.CSVCho || "";
         const banchi = house.CSVBanchi || "";
@@ -102,7 +140,6 @@ const ChildMapApp = {
         line1 = `${house.InputTownName || ""}${cho}${hyphen}${banchi}`;
       }
 
-      // 2行目：建物名＋部屋番号
       if (house.BuildingName || house.RoomNo) {
         line2 = `${house.BuildingName || ""}${house.RoomNo ? house.RoomNo + "号室" : ""}`;
       }
@@ -143,7 +180,7 @@ const ChildMapApp = {
         this.cardInfo = data.cardInfo;
         this.childInfo = data.childInfo;
         this.houses = data.houses;
-        this.userMaster = data.userMaster || [];   // ← ここで user_master を受け取る
+        this.userMaster = data.userMaster || [];
       }
     },
 
@@ -251,7 +288,7 @@ const ChildMapApp = {
       button.style.padding = "6px 10px";
       button.style.borderRadius = "4px";
       button.style.cursor = "pointer";
-      button.style.fontSize = "17px"; // -3px
+      button.style.fontSize = "17px";
 
       button.onclick = () => {
         navigator.geolocation.getCurrentPosition((pos) => {
@@ -300,7 +337,6 @@ const ChildMapApp = {
         if (!h.CSVLat || !h.CSVLng) return;
 
         let color = "#FFD700"; // 不在
-
         const status = (h.VisitStatus || "").trim();
 
         if (status.includes("済") || status.includes("在宅")) {
@@ -326,7 +362,7 @@ const ChildMapApp = {
           label: {
             text: String(h.ID),
             color: "#333",
-            fontSize: "16px", // -3px
+            fontSize: "16px",
             fontWeight: "bold",
           },
         });
@@ -526,12 +562,32 @@ const ChildMapApp = {
     // -----------------------------
     openResultModal(house) {
       this.selectedHouse = house;
+
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+
+      this.resultForm.visitDate = `${yyyy}-${mm}-${dd}`;
+      this.resultForm.time = "";
+      this.resultForm.field = "訪問";
       this.resultForm.result = "";
-      this.resultForm.comment = "";
+      this.resultForm.note = "";
+      this.resultForm.ng_flag = "";
+
       $("#resultModal").modal("show");
     },
 
     async submitResult() {
+      if (!this.resultForm.visitDate) {
+        alert("訪問日を入力してください。");
+        return;
+      }
+      if (!this.resultForm.field || !this.resultForm.result) {
+        alert("方法と結果を選択してください。");
+        return;
+      }
+
       this.savingResult = true;
 
       const user = firebase.auth().currentUser;
@@ -539,11 +595,29 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "upsertVisitRecord",
-        cardNo: this.cardNo,
-        childNo: this.childNo,
-        houseId: this.selectedHouse.ID,
+
+        // visit_record 用（平文＋暗号化は Worker 側）
+        cardNo: this.cardInfo.CardNo,
+        childNo: this.childInfo.ChildNo,
+        housingNo: this.selectedHouse.ID,
+
+        visitDate: this.resultForm.visitDate,
+        time: this.resultForm.time,
+        field: this.resultForm.field,
         result: this.resultForm.result,
-        comment: this.resultForm.comment,
+        note: this.resultForm.note,
+
+        minister: this.ministerName,
+        comment: "",
+        term: this.childInfo.ChildTerm,
+
+        // detail 更新用（UPDATE のみ）
+        detailUpdate: {
+          cardNo: this.cardInfo.CardNo,
+          childNo: this.childInfo.ChildNo,
+          id: this.selectedHouse.ID,
+          ngFlag: this.resultForm.ng_flag || ""
+        }
       };
 
       await fetch(this.apiEndpoint, {

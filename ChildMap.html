@@ -152,6 +152,12 @@
       font-size: 20px;
       align-items: center;
     }
+
+    /* モーダル内ラジオの行間 */
+    .radio-group-inline .form-check {
+      margin-right: 12px;
+      margin-bottom: 4px;
+    }
   </style>
 </head>
 
@@ -163,11 +169,11 @@
       <i class="fas fa-spinner fa-4x fa-spin text-secondary"></i>
     </div>
 
-    <!-- ヘッダー（終了削除・ホーム右端・タイトル位置調整） -->
+    <!-- ヘッダー -->
     <header class="sticky-top bg-white mb-2 py-2 border-bottom">
       <div class="d-flex justify-content-between align-items-center">
 
-        <!-- 左：戻る -->
+        <!-- 左：戻る＋タイトル -->
         <div class="d-flex align-items-center">
           <button class="btn btn-link p-0 text-center mr-3" @click="goBackToMyPage">
             <div><i class="fas fa-arrow-circle-left fa-2x"></i></div>
@@ -315,7 +321,7 @@
             </span>
           </div>
 
-          <!-- NGFlag（ピルの後ろへ移動） -->
+          <!-- NGFlag（ピルの後ろ） -->
           <div class="col-ng">
             <i v-if="house.NGFlag === '不可'" class="fas fa-ban icon-8" style="color:#cc0000;"></i>
           </div>
@@ -334,9 +340,13 @@
             <i v-if="house.BadFlag === 'Bad'" class="fas fa-exclamation-triangle" style="color:#cc0000; font-size:20px;"></i>
           </div>
 
-          <!-- 結果入力 -->
+          <!-- 結果入力（黄色ボタン） -->
           <div class="col-result">
-            <button class="btn btn-sm btn-outline-primary" style="font-size:20px;" @click="openResultModal(house)">
+            <button
+              class="btn btn-sm btn-warning"
+              style="font-size:20px; color:#000; font-weight:bold;"
+              @click="openResultModal(house)"
+            >
               結果入力
             </button>
           </div>
@@ -366,43 +376,112 @@
       </div>
     </div>
 
-    <!-- 結果入力モーダル -->
+    <!-- 結果入力モーダル（スクショ準拠） -->
     <div class="modal fade" id="resultModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
           <div class="modal-header">
-            <h5 class="modal-title">訪問結果入力</h5>
+            <h5 class="modal-title">訪問記録の登録</h5>
             <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
           </div>
 
           <div class="modal-body" v-if="selectedHouse">
-            <p class="small text-muted mb-1" style="font-size:20px;">
+            <!-- 住所表示 -->
+            <p class="small text-muted mb-2" style="font-size:18px;">
               {{ getDisplayAddress(selectedHouse) }}
             </p>
 
+            <!-- 訪問日 -->
             <div class="form-group">
-              <label>結果</label>
-              <select v-model="resultForm.result" class="form-control">
-                <option value="">選択してください</option>
-                <option value="在宅">在宅</option>
-                <option value="不在">不在</option>
-                <option value="NG">NG</option>
-                <option value="保留">保留</option>
+              <label>訪問日</label>
+              <input
+                type="date"
+                class="form-control"
+                v-model="resultForm.visitDate"
+              />
+            </div>
+
+            <!-- 時間帯 -->
+            <div class="form-group">
+              <label>時間帯</label>
+              <select v-model="resultForm.time" class="form-control">
+                <option value="">-選択-</option>
+                <option value="9時以前">9時以前</option>
+                <option value="9時〜12時">9時〜12時</option>
+                <option value="12時〜13時">12時〜13時</option>
+                <option value="13時〜16時">13時〜16時</option>
+                <option value="16時〜18時">16時〜18時</option>
+                <option value="18時以降">18時以降</option>
               </select>
             </div>
 
+            <!-- 方法 -->
             <div class="form-group">
-              <label>コメント</label>
-              <textarea v-model="resultForm.comment" class="form-control" rows="3"></textarea>
+              <label>方法</label>
+              <div class="radio-group-inline d-flex flex-wrap">
+                <div class="form-check" v-for="m in methodOptions" :key="m.value">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    :id="'field-' + m.value"
+                    name="field"
+                    :value="m.value"
+                    v-model="resultForm.field"
+                  />
+                  <label class="form-check-label" :for="'field-' + m.value">
+                    {{ m.label }}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 結果（方法に応じて変化） -->
+            <div class="form-group">
+              <label>結果</label>
+              <div class="radio-group-inline d-flex flex-wrap">
+                <div class="form-check" v-for="r in resultOptions" :key="r">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    :id="'result-' + r"
+                    name="result"
+                    :value="r"
+                    v-model="resultForm.result"
+                  />
+                  <label class="form-check-label" :for="'result-' + r">
+                    {{ r }}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- メモ -->
+            <div class="form-group">
+              <label>メモ</label>
+              <textarea
+                v-model="resultForm.note"
+                class="form-control"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <!-- 訪問可否 -->
+            <div class="form-group">
+              <label>訪問可否</label>
+              <select v-model="resultForm.ng_flag" class="form-control">
+                <option value="">-選択-</option>
+                <option value="可">可</option>
+                <option value="不可">不可</option>
+              </select>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+            <button class="btn btn-secondary" data-dismiss="modal">閉じる</button>
             <button class="btn btn-primary" :disabled="savingResult" @click="submitResult">
-              <span v-if="savingResult"><i class="fas fa-spinner fa-spin mr-1"></i> 保存中…</span>
-              <span v-else>保存</span>
+              <span v-if="savingResult"><i class="fas fa-spinner fa-spin mr-1"></i> 登録中…</span>
+              <span v-else>登録</span>
             </button>
           </div>
 
@@ -412,7 +491,7 @@
 
   </div>
 
-    <!-- Vue -->
+  <!-- Vue -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 
   <!-- jQuery -->
