@@ -103,12 +103,6 @@
       width: 100%;
     }
 
-    /* アイコン */
-    .icon-8 {
-      font-size: 14px;
-      margin-right: 4px;
-    }
-
     /* 表札名 */
     .family-name {
       font-size: 20px;
@@ -130,13 +124,7 @@
       gap: 6px;
     }
 
-    .house-row > div {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    /* 履歴ボタン（背景透明・枠線透明） */
+    /* 履歴ボタン */
     .btn-history {
       background: transparent !important;
       border: none !important;
@@ -153,13 +141,12 @@
       align-items: center;
     }
 
-    /* モーダル内ラジオグループ */
+    /* カスタムラジオ（角丸四角ボタン） */
     .radio-group-inline {
       display: flex;
       flex-wrap: wrap;
     }
 
-    /* カスタムラジオ（R付き四角ボタン風） */
     .radio-pill {
       position: relative;
       margin-right: 8px;
@@ -188,13 +175,10 @@
       transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
 
+    /* R を消す */
     .radio-pill-label::before {
-      content: "R";
-      display: inline-block;
-      font-size: 12px;
-      font-weight: bold;
-      margin-right: 6px;
-      color: #666;
+      content: "";
+      margin-right: 0;
     }
 
     .radio-pill input[type="radio"]:checked + .radio-pill-label {
@@ -203,16 +187,8 @@
       border-color: #007bff;
     }
 
-    .radio-pill input[type="radio"]:checked + .radio-pill-label::before {
-      color: #fff;
-    }
-
     .radio-pill-label:hover {
       background-color: #e6f0ff;
-    }
-
-    .radio-pill input[type="radio"]:focus + .radio-pill-label {
-      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
     }
   </style>
 </head>
@@ -236,7 +212,6 @@
             <div class="small">戻る</div>
           </button>
 
-          <!-- タイトル（戻るボタンから36px右） -->
           <div style="margin-left:36px;">
             <div class="small text-muted">
               区域カード {{ childInfo?.CardNo ?? '' }} - {{ childInfo?.ChildNo ?? '' }}
@@ -258,7 +233,7 @@
       </div>
     </header>
 
-    <!-- 子カード情報（横一列） -->
+    <!-- 子カード情報 -->
     <div class="card mb-2">
       <div class="card-body py-2">
         <div class="child-info-row">
@@ -280,7 +255,6 @@
       <div v-show="mapOpen" class="p-0" style="overflow:hidden;">
         <div id="mapContainer"></div>
 
-        <!-- 地図高さ変更ボタン -->
         <div class="btn-group m-2" role="group">
           <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('small')">小</button>
           <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('medium')">中</button>
@@ -310,17 +284,14 @@
     >
       <div class="card-header py-2">
 
-        <!-- 住戸カード（PC：横一列固定幅 / スマホ：折り返し） -->
         <div class="house-row">
 
-          <!-- ID -->
           <div class="col-id">
             <button class="house-no-btn" @click="scrollToMapAndFocus(house)">
               {{ house.ID }}
             </button>
           </div>
 
-          <!-- YoungerGENFlag -->
           <div class="col-young">
             <i
               class="fas fa-user icon-8"
@@ -328,14 +299,12 @@
             ></i>
           </div>
 
-          <!-- 表札名 -->
           <div class="col-name">
             <span class="family-name">
               {{ house.FamilyName ? house.FamilyName + 'さん' : '（表札名なし）' }}
             </span>
           </div>
 
-          <!-- TEL -->
           <div class="col-tel">
             <i
               :class="house.TEL ? 'fas fa-phone icon-8' : 'fas fa-phone-slash icon-8'"
@@ -343,7 +312,6 @@
             ></i>
           </div>
 
-          <!-- 建物種別 -->
           <div class="col-bld">
             <i
               class="icon-8"
@@ -357,7 +325,6 @@
             ></i>
           </div>
 
-          <!-- 訪問ステータス（ピル） -->
           <div class="col-status">
             <span
               class="pill-status"
@@ -377,12 +344,10 @@
             </span>
           </div>
 
-          <!-- NGFlag -->
           <div class="col-ng">
             <i v-if="house.NGFlag === '不可'" class="fas fa-ban icon-8" style="color:#cc0000;"></i>
           </div>
 
-          <!-- 住所（2行構成） -->
           <div class="col-address">
             <span class="address-text">{{ getAddressLines(house).line1 }}</span>
             <span class="address-text" v-if="getAddressLines(house).line2">
@@ -390,13 +355,11 @@
             </span>
           </div>
 
-          <!-- BadFlag -->
           <div class="col-bad">
             <i v-if="house.BadFlag === 'Good'" class="fas fa-check-circle" style="color:#00aa55; font-size:20px;"></i>
             <i v-if="house.BadFlag === 'Bad'" class="fas fa-exclamation-triangle" style="color:#cc0000; font-size:20px;"></i>
           </div>
 
-          <!-- 結果入力（黄色ボタン） -->
           <div class="col-result">
             <button
               class="btn btn-sm btn-warning"
@@ -407,7 +370,6 @@
             </button>
           </div>
 
-          <!-- 履歴 -->
           <div class="col-history">
             <button class="btn-history" @click="toggleVisitHistory(house.ID)">
               {{ isVisitHistoryOpen(house.ID) ? '▲' : '▼' }}
@@ -417,7 +379,7 @@
         </div>
       </div>
 
-      <!-- 訪問履歴（スクショ風） -->
+      <!-- 訪問履歴 -->
       <div v-show="isVisitHistoryOpen(house.ID)" class="card-body py-2">
         <div v-if="house.VRecord && house.VRecord.length > 0" class="visit-record-timeline">
           <div v-for="rec in sortedVRecord(house.VRecord)" :key="rec.ID" class="visit-record-item">
@@ -434,7 +396,7 @@
       </div>
     </div>
 
-    <!-- 結果入力モーダル（カスタムラジオ対応） -->
+    <!-- 結果入力モーダル（ここから） -->
     <div class="modal fade" id="resultModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -445,10 +407,22 @@
           </div>
 
           <div class="modal-body" v-if="selectedHouse">
-            <!-- 住所表示 -->
-            <p class="small text-muted mb-2" style="font-size:18px;">
-              {{ getDisplayAddress(selectedHouse) }}
-            </p>
+
+            <!-- 住戸情報ヘッダー -->
+            <div class="mb-3">
+              <div style="font-size:22px; font-weight:bold;">
+                ID {{ selectedHouse.ID }}　
+                {{ selectedHouse.FamilyName ? selectedHouse.FamilyName + 'さん' : '（表札名なし）' }}
+              </div>
+
+              <div style="font-size:18px; color:#555;">
+                {{ getAddressLines(selectedHouse).line1 }}
+              </div>
+              <div v-if="getAddressLines(selectedHouse).line2"
+                   style="font-size:18px; color:#555;">
+                {{ getAddressLines(selectedHouse).line2 }}
+              </div>
+            </div>
 
             <!-- 訪問日 -->
             <div class="form-group">
@@ -553,7 +527,7 @@
 
   </div>
 
-  <!-- Vue -->
+    <!-- Vue -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 
   <!-- jQuery -->
