@@ -1,8 +1,8 @@
-// ChildMap.js（完全版）
+// ChildMap.js（完全版）Part 1/2
 // ・住所2行構成（cho-banchiはハイフン）
 // ・user_masterからministerName取得
-// ・InfoWindowフォント -3px
-// ・結果入力モーダル：visit_record + detail 更新仕様対応
+// ・InfoWindowフォント -3px ＋ 最新結果表示
+// ・結果入力モーダル用の基礎ロジック（Part 2/2 で完結）
 
 const ChildMapApp = {
   data() {
@@ -31,12 +31,12 @@ const ChildMapApp = {
 
       selectedHouse: null,
       resultForm: {
-        visitDate: "",
+        visit_date: "",
         time: "",
         field: "訪問",
         result: "",
         note: "",
-        ng_flag: ""
+        ng_flag: "可"
       },
 
       searchQuery: "",
@@ -63,6 +63,18 @@ const ChildMapApp = {
         u => String(u.ID) === String(this.childInfo.Minister)
       );
       return m ? m.UserName : "-";
+    },
+
+    // 時間帯の選択肢
+    timeOptions() {
+      return [
+        "9時以前",
+        "9時〜12時",
+        "12時〜13時",
+        "13時〜16時",
+        "16時〜18時",
+        "18時以降",
+      ];
     },
 
     // 方法の選択肢
@@ -393,8 +405,17 @@ const ChildMapApp = {
       return met[0].VisitDate;
     },
 
+    // 最新の訪問レコード（VisitDate 降順）
+    getLatestRecord(records) {
+      if (!records || records.length === 0) return null;
+      const sorted = [...records].sort((a, b) =>
+        (b.VisitDate || "").localeCompare(a.VisitDate || "")
+      );
+      return sorted[0];
+    },
+
     // -----------------------------
-    // InfoWindow（フォント -3px）
+    // InfoWindow（フォント -3px ＋ 最新結果表示）
     // -----------------------------
     async focusOnMap(house) {
       this.focusedId = house.ID;
@@ -412,6 +433,11 @@ const ChildMapApp = {
 
       const addr = this.getAddressLines(house);
       const lastMet = this.getLastMetDate(house.VRecord);
+      const latest = this.getLatestRecord(house.VRecord);
+
+      const latestSummary = latest
+        ? `${latest.Result || "-"}${latest.Time ? "（" + latest.Time + " / " : "（"}${latest.Field || "-"}）`
+        : null;
 
       const gmapUrl = `https://www.google.com/maps?q=${pos.lat},${pos.lng}`;
       const amapUrl = `https://maps.apple.com/?ll=${pos.lat},${pos.lng}`;
@@ -446,6 +472,14 @@ const ChildMapApp = {
             lastMet
               ? `<div style="font-size:16px; color:#007bff; margin-top:6px;">
                    最後にお会いできた日：<strong>${lastMet}</strong>
+                 </div>`
+              : ""
+          }
+
+          ${
+            latestSummary
+              ? `<div style="font-size:16px; color:#28a745; margin-top:4px;">
+                   最新の訪問結果：<strong>${latestSummary}</strong>
                  </div>`
               : ""
           }
@@ -558,33 +592,71 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 結果入力モーダル
+    // モーダル初期値セット
     // -----------------------------
     openResultModal(house) {
       this.selectedHouse = house;
 
+      // 今日の日付
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, "0");
       const dd = String(today.getDate()).padStart(2, "0");
+      this.resultForm.visit_date = `${yyyy}-${mm}-${dd}`;
 
-      this.resultForm.visitDate = `${yyyy}-${mm}-${dd}`;
-      this.resultForm.time = "";
+      // 現在時刻 → 時間帯を自動判定
+      const hour = today.getHours();
+      if (hour < 9) this.resultForm.time = "9時以前";
+      else if (hour < 12) this.resultForm.time = "9時〜12時";
+      else if (hour < 13) this.resultForm.time = "12時〜13時";
+      else if (hour < 16) this.resultForm.time = "13時〜16時";
+      else if (hour < 18) this.resultForm.time = "16時〜18時";
+      else this.resultForm.time = "18時以降";
+
+      // 方法
       this.resultForm.field = "訪問";
-      this.resultForm.result = "";
+
+      // 結果（初期値：不在）
+      this.resultForm.result = "不在";
+
+      // メモ
       this.resultForm.note = "";
-      this.resultForm.ng_flag = "";
+
+      // 訪問可否（初期値：可）
+      this.resultForm.ng_flag = "可";
 
       $("#resultModal").modal("show");
     },
 
+    // -----------------------------
+    // 方法変更 → 結果をクリア
+    // -----------------------------
+    onFieldChange() {
+      this.resultForm.result = "";
+    },
+
+    // -----------------------------
+    // visit_record INSERT + detail UPDATE
+    // -----------------------------
     async submitResult() {
-      if (!this.resultForm.visitDate) {
+      if (!this.resultForm.visit_date) {
         alert("訪問日を入力してください。");
         return;
       }
-      if (!this.resultForm.field || !this.resultForm.result) {
-        alert("方法と結果を選択してください。");
+      if (!this.resultForm.time) {
+        alert("時間帯を選択してください。");
+        return;
+      }
+      if (!this.resultForm.field) {
+        alert("方法を選択してください。");
+        return;
+      }
+      if (!this.resultForm.result) {
+        alert("結果を選択してください。");
+        return;
+      }
+      if (!this.resultForm.ng_flag) {
+        alert("訪問可否を選択してください。");
         return;
       }
 
@@ -593,34 +665,49 @@ const ChildMapApp = {
       const user = firebase.auth().currentUser;
       const idToken = await user.getIdToken(true);
 
+      // VisitStatus の自動決定
+      let visitStatus = "その他";
+      if (this.resultForm.result.includes("済")) visitStatus = "済";
+      else if (this.resultForm.result.includes("不在")) visitStatus = "不在";
+      else if (this.resultForm.result.includes("NG")) visitStatus = "NG";
+      else if (this.resultForm.result.includes("保留")) visitStatus = "保留";
+
+      // -----------------------------
+      // Supabase に送る payload（snake_case）
+      // -----------------------------
       const payload = {
         funcName: "upsertVisitRecord",
 
-        // visit_record 用（平文＋暗号化は Worker 側）
-        cardNo: this.cardInfo.CardNo,
-        childNo: this.childInfo.ChildNo,
-        housingNo: this.selectedHouse.ID,
+        // visit_record（平文）
+        card_no: this.cardInfo.CardNo,
+        child_no: this.childInfo.ChildNo,
+        housing_no: this.selectedHouse.ID,
 
-        visitDate: this.resultForm.visitDate,
+        visit_date: this.resultForm.visit_date,
+
+        // visit_record（暗号化対象）
         time: this.resultForm.time,
         field: this.resultForm.field,
         result: this.resultForm.result,
         note: this.resultForm.note,
-
         minister: this.ministerName,
         comment: "",
         term: this.childInfo.ChildTerm,
 
-        // detail 更新用（UPDATE のみ）
-        detailUpdate: {
-          cardNo: this.cardInfo.CardNo,
-          childNo: this.childInfo.ChildNo,
+        // detail UPDATE（ng_flag + VisitStatus）
+        detail_update: {
+          card_no: this.cardInfo.CardNo,
+          child_no: this.childInfo.ChildNo,
           id: this.selectedHouse.ID,
-          ngFlag: this.resultForm.ng_flag || ""
+          ng_flag: this.resultForm.ng_flag,
+          visit_status: visitStatus
         }
       };
 
-      await fetch(this.apiEndpoint, {
+      // -----------------------------
+      // Worker 呼び出し
+      // -----------------------------
+      const res = await fetch(this.apiEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -629,9 +716,19 @@ const ChildMapApp = {
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json();
+
+      if (data.status !== "success") {
+        console.error("保存エラー:", data);
+        alert("保存中にエラーが発生しました。");
+        this.savingResult = false;
+        return;
+      }
+
       $("#resultModal").modal("hide");
       this.savingResult = false;
 
+      // 再取得して画面更新
       await this.fetchChildDetail();
       if (this.map) {
         this.addAllMarkers(null);
