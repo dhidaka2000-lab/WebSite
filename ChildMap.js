@@ -685,11 +685,11 @@ const ChildMapApp = {
         visit_date: this.resultForm.visit_date,
 
         // visit_record（暗号化対象）
-        time: this.resultForm.Time,
-        field: this.resultForm.Field,
-        result: this.resultForm.Result,
-        note: this.resultForm.Note,
-        minister: this.Minister,
+        time: this.resultForm.time,
+        field: this.resultForm.field,
+        result: this.resultForm.result,
+        note: this.resultForm.note,
+        minister: this.ministerName,
         comment: "",
         term: this.childInfo.ChildTerm,
 
