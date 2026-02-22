@@ -682,6 +682,8 @@ const ChildMapApp = {
         card_no: this.cardInfo.CardNo,
         child_no: this.childInfo.ChildNo,
         housing_no: this.selectedHouse.ID,
+        id: this.selectedHouse.ID,   // ★ 追加（Worker が必要としている）
+
         visit_date: this.resultForm.visit_date,
 
         // visit_record（暗号化対象）
@@ -694,7 +696,7 @@ const ChildMapApp = {
         term: this.childInfo.ChildTerm,
 
         // detail UPDATE（ng_flag + VisitStatus）
-        detail_update: {
+        detailUpdate: {   // ★ 修正（detail_update → detailUpdate）
           card_no: this.cardInfo.CardNo,
           child_no: this.childInfo.ChildNo,
           id: this.selectedHouse.ID,
