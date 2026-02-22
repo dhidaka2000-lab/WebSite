@@ -277,18 +277,19 @@
 
     <div
       v-for="house in filteredHouses"
-      :key="house.ID"
-      :id="`house-${house.ID}`"
+      :key="house.housing_no"
+      :id="`house-${house.housing_no}`"
       class="card card-house"
-      :class="{ 'focused-house': focusedId === house.ID }"
+      :class="{ 'focused-house': focusedId === house.housing_no }"
     >
+
       <div class="card-header py-2">
 
         <div class="house-row">
 
           <div class="col-id">
             <button class="house-no-btn" @click="scrollToMapAndFocus(house)">
-              {{ house.ID }}
+              {{ house.housing_no }}
             </button>
           </div>
 
@@ -411,7 +412,7 @@
             <!-- 住戸情報ヘッダー -->
             <div class="mb-3">
               <div style="font-size:22px; font-weight:bold;">
-                ID {{ selectedHouse.ID }}　
+                ID {{ selectedHouse.housing_no }}
                 {{ selectedHouse.FamilyName ? selectedHouse.FamilyName + 'さん' : '（表札名なし）' }}
               </div>
 
