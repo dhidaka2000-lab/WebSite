@@ -681,8 +681,8 @@ const ChildMapApp = {
         // visit_record（平文）
         card_no: this.cardInfo.CardNo,
         child_no: this.childInfo.ChildNo,
-        housing_no: this.selectedHouse.housing_no,  // ★ 修正
-        id: this.selectedHouse.housing_no,          // ★ Worker が必要としている
+        housing_no: this.selectedHouse.HousingNo,  // ★ 修正
+        id: this.selectedHouse.HousingNo,          // ★ Worker が必要としている
 
         visit_date: this.resultForm.visit_date,
 
