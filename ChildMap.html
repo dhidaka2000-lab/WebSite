@@ -372,8 +372,8 @@
           </div>
 
           <div class="col-history">
-            <button class="btn-history" @click="toggleVisitHistory(house.housing_no)">
-              {{ isVisitHistoryOpen(house.housing_no) ? '▲' : '▼' }}
+            <button class="btn-history" @click="toggleVisitHistory(house.HousingNo)">
+              {{ isVisitHistoryOpen(house.HousingNo) ? '▲' : '▼' }}
             </button>
           </div>
 
@@ -381,7 +381,7 @@
       </div>
 
       <!-- 訪問履歴 -->
-      <div v-show="isVisitHistoryOpen(house.housing_no)" class="card-body py-2">
+      <div v-show="isVisitHistoryOpen(house.HousingNo)" class="card-body py-2">
         <div v-if="house.VRecord && house.VRecord.length > 0" class="visit-record-timeline">
           <div v-for="rec in sortedVRecord(house.VRecord)" :key="rec.ID" class="visit-record-item">
             <div class="small" style="font-size:18px;">

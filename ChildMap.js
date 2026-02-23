@@ -418,10 +418,10 @@ const ChildMapApp = {
     // InfoWindow（フォント -3px ＋ 最新結果表示）
     // -----------------------------
     async focusOnMap(house) {
-      this.focusedId = house.housing_no;
+      this.focusedId = house.HousingNo;
 
       await this.ensureMapInitialized();
-      this.addAllMarkers(house.housing_no);
+      this.addAllMarkers(house.HousingNo);
 
       const pos = {
         lat: Number(house.CSVLat),
@@ -487,7 +487,7 @@ const ChildMapApp = {
           <hr style="margin:10px 0;">
 
           <button
-            onclick="childMapApp.scrollToHouse(${house.housing_no})"
+            onclick="childMapApp.scrollToHouse(${house.HousingNo})"
             style="
               width:100%;
               padding:6px 0;
