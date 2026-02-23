@@ -372,7 +372,7 @@ const ChildMapApp = {
           map: this.map,
           icon,
           label: {
-            text: String(h.ID),
+            text: String(h.HousingNo),
             color: "#333",
             fontSize: "16px",
             fontWeight: "bold",
