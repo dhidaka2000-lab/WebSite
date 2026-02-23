@@ -1,8 +1,8 @@
-// ChildMap.js（完全版）Part 1/2
+// ChildMap.js（改修版・最終）
 // ・住所2行構成（cho-banchiはハイフン）
 // ・user_masterからministerName取得
-// ・InfoWindowフォント -3px ＋ 最新結果表示
-// ・結果入力モーダル用の基礎ロジック（Part 2/2 で完結）
+// ・InfoWindowレイアウト調整（パディング半分／ステータスをピル表示／「最新在宅日」表記／最新結果行削除）
+// ・結果入力モーダル用の基礎ロジック
 
 const ChildMapApp = {
   data() {
@@ -388,7 +388,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 最後に会えた日付
+    // 最後に会えた日付（在宅系）
     // -----------------------------
     getLastMetDate(records) {
       if (!records || records.length === 0) return null;
@@ -405,17 +405,19 @@ const ChildMapApp = {
       return met[0].VisitDate;
     },
 
-    // 最新の訪問レコード（VisitDate 降順）
-    getLatestRecord(records) {
-      if (!records || records.length === 0) return null;
-      const sorted = [...records].sort((a, b) =>
-        (b.VisitDate || "").localeCompare(a.VisitDate || "")
-      );
-      return sorted[0];
+    // -----------------------------
+    // ステータス色（住戸カードと整合）
+    // -----------------------------
+    getStatusColor(status) {
+      if (!status) return "#999999";
+      if (status.includes("済") || status.includes("在宅")) return "#00AA55"; // 緑
+      if (status.includes("NG")) return "#CC0000"; // 赤
+      if (status.includes("不在")) return "#FFD700"; // 黄
+      return "#999999";
     },
 
     // -----------------------------
-    // InfoWindow（フォント -3px ＋ 最新結果表示）
+    // InfoWindow（レイアウト調整版）
     // -----------------------------
     async focusOnMap(house) {
       this.focusedId = house.HousingNo;
@@ -433,58 +435,58 @@ const ChildMapApp = {
 
       const addr = this.getAddressLines(house);
       const lastMet = this.getLastMetDate(house.VRecord);
-      const latest = this.getLatestRecord(house.VRecord);
-
-      const latestSummary = latest
-        ? `${latest.Result || "-"}${latest.Time ? "（" + latest.Time + " / " : "（"}${latest.Field || "-"}）`
-        : null;
+      const statusColor = this.getStatusColor(house.VisitStatus || "");
 
       const gmapUrl = `https://www.google.com/maps?q=${pos.lat},${pos.lng}`;
       const amapUrl = `https://maps.apple.com/?ll=${pos.lat},${pos.lng}`;
 
       const html = `
         <div style="
-          font-size:18px;
+          font-size:15px;
           max-width:260px;
-          padding:12px 14px;
+          padding:6px 7px;
           border-radius:10px;
           box-shadow:0 2px 8px rgba(0,0,0,0.15);
-          line-height:1.5;
+          line-height:1.4;
         ">
-          <div style="font-weight:bold; font-size:20px; margin-bottom:6px;">
+          <div style="font-weight:bold; font-size:17px; margin-bottom:4px;">
             ${house.FamilyName || "（表札名なし）"}${house.FamilyName ? "さん" : ""}
           </div>
 
-          <div style="color:#555; font-size:18px;">
+          <div style="color:#555; font-size:14px;">
             ${addr.line1}
           </div>
           ${
             addr.line2
-              ? `<div style="color:#555; font-size:18px;">${addr.line2}</div>`
+              ? `<div style="color:#555; font-size:14px;">${addr.line2}</div>`
               : ""
           }
 
-          <div style="font-size:16px; color:#777; margin-top:6px;">
-            ステータス：${house.VisitStatus || "未訪問"}
+          <div style="margin-top:6px;">
+            <span
+              style="
+                display:inline-block;
+                padding:2px 8px;
+                border-radius:999px;
+                font-size:12px;
+                font-weight:bold;
+                background:${statusColor};
+                color:${(house.VisitStatus || "").includes("不在") ? "#333" : "#fff"};
+              "
+            >
+              ${house.VisitStatus || "未訪問"}
+            </span>
           </div>
 
           ${
             lastMet
-              ? `<div style="font-size:16px; color:#007bff; margin-top:6px;">
-                   最後にお会いできた日：<strong>${lastMet}</strong>
+              ? `<div style="font-size:13px; color:#007bff; margin-top:6px;">
+                   <strong>最新在宅日：</strong>${lastMet}
                  </div>`
               : ""
           }
 
-          ${
-            latestSummary
-              ? `<div style="font-size:16px; color:#28a745; margin-top:4px;">
-                   最新の訪問結果：<strong>${latestSummary}</strong>
-                 </div>`
-              : ""
-          }
-
-          <hr style="margin:10px 0;">
+          <hr style="margin:8px 0;">
 
           <button
             onclick="childMapApp.scrollToHouse(${house.HousingNo})"
@@ -495,9 +497,9 @@ const ChildMapApp = {
               color:white;
               border:none;
               border-radius:6px;
-              font-size:18px;
+              font-size:14px;
               cursor:pointer;
-              margin-bottom:8px;
+              margin-bottom:6px;
             "
           >
             ▶ この住戸カードへ移動
@@ -512,7 +514,7 @@ const ChildMapApp = {
                 background:#28a745;
                 color:white;
                 border-radius:6px;
-                font-size:16px;
+                font-size:13px;
                 text-decoration:none;
               "
             >Google Maps</a>
@@ -525,7 +527,7 @@ const ChildMapApp = {
                 background:#555;
                 color:white;
                 border-radius:6px;
-                font-size:16px;
+                font-size:13px;
                 text-decoration:none;
               "
             >Apple Maps</a>
@@ -681,8 +683,8 @@ const ChildMapApp = {
         // visit_record（平文）
         card_no: this.cardInfo.CardNo,
         child_no: this.childInfo.ChildNo,
-        housing_no: this.selectedHouse.HousingNo,  // ★ 修正
-        id: this.selectedHouse.HousingNo,          // ★ Worker が必要としている
+        housing_no: this.selectedHouse.HousingNo,
+        id: this.selectedHouse.HousingNo,
 
         visit_date: this.resultForm.visit_date,
 
@@ -696,16 +698,13 @@ const ChildMapApp = {
         term: this.childInfo.ChildTerm,
 
         // detail UPDATE（ng_flag + VisitStatus）
-        detailUpdate: {   // ★ camelCase に統一
-          row_id: this.selectedHouse.row_id,        // ★ 主キー
+        detailUpdate: {
+          row_id: this.selectedHouse.row_id,
           ng_flag: this.resultForm.ng_flag,
           visit_status: visitStatus
         }
       };
 
-      // -----------------------------
-      // Worker 呼び出し
-      // -----------------------------
       const res = await fetch(this.apiEndpoint, {
         method: "POST",
         headers: {
@@ -727,7 +726,6 @@ const ChildMapApp = {
       $("#resultModal").modal("hide");
       this.savingResult = false;
 
-      // 再取得して画面更新
       await this.fetchChildDetail();
       if (this.map) {
         this.addAllMarkers(null);
