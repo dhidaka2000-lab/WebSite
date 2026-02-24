@@ -8,48 +8,37 @@ createApp({
     const selectedChild = ref(null);
     const modalInstance = ref(null);
 
-    // ログインユーザー情報
     const userEmail = ref("");
     const userName = ref("");
     const userGroup = ref("");
     const userrole = ref(0);
 
-    // ★ フィルタモード（4 種類）
     const filterMode = ref("all");
 
-    // ステータス色
     const statusClass = (child) => {
       switch (child.CHILDSTATUS) {
-        case "貸出中":
-          return "bg-warning text-black";
-        case "返却済":
-          return "bg-info text-white";
-        case "貸出可能":
-          return "bg-success text-white";
-        default:
-          return "bg-secondary text-white";
+        case "貸出中": return "bg-warning text-black";
+        case "返却済": return "bg-info text-white";
+        case "貸出可能": return "bg-success text-white";
+        default: return "bg-secondary text-white";
       }
     };
 
-    // ログアウト
     const logout = () => {
       firebase.auth().signOut().then(() => {
         window.location.href = "index.html";
       });
     };
 
-    // ページ遷移
     const go = (page) => {
       window.location.href = page + ".html";
     };
 
-    // 子カードページへ遷移
     const goToMap = (child) => {
       const url = `./ChildMap.html?cardNo=${child.CARDNO}&childNo=${child.CHILDNO}&loginUser=${userEmail.value}`;
       window.location.href = url;
     };
 
-    // Firebase ログイン状態監視
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "index.html";
@@ -64,19 +53,44 @@ createApp({
       fetchChildCards();
     });
 
-    // モーダル
     const openModal = (type, child) => {
       selectedChild.value = child;
+
       if (!modalInstance.value) {
         modalInstance.value = new bootstrap.Modal(
           document.getElementById("childModal")
         );
       }
       modalInstance.value.show();
+
+      setTimeout(() => {
+        initModalMap(child);
+      }, 300);
     };
 
     const closeModal = () => {
       modalInstance.value?.hide();
+    };
+
+    const initModalMap = (child) => {
+      if (!child.CHILDLAT || !child.CHILDLNG) return;
+
+      const pos = {
+        lat: Number(child.CHILDLAT),
+        lng: Number(child.CHILDLNG)
+      };
+
+      const map = new google.maps.Map(document.getElementById("modalMap"), {
+        center: pos,
+        zoom: 17,
+        mapTypeControl: false
+      });
+
+      new google.maps.Marker({
+        position: pos,
+        map,
+        title: child.CHILDBLOCK
+      });
     };
 
     const handleResize = () => {
@@ -86,10 +100,9 @@ createApp({
     const isUpdating = ref(false);
     let toastInstance = null;
 
-    // ★ キャッシュ対応
     const fetchChildCards = async () => {
       const CACHE_KEY = "childCardCache";
-      const CACHE_EXPIRE = 300 * 60 * 1000;
+      const CACHE_EXPIRE = 18000 * 60 * 1000;
 
       const cache = localStorage.getItem(CACHE_KEY);
       if (cache) {
@@ -108,7 +121,6 @@ createApp({
       fetchFromWorker(true);
     };
 
-    // ★ Worker → Supabase
     const fetchFromWorker = async (hideLoading) => {
       try {
         const user = firebase.auth().currentUser;
@@ -148,7 +160,6 @@ createApp({
       }
     };
 
-    // ★ 最新情報に更新
     const refresh = () => {
       if (isUpdating.value) return;
 
@@ -166,7 +177,6 @@ createApp({
       });
     };
 
-    // ★ フィルタロジック（4 種類）
     const filteredChilds = computed(() => {
       if (filterMode.value === "all") return childs.value;
       if (filterMode.value === "lent") return childs.value.filter(c => c.CHILDSTATUS === "貸出中");
@@ -175,9 +185,8 @@ createApp({
       return childs.value;
     });
 
-    // ★ セッション管理（300秒）
     let sessionTimer = null;
-    const SESSION_LIMIT = 300 * 1000;
+    const SESSION_LIMIT = 18000 * 1000;
 
     const resetSessionTimer = () => {
       if (sessionTimer) clearTimeout(sessionTimer);
