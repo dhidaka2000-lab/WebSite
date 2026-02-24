@@ -172,10 +172,9 @@
         <p><strong>貸出日：</strong> {{ selectedChild?.CHILDCHECKOUTDATE || "-" }}</p>
         <p><strong>使用開始日：</strong> {{ selectedChild?.CHILDSTARTDATE || "-" }}</p>
         <p><strong>使用期限：</strong> {{ selectedChild?.CHILDLIMITDATE || "-" }}</p>
-        
-        <p><strong>グループ：</strong> {{ selectedChild?.GROUP || "-" }}</p>
-        <p><strong>グループ監督：</strong> {{ getUserName(selectedChild?.ARRENGER) }}</p>
-        <p><strong>奉仕者：</strong> {{ getUserName(selectedChild?.MINISTER) }}</p>
+
+        <p><strong>貸出先グループ：</strong> {{ selectedChild?.GROUP || "-" }}</p>
+        <p><strong>貸出責任者：</strong> {{ getUserName(selectedChild?.ARRENGER) }}</p>
 
         <p><strong>メモ：</strong> {{ selectedChild?.DESCRIPTION || "-" }}</p>
 
@@ -219,6 +218,9 @@
   };
   firebase.initializeApp(firebaseConfig);
 </script>
+
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
 
 <script src="AssignmentList.js"></script>
 
