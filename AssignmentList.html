@@ -152,12 +152,12 @@
               戸数：{{ child.CHILDHOUSES }}件（うち残 {{ child.CHILDHOUSES - child.VISITED }}件）
             </p>
 
-            <!-- ★ 貸出日 -->
+            <!-- ★ 貸出日（checkout_date） -->
             <p class="mb-1">
               <strong>貸出日：</strong> {{ child.CHECKOUTDATE || "-" }}
             </p>
 
-            <!-- ★ 使用開始日 -->
+            <!-- ★ 使用開始日（start_date） -->
             <p class="mb-1">
               <strong>使用開始日：</strong> {{ child.STARTDATE || "-" }}
             </p>
