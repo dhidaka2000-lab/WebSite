@@ -31,16 +31,10 @@
       z-index: 2000;
     }
 
-    /* スマホ（〜512px）：全体を3倍スケール＋カード余白を1/4に調整 */
+    /* スマホ（〜512px） */
     @media (max-width: 512px) {
-
-      body {
-        font-size: 24px;
-      }
-
-      h3, h5 {
-        font-size: 30px;
-      }
+      body { font-size: 24px; }
+      h3, h5 { font-size: 30px; }
 
       .btn {
         font-size: 24px;
@@ -48,14 +42,13 @@
         border-radius: 12px;
       }
 
-      /* ★ ここを調整：カードの余白を1/4にする ★ */
       .card {
-        padding: 5px !important;        /* ← 20px → 5px（1/4） */
+        padding: 5px !important;
         border-radius: 12px;
       }
 
       .card-body {
-        padding: 8px !important;        /* ← 24px → 8px（1/3〜1/4） */
+        padding: 8px !important;
       }
 
       .badge {
@@ -63,7 +56,7 @@
         padding: 6px 10px;
       }
     }
-    
+
     /* タブレット（〜1024px） */
     @media (max-width: 1024px) {
       body { font-size: 16px; }
@@ -83,44 +76,31 @@
   <!-- Vue アプリ本体 -->
   <main role="main" id="app" v-cloak class="container py-3">
 
-  <!-- ヘッダー（ChildMap と完全統一＋ラベル付き） -->
+  <!-- ★ ヘッダー（要望①②③反映） -->
   <header class="sticky-top bg-white mb-2 py-2 border-bottom">
     <div class="d-flex justify-content-between align-items-center">
 
-      <!-- 左側：戻る・ホーム・終了 -->
+      <!-- 左：戻る -->
       <div class="d-flex gap-3">
-
-        <!-- 戻る -->
         <button class="btn btn-link p-0 text-center" @click="go('mainMenu')">
-          <div>
-            <i class="fas fa-arrow-circle-left fa-2x"></i>
-          </div>
+          <div><i class="fas fa-arrow-circle-left fa-2x"></i></div>
           <div class="small">戻る</div>
         </button>
-
-        <!-- ホーム -->
-        <button class="btn btn-link p-0 text-center" @click="go('mainMenu')">
-          <div>
-            <i class="fas fa-home fa-2x"></i>
-          </div>
-          <div class="small">ホーム</div>
-        </button>
-
-        <!-- 終了 -->
-        <button class="btn btn-link p-0 text-center" @click="logout">
-          <div>
-            <i class="fas fa-door-open fa-2x"></i>
-          </div>
-          <div class="small">終了</div>
-        </button>
-
       </div>
 
-      <!-- 右側：タイトル -->
-      <div class="text-right">
-        <div class="font-weight-bold">
-          区域カード一覧
+      <!-- 中央：画面名（マイページ） -->
+      <div class="text-center flex-grow-1">
+        <div style="font-size:22px; font-weight:700;">
+          マイページ
         </div>
+      </div>
+
+      <!-- 右：ホーム -->
+      <div class="d-flex gap-3">
+        <button class="btn btn-link p-0 text-center" @click="go('mainMenu')">
+          <div><i class="fas fa-home fa-2x"></i></div>
+          <div class="small">ホーム</div>
+        </button>
       </div>
 
     </div>
@@ -128,26 +108,28 @@
 
     <!-- ユーザー情報 -->
     <div class="alert alert-secondary py-2 mb-3">
-      <strong>{{ userName }}</strong>（{{ userEmail }}）  
+      <strong>{{ userName }}</strong>（{{ userEmail }}）
       ／ グループ：{{ userGroup }} ／ 権限：{{ userrole }}
     </div>
 
-    <!-- フィルタ＋更新 -->
+    <!-- ★ フィルタ（4 種類） -->
     <div class="d-flex justify-content-end mb-2">
-      <button class="btn btn-outline-primary me-2" @click="toggleFilter">
-        <i class="fas fa-filter"></i>
-        {{ showOnlyLent ? "全件表示" : "貸出中のみ" }}
-      </button>
+      <select class="form-select w-auto me-2" v-model="filterMode">
+        <option value="all">全件表示</option>
+        <option value="lent">貸出中のみ</option>
+        <option value="focus">重点のみ</option>
+        <option value="nonfocus">重点以外</option>
+      </select>
 
       <button class="btn btn-primary" @click="refresh" :disabled="isUpdating">
         <i class="fas fa-sync-alt"></i> 最新情報に更新
       </button>
     </div>
 
-    <!-- カード一覧 -->
+    <!-- ★ 子カード一覧（PC も 2 列） -->
     <div class="row g-3">
       <div
-        class="col-12 col-sm-6 col-lg-4"
+        class="col-12 col-sm-6 col-lg-6"
         v-for="child in filteredChilds"
         :key="child.CHILDID"
       >
@@ -156,7 +138,7 @@
 
             <div class="d-flex justify-content-between">
               <h5 class="card-title mb-1">
-                {{ child.CHILDBLOCK }}  
+                {{ child.CHILDBLOCK }}
                 {{ child.CARDNO }}-{{ child.CHILDNO }}
               </h5>
 
@@ -165,16 +147,24 @@
               </span>
             </div>
 
+            <!-- ★ 戸数＋残件数 -->
             <p class="text-muted mb-1">
-              戸数：{{ child.CHILDHOUSES }}
+              戸数：{{ child.CHILDHOUSES }}件（うち残 {{ child.CHILDHOUSES - child.VISITED }}件）
             </p>
 
+            <!-- ★ 貸出日 -->
             <p class="mb-1">
-              <strong>使用期限：</strong> {{ child.CHILDLIMITDATE }}
+              <strong>貸出日：</strong> {{ child.CHECKOUTDATE || "-" }}
             </p>
 
+            <!-- ★ 使用開始日 -->
+            <p class="mb-1">
+              <strong>使用開始日：</strong> {{ child.STARTDATE || "-" }}
+            </p>
+
+            <!-- 使用期限 -->
             <p class="mb-2">
-              <strong>残件数：</strong> {{ child.CHILDHOUSES - child.VISITED }}
+              <strong>使用期限：</strong> {{ child.CHILDLIMITDATE }}
             </p>
 
             <div class="d-flex gap-2">

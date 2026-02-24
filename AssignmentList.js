@@ -14,6 +14,9 @@ createApp({
     const userGroup = ref("");
     const userrole = ref(0);
 
+    // ★ フィルタモード（4 種類）
+    const filterMode = ref("all");
+
     // ステータス色
     const statusClass = (child) => {
       switch (child.CHILDSTATUS) {
@@ -83,7 +86,7 @@ createApp({
     const isUpdating = ref(false);
     let toastInstance = null;
 
-    // キャッシュ対応
+    // ★ キャッシュ対応
     const fetchChildCards = async () => {
       const CACHE_KEY = "childCardCache";
       const CACHE_EXPIRE = 300 * 60 * 1000;
@@ -105,7 +108,7 @@ createApp({
       fetchFromWorker(true);
     };
 
-    // Worker → Supabase
+    // ★ Worker → Supabase
     const fetchFromWorker = async (hideLoading) => {
       try {
         const user = firebase.auth().currentUser;
@@ -145,6 +148,7 @@ createApp({
       }
     };
 
+    // ★ 最新情報に更新
     const refresh = () => {
       if (isUpdating.value) return;
 
@@ -162,16 +166,13 @@ createApp({
       });
     };
 
-    // ★ 貸出中フィルタ
-    const showOnlyLent = ref(false);
-
-    const toggleFilter = () => {
-      showOnlyLent.value = !showOnlyLent.value;
-    };
-
+    // ★ フィルタロジック（4 種類）
     const filteredChilds = computed(() => {
-      if (!showOnlyLent.value) return childs.value;
-      return childs.value.filter(c => c.CHILDSTATUS === "貸出中");
+      if (filterMode.value === "all") return childs.value;
+      if (filterMode.value === "lent") return childs.value.filter(c => c.CHILDSTATUS === "貸出中");
+      if (filterMode.value === "focus") return childs.value.filter(c => c.FOCUSFLAG === "重点");
+      if (filterMode.value === "nonfocus") return childs.value.filter(c => c.FOCUSFLAG !== "重点");
+      return childs.value;
     });
 
     // ★ セッション管理（300秒）
@@ -212,8 +213,7 @@ createApp({
       go,
       refresh,
       isUpdating,
-      showOnlyLent,
-      toggleFilter,
+      filterMode,
       filteredChilds
     };
   }
