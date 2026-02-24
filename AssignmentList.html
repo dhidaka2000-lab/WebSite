@@ -27,8 +27,6 @@
       border-radius: 8px;
       padding: 2px 8px;
       font-weight: bold;
-      color: #007bff;
-      background: white;
       margin-right: 6px;
     }
 
@@ -100,7 +98,19 @@
 
         <div class="d-flex justify-content-between">
           <h5 class="card-title mb-1">
-            <span class="cardno-badge">{{ child.CARDNO }}-{{ child.CHILDNO }}</span>
+
+            <!-- ★ COLOR に応じて塗り分け -->
+            <span
+              class="cardno-badge"
+              :style="{
+                background: child.bgCOLOR || 'white',
+                color: child.bgCOLOR ? 'white' : '#007bff',
+                borderColor: child.bgCOLOR || '#007bff'
+              }"
+            >
+              {{ child.CARDNO }}-{{ child.CHILDNO }}
+            </span>
+
             {{ child.CHILDBLOCK }}
           </h5>
 
@@ -142,7 +152,16 @@
 
       <div class="modal-header">
         <h5 class="modal-title">
-          <span class="cardno-badge">{{ selectedChild?.CARDNO }}-{{ selectedChild?.CHILDNO }}</span>
+          <span
+            class="cardno-badge"
+            :style="{
+              background: selectedChild?.bgCOLOR || 'white',
+              color: selectedChild?.bgCOLOR ? 'white' : '#007bff',
+              borderColor: selectedChild?.bgCOLOR || '#007bff'
+            }"
+          >
+            {{ selectedChild?.CARDNO }}-{{ selectedChild?.CHILDNO }}
+          </span>
           {{ selectedChild?.CHILDBLOCK }}
         </h5>
         <button type="button" class="btn-close" @click="closeModal"></button>
@@ -155,7 +174,7 @@
         <p><strong>使用期限：</strong> {{ selectedChild?.CHILDLIMITDATE || "-" }}</p>
 
         <p><strong>グループ：</strong> {{ selectedChild?.GROUP || "-" }}</p>
-        <p><strong>グループ監督：</strong> {{ getUserName(selectedChild?.ARRENGER) }}</p>
+        <p><strong>貸出責任者：</strong> {{ getUserName(selectedChild?.ARRENGER) }}</p>
         <p><strong>奉仕者：</strong> {{ getUserName(selectedChild?.MINISTER) }}</p>
 
         <p><strong>メモ：</strong> {{ selectedChild?.DESCRIPTION || "-" }}</p>

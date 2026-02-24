@@ -89,7 +89,10 @@ createApp({
         lng: Number(child.CHILDLNG)
       };
 
-      const map = new google.maps.Map(document.getElementById("modalMap"), {
+      const mapEl = document.getElementById("modalMap");
+      mapEl.innerHTML = "";
+
+      const map = new google.maps.Map(mapEl, {
         center: pos,
         zoom: 17,
         mapTypeControl: false
@@ -100,6 +103,11 @@ createApp({
         map,
         title: child.CHILDBLOCK
       });
+
+      setTimeout(() => {
+        google.maps.event.trigger(map, "resize");
+        map.setCenter(pos);
+      }, 200);
     };
 
     const handleResize = () => {
