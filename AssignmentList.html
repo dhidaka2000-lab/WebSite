@@ -152,7 +152,7 @@
 
         <p><strong>貸出日：</strong> {{ selectedChild?.CHILDCHECKOUTDATE || "-" }}</p>
         <p><strong>使用開始日：</strong> {{ selectedChild?.CHILDSTARTDATE || "-" }}</p>
-        <p><strong>使用期限：</strong> {{ child.CHILDLIMITDATE }}</p>
+        <p><strong>使用期限：</strong> {{ selectedChild?.CHILDLIMITDATE || "-" }}</p>
 
         <p><strong>グループ：</strong> {{ selectedChild?.GROUP || "-" }}</p>
         <p><strong>グループ監督：</strong> {{ getUserName(selectedChild?.ARRENGER) }}</p>
