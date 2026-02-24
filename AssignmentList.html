@@ -103,9 +103,9 @@
             <span
               class="cardno-badge"
               :style="{
-                background: child.bgCOLOR || 'white',
-                color: child.bgCOLOR ? 'white' : '#007bff',
-                borderColor: child.bgCOLOR || '#007bff'
+                background: colorMap[child.COLOR] || 'white',
+                color: child.COLOR ? 'white' : '#007bff',
+                borderColor: colorMap[child.COLOR] || '#007bff'
               }"
             >
               {{ child.CARDNO }}-{{ child.CHILDNO }}
@@ -155,9 +155,9 @@
           <span
             class="cardno-badge"
             :style="{
-              background: selectedChild?.bgCOLOR || 'white',
-              color: selectedChild?.bgCOLOR ? 'white' : '#007bff',
-              borderColor: selectedChild?.bgCOLOR || '#007bff'
+              background: colorMap[selectedChild?.COLOR] || 'white',
+              color: selectedChild?.COLOR ? 'white' : '#007bff',
+              borderColor: colorMap[selectedChild?.COLOR] || '#007bff'
             }"
           >
             {{ selectedChild?.CARDNO }}-{{ selectedChild?.CHILDNO }}
@@ -172,9 +172,9 @@
         <p><strong>貸出日：</strong> {{ selectedChild?.CHILDCHECKOUTDATE || "-" }}</p>
         <p><strong>使用開始日：</strong> {{ selectedChild?.CHILDSTARTDATE || "-" }}</p>
         <p><strong>使用期限：</strong> {{ selectedChild?.CHILDLIMITDATE || "-" }}</p>
-
+        
         <p><strong>グループ：</strong> {{ selectedChild?.GROUP || "-" }}</p>
-        <p><strong>貸出責任者：</strong> {{ getUserName(selectedChild?.ARRENGER) }}</p>
+        <p><strong>グループ監督：</strong> {{ getUserName(selectedChild?.ARRENGER) }}</p>
         <p><strong>奉仕者：</strong> {{ getUserName(selectedChild?.MINISTER) }}</p>
 
         <p><strong>メモ：</strong> {{ selectedChild?.DESCRIPTION || "-" }}</p>

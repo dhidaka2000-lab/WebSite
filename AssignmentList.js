@@ -16,6 +16,17 @@ createApp({
 
     const filterMode = ref("all");
 
+    // ★ COLOR → HTML カラーコード変換
+    const colorMap = {
+      "赤": "#CC0000",
+      "青": "#0066CC",
+      "黄": "#FFD700",
+      "白": "#999999",
+      "緑": "#00AA55",
+      "★": "#FFD700",
+      "": "white"
+    };
+
     const statusClass = (child) => {
       switch (child.CHILDSTATUS) {
         case "貸出中": return "bg-warning text-black";
@@ -46,6 +57,7 @@ createApp({
       window.location.href = url;
     };
 
+    // ★ Firebase ログイン状態監視
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "index.html";
@@ -60,6 +72,7 @@ createApp({
       fetchChildCards();
     });
 
+    // ★ モーダルを開く
     const openModal = (type, child) => {
       selectedChild.value = child;
 
@@ -71,6 +84,7 @@ createApp({
 
       modalInstance.value.show();
 
+      // ★ モーダルが完全に開いた後に地図を描画
       const modalEl = document.getElementById("childModal");
       modalEl.addEventListener("shown.bs.modal", () => {
         initModalMap(child);
@@ -81,6 +95,7 @@ createApp({
       modalInstance.value?.hide();
     };
 
+    // ★ Google Map 初期化
     const initModalMap = (child) => {
       if (!child.CHILDLAT || !child.CHILDLNG) return;
 
@@ -90,7 +105,7 @@ createApp({
       };
 
       const mapEl = document.getElementById("modalMap");
-      mapEl.innerHTML = "";
+      mapEl.innerHTML = ""; // 再描画バグ防止
 
       const map = new google.maps.Map(mapEl, {
         center: pos,
@@ -104,6 +119,7 @@ createApp({
         title: child.CHILDBLOCK
       });
 
+      // ★ モーダル内の地図は resize が必須
       setTimeout(() => {
         google.maps.event.trigger(map, "resize");
         map.setCenter(pos);
@@ -117,6 +133,7 @@ createApp({
     const isUpdating = ref(false);
     let toastInstance = null;
 
+    // ★ キャッシュ対応
     const fetchChildCards = async () => {
       const CACHE_KEY = "childCardCache";
       const CACHE_EXPIRE = 18000 * 60 * 1000;
@@ -138,6 +155,7 @@ createApp({
       fetchFromWorker(true);
     };
 
+    // ★ Worker → Supabase
     const fetchFromWorker = async (hideLoading) => {
       try {
         const user = firebase.auth().currentUser;
@@ -178,6 +196,7 @@ createApp({
       }
     };
 
+    // ★ 最新情報に更新
     const refresh = () => {
       if (isUpdating.value) return;
 
@@ -195,6 +214,7 @@ createApp({
       });
     };
 
+    // ★ フィルタロジック
     const filteredChilds = computed(() => {
       if (filterMode.value === "all") return childs.value;
       if (filterMode.value === "lent") return childs.value.filter(c => c.CHILDSTATUS === "貸出中");
@@ -203,6 +223,7 @@ createApp({
       return childs.value;
     });
 
+    // ★ セッション管理
     let sessionTimer = null;
     const SESSION_LIMIT = 18000 * 1000;
 
@@ -234,6 +255,7 @@ createApp({
       userrole,
       statusClass,
       getUserName,
+      colorMap,
       openModal,
       closeModal,
       goToMap,
