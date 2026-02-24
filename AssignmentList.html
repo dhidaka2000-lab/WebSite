@@ -135,7 +135,7 @@
   </div>
 </div>
 
-<!-- ★ 詳細モーダル（貸出日・使用開始日・Google Map 追加） -->
+<!-- ★ 詳細モーダル -->
 <div class="modal fade" id="childModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -150,15 +150,15 @@
 
       <div class="modal-body">
 
-        <p><strong>状態：</strong> {{ selectedChild?.CHILDSTATUS }}</p>
-        <p><strong>戸数：</strong> {{ selectedChild?.CHILDHOUSES }}</p>
-
         <p><strong>貸出日：</strong> {{ selectedChild?.CHILDCHECKOUTDATE || "-" }}</p>
         <p><strong>使用開始日：</strong> {{ selectedChild?.CHILDSTARTDATE || "-" }}</p>
+        <p><strong>使用期限：</strong> {{ child.CHILDLIMITDATE }}</p>
 
         <p><strong>グループ：</strong> {{ selectedChild?.GROUP || "-" }}</p>
-        <p><strong>グループ監督：</strong> {{ selectedChild?.ARRENGER || "-" }}</p>
-        <p><strong>奉仕者：</strong> {{ selectedChild?.MINISTER || "-" }}</p>
+        <p><strong>グループ監督：</strong> {{ getUserName(selectedChild?.ARRENGER) }}</p>
+        <p><strong>奉仕者：</strong> {{ getUserName(selectedChild?.MINISTER) }}</p>
+
+        <p><strong>メモ：</strong> {{ selectedChild?.DESCRIPTION || "-" }}</p>
 
         <hr>
 

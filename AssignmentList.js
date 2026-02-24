@@ -5,6 +5,7 @@ createApp({
     const screenWidth = ref(window.innerWidth);
     const cardsNumbers = ref(0);
     const childs = ref([]);
+    const userMaster = ref([]);
     const selectedChild = ref(null);
     const modalInstance = ref(null);
 
@@ -22,6 +23,12 @@ createApp({
         case "貸出可能": return "bg-success text-white";
         default: return "bg-secondary text-white";
       }
+    };
+
+    const getUserName = (id) => {
+      if (!id) return "-";
+      const u = userMaster.value.find(x => String(x.ID) === String(id));
+      return u ? `${u.UserName}${u.BS || ""}` : "-";
     };
 
     const logout = () => {
@@ -61,11 +68,13 @@ createApp({
           document.getElementById("childModal")
         );
       }
+
       modalInstance.value.show();
 
-      setTimeout(() => {
+      const modalEl = document.getElementById("childModal");
+      modalEl.addEventListener("shown.bs.modal", () => {
         initModalMap(child);
-      }, 300);
+      }, { once: true });
     };
 
     const closeModal = () => {
@@ -142,8 +151,9 @@ createApp({
 
         const data = await response.json();
 
-        if (data.status === "success" && Array.isArray(data.cards)) {
+        if (data.status === "success") {
           childs.value = data.cards;
+          userMaster.value = data.userMaster || [];
           cardsNumbers.value = data.cards.length;
 
           localStorage.setItem("childCardCache", JSON.stringify({
@@ -180,8 +190,8 @@ createApp({
     const filteredChilds = computed(() => {
       if (filterMode.value === "all") return childs.value;
       if (filterMode.value === "lent") return childs.value.filter(c => c.CHILDSTATUS === "貸出中");
-      if (filterMode.value === "focus") return childs.value.filter(c => c.FOCUSFLAG === "重点");
-      if (filterMode.value === "nonfocus") return childs.value.filter(c => c.FOCUSFLAG !== "重点");
+      if (filterMode.value === "focus") return childs.value.filter(c => c.COLOR === "★");
+      if (filterMode.value === "nonfocus") return childs.value.filter(c => c.COLOR !== "★");
       return childs.value;
     });
 
@@ -215,6 +225,7 @@ createApp({
       userGroup,
       userrole,
       statusClass,
+      getUserName,
       openModal,
       closeModal,
       goToMap,
