@@ -250,6 +250,15 @@ createApp({
         const data = await response.json();
 
         if (data.status === "success") {
+
+          // -------------------------
+          // ★ CARDNO → CHILDNO 昇順ソート
+          // -------------------------
+          data.cards.sort((a, b) => {
+            if (a.CARDNO !== b.CARDNO) return a.CARDNO - b.CARDNO;
+            return a.CHILDNO - b.CHILDNO;
+          });
+
           childs.value = data.cards;
           userMaster.value = data.userMaster || [];
           cardsNumbers.value = data.cards.length;
