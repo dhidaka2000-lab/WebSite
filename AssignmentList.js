@@ -16,9 +16,6 @@ createApp({
 
     const filterMode = ref("all");
 
-    // -------------------------
-    // ★ COLOR → HTML カラーコード変換
-    // -------------------------
     const colorMap = {
       "赤": "#CC0000",
       "青": "#0066CC",
@@ -29,9 +26,6 @@ createApp({
       "": "white"
     };
 
-    // -------------------------
-    // ★ Firebase 初期化（Worker 経由）
-    // -------------------------
     async function initFirebase() {
       const res = await fetch("https://ekuikidev.dhidaka2000.workers.dev", {
         method: "POST",
@@ -48,9 +42,6 @@ createApp({
       });
     }
 
-    // -------------------------
-    // ★ Google Maps API ロード（Worker 経由）
-    // -------------------------
     let googleLoaded = false;
 
     async function loadGoogleMapsApi() {
@@ -81,9 +72,6 @@ createApp({
       });
     }
 
-    // -------------------------
-    // ★ ステータスバッジ
-    // -------------------------
     const statusClass = (child) => {
       switch (child.CHILDSTATUS) {
         case "貸出中": return "bg-warning text-black";
@@ -93,18 +81,12 @@ createApp({
       }
     };
 
-    // -------------------------
-    // ★ userMaster → 名前変換
-    // -------------------------
     const getUserName = (id) => {
       if (!id) return "-";
       const u = userMaster.value.find(x => String(x.ID) === String(id));
       return u ? `${u.UserName}${u.BS || ""}` : "-";
     };
 
-    // -------------------------
-    // ★ ログアウト
-    // -------------------------
     const logout = () => {
       firebase.auth().signOut().then(() => {
         window.location.href = "index.html";
@@ -120,9 +102,6 @@ createApp({
       window.location.href = url;
     };
 
-    // -------------------------
-    // ★ Firebase Auth 監視
-    // -------------------------
     async function startAuthWatcher() {
       firebase.auth().onAuthStateChanged(async (user) => {
         if (!user) {
@@ -139,9 +118,6 @@ createApp({
       });
     }
 
-    // -------------------------
-    // ★ モーダルを開く（KML 2枚重ね対応）
-    // -------------------------
     const openModal = async (type, child) => {
       selectedChild.value = child;
 
@@ -165,9 +141,6 @@ createApp({
       modalInstance.value?.hide();
     };
 
-    // -------------------------
-    // ★ Google Map 初期化（親KML＋子KMLの2枚重ね）
-    // -------------------------
     const initModalMap = (child) => {
       if (!child.CHILDLAT || !child.CHILDLNG) return;
 
@@ -185,9 +158,6 @@ createApp({
         mapTypeControl: false
       });
 
-      // -------------------------
-      // ★ 親カード KML（card_list.kml → KML）
-      // -------------------------
       if (child.KML) {
         const parentKmlUrl =
           `https://ekuikidev.dhidaka2000.workers.dev?funcName=getKml&file=${encodeURIComponent(child.KML)}`;
@@ -199,9 +169,6 @@ createApp({
         });
       }
 
-      // -------------------------
-      // ★ 子カード KML（child_list.kml → CHILDKML）
-      // -------------------------
       if (child.CHILDKML) {
         const childKmlUrl =
           `https://ekuikidev.dhidaka2000.workers.dev?funcName=getKml&file=${encodeURIComponent(child.CHILDKML)}`;
@@ -213,9 +180,6 @@ createApp({
         });
       }
 
-      // -------------------------
-      // ★ ピン表示
-      // -------------------------
       new google.maps.Marker({
         position: pos,
         map,
@@ -228,9 +192,6 @@ createApp({
       }, 200);
     };
 
-    // -------------------------
-    // ★ キャッシュ対応
-    // -------------------------
     const isUpdating = ref(false);
     let toastInstance = null;
 
@@ -255,9 +216,6 @@ createApp({
       fetchFromWorker(true);
     };
 
-    // -------------------------
-    // ★ Worker → Supabase
-    // -------------------------
     const fetchFromWorker = async (hideLoading) => {
       try {
         const user = firebase.auth().currentUser;
@@ -281,9 +239,6 @@ createApp({
 
         if (data.status === "success") {
 
-          // -------------------------
-          // ★ CARDNO → CHILDNO 昇順ソート
-          // -------------------------
           data.cards.sort((a, b) => {
             if (a.CARDNO !== b.CARDNO) return a.CARDNO - b.CARDNO;
             return a.CHILDNO - b.CHILDNO;
@@ -307,9 +262,6 @@ createApp({
       }
     };
 
-    // -------------------------
-    // ★ 最新情報に更新
-    // -------------------------
     const refresh = () => {
       if (isUpdating.value) return;
 
@@ -327,9 +279,6 @@ createApp({
       });
     };
 
-    // -------------------------
-    // ★ フィルタロジック
-    // -------------------------
     const filteredChilds = computed(() => {
       if (filterMode.value === "all") return childs.value;
       if (filterMode.value === "lent") return childs.value.filter(c => c.CHILDSTATUS === "貸出中");
@@ -338,9 +287,6 @@ createApp({
       return childs.value;
     });
 
-    // -------------------------
-    // ★ セッション管理
-    // -------------------------
     let sessionTimer = null;
     const SESSION_LIMIT = 18000 * 1000;
 
@@ -356,12 +302,9 @@ createApp({
     window.addEventListener("keydown", resetSessionTimer);
     window.addEventListener("touchstart", resetSessionTimer);
 
-    // -------------------------
-    // ★ onMounted（初期化の順番が超重要）
-    // -------------------------
     onMounted(async () => {
-      await initFirebase();      // ① Firebase 初期化
-      await startAuthWatcher();  // ② Auth 監視開始
+      await initFirebase();
+      await startAuthWatcher();
 
       window.addEventListener("resize", () => {
         screenWidth.value = window.innerWidth;
