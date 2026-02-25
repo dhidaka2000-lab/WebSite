@@ -27,6 +27,39 @@ createApp({
       "": "white"
     };
 
+    // -------------------------
+    // ★ Google Maps API ロード
+    // -------------------------
+    let googleLoaded = false;
+
+    async function loadGoogleMapsApi() {
+      if (googleLoaded) return;
+
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
+
+      const res = await fetch("https://ekuikidev.dhidaka2000.workers.dev", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + idToken
+        },
+        body: JSON.stringify({ funcName: "getGoogleMapsUrl" })
+      });
+
+      const data = await res.json();
+
+      await new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = data.mapUrl;
+        script.onload = () => {
+          googleLoaded = true;
+          resolve();
+        };
+        document.head.appendChild(script);
+      });
+    }
+
     const statusClass = (child) => {
       switch (child.CHILDSTATUS) {
         case "貸出中": return "bg-warning text-black";
@@ -73,8 +106,11 @@ createApp({
     });
 
     // ★ モーダルを開く
-    const openModal = (type, child) => {
+    const openModal = async (type, child) => {
       selectedChild.value = child;
+
+      // ★ Google Maps API を Worker からロード
+      await loadGoogleMapsApi();
 
       if (!modalInstance.value) {
         modalInstance.value = new bootstrap.Modal(
@@ -84,7 +120,6 @@ createApp({
 
       modalInstance.value.show();
 
-      // ★ モーダルが完全に開いた後に地図を描画
       const modalEl = document.getElementById("childModal");
       modalEl.addEventListener("shown.bs.modal", () => {
         initModalMap(child);
@@ -119,7 +154,6 @@ createApp({
         title: child.CHILDBLOCK
       });
 
-      // ★ モーダル内の地図は resize が必須
       setTimeout(() => {
         google.maps.event.trigger(map, "resize");
         map.setCenter(pos);
