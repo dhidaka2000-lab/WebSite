@@ -171,6 +171,7 @@ createApp({
       }
 
       // ★ 子カード KML（GET 版）
+      /* 
       if (child.CHILDKML) {
         const childKmlUrl =
           `https://ekuikidev.dhidaka2000.workers.dev/getKml?file=${child.CHILDKML}`;
@@ -181,7 +182,8 @@ createApp({
           preserveViewport: true
         });
       }
-
+      */
+     
       new google.maps.Marker({
         position: pos,
         map,
