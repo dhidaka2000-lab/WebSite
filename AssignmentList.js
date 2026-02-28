@@ -158,9 +158,10 @@ createApp({
         mapTypeControl: false
       });
 
+      // ★ 親カード KML（GET 版）
       if (child.KML) {
         const parentKmlUrl =
-          `https://ekuikidev.dhidaka2000.workers.dev?funcName=getKml&file=${encodeURIComponent(child.KML)}`;
+          `https://ekuikidev.dhidaka2000.workers.dev/getKml?file=${encodeURIComponent(child.KML)}`;
 
         new google.maps.KmlLayer({
           url: parentKmlUrl,
@@ -169,9 +170,10 @@ createApp({
         });
       }
 
+      // ★ 子カード KML（GET 版）
       if (child.CHILDKML) {
         const childKmlUrl =
-          `https://ekuikidev.dhidaka2000.workers.dev?funcName=getKml&file=${encodeURIComponent(child.CHILDKML)}`;
+          `https://ekuikidev.dhidaka2000.workers.dev/getKml?file=${encodeURIComponent(child.CHILDKML)}`;
 
         new google.maps.KmlLayer({
           url: childKmlUrl,
