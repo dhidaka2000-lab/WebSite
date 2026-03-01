@@ -427,10 +427,13 @@ const ChildMapApp = {
     openResultModal(house) {
       this.selectedHouse = house;
 
+      // 今日の日付
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, "0");
       const dd = String(today.getDate()).padStart(2, "0");
+
+      // 初期値セット
       this.resultForm.visit_date = `${yyyy}-${mm}-${dd}`;
 
       const hour = today.getHours();
@@ -446,7 +449,10 @@ const ChildMapApp = {
       this.resultForm.note = "";
       this.resultForm.ng_flag = "可";
 
-      $("#resultModal").modal("show");
+      // ★ DOM 更新後にモーダルを開く
+      this.$nextTick(() => {
+        $("#resultModal").modal("show");
+      });
     },
 
     // -----------------------------
