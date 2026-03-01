@@ -205,6 +205,41 @@ const ChildMapApp = {
     },
 
     // -----------------------------
+    // 訪問履歴の削除
+    // -----------------------------
+
+    async deleteVisitRecord(rec) {
+      if (!confirm("訪問履歴を削除してもよろしいですか？")) return;
+
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
+
+      const payload = {
+        funcName: "deleteVisitRecord",
+        id: rec.ID
+      };
+
+      const res = await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (data.status !== "success") {
+        alert("削除中にエラーが発生しました。");
+        return;
+      }
+
+      // 再読み込み
+      await this.fetchChildDetail();
+    },
+
+    // -----------------------------
     // 地図アコーディオン
     // -----------------------------
     toggleMap() {

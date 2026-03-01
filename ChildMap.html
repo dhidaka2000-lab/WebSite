@@ -211,24 +211,35 @@
           <div class="small">戻る</div>
         </button>
 
-        <!-- 中央：区域カード情報（横並び） -->
+        <!-- 中央：区域カード番号（黄色）＋ 子カード名 -->
         <div class="text-center" style="flex-grow:1;">
 
-          <!-- 1行目：区域カード番号 ＋ 子カード名（横並び） -->
-          <div style="display:flex; justify-content:center; gap:12px; align-items:center;">
-            <div class="small text-muted">
-              区域カード {{ childInfo?.CardNo ?? '' }}-{{ childInfo?.ChildNo ?? '' }}
+          <div style="display:flex; justify-content:center; align-items:center; gap:12px;">
+
+            <!-- 黄色のカード番号（AssignmentList と同じデザイン） -->
+            <div style="
+              background:#ffeb3b;
+              padding:4px 10px;
+              border-radius:6px;
+              font-weight:bold;
+              font-size:20px;
+              border:1px solid #d4c000;
+            ">
+              {{ childInfo?.CardNo ?? '' }}-{{ childInfo?.ChildNo ?? '' }}
             </div>
-            <div class="font-weight-bold" style="font-size:20px;">
+
+            <!-- 子カード名 -->
+            <div style="font-size:20px; font-weight:bold;">
               {{ childInfo?.ChildBlock || '-' }}
             </div>
+
           </div>
 
-          <!-- 2行目：奉仕者名・貸出責任者名・貸出先グループ名・返却期日 -->
-          <div style="font-size:16px; margin-top:2px; display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+          <!-- 奉仕者名・貸出責任者名・グループ名・返却期日 -->
+          <div style="font-size:16px; margin-top:4px; display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
             <div>奉仕者名：{{ ministerName }}</div>
             <div>貸出責任者：{{ arrengerName }}</div>
-            <div>貸出先グループ：{{ childInfo?.ChildGroup || '-' }}</div>
+            <div>グループ：{{ childInfo?.ChildGroup || '-' }}</div>
             <div>返却期日：{{ childInfo?.ChildLimitDate || '-' }}</div>
           </div>
 
@@ -381,6 +392,30 @@
       <div v-show="isVisitHistoryOpen(house.HousingNo)" class="card-body py-2">
         <div v-if="house.VRecord && house.VRecord.length > 0" class="visit-record-timeline">
           <div v-for="rec in sortedVRecord(house.VRecord)" :key="rec.ID" class="visit-record-item">
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div class="small" style="font-size:18px;">
+                  <strong>{{ rec.VisitDate || '-' }}</strong>
+                  <span v-if="rec.Time">（{{ rec.Time }}）</span>
+                </div>
+                <div class="small" style="font-size:18px;">方法：{{ rec.Field || '-' }}</div>
+                <div class="small" style="font-size:18px;">結果：{{ rec.Result || '-' }}</div>
+                <div class="small text-muted" style="font-size:18px;">メモ：{{ rec.Comment || '-' }}</div>
+              </div>
+
+              <!-- ★ 削除ボタン -->
+              <button
+                class="btn btn-sm btn-outline-danger"
+                style="height:36px;"
+                @click="deleteVisitRecord(rec)"
+              >
+                削除
+              </button>
+            </div>
+
+          </div>
+
             <div class="small" style="font-size:18px;">
               <strong>{{ rec.VisitDate || '-' }}</strong>
               <span v-if="rec.Time">（{{ rec.Time }}）</span>
