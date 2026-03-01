@@ -275,6 +275,16 @@ const ChildMapApp = {
           center: fallbackPos,
           zoom: 16,
           mapTypeControl: false,
+
+          // ★ ここを追加
+          zoomControl: true,
+          zoomControlOptions: {
+            position: google.maps.ControlPosition.RIGHT_BOTTOM
+          },
+
+          // ★ 現在地ボタンを消すので不要
+          fullscreenControl: false,
+          streetViewControl: false,
         }
       );
 
@@ -319,7 +329,7 @@ const ChildMapApp = {
 
       // ★ 住戸マーカー
       this.addAllMarkers(null);
-      this.addCurrentLocationButton();
+      //this.addCurrentLocationButton();
     },
 
     // -----------------------------
