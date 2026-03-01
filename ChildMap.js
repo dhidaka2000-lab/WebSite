@@ -276,15 +276,16 @@ const ChildMapApp = {
           zoom: 16,
           mapTypeControl: false,
 
-          // ★ ここを追加
           zoomControl: true,
           zoomControlOptions: {
             position: google.maps.ControlPosition.RIGHT_BOTTOM
           },
 
-          // ★ 現在地ボタンを消すので不要
-          fullscreenControl: false,
-          streetViewControl: false,
+          fullscreenControl: true,
+          streetViewControl: true,
+          streetViewControlOptions: {
+            position: google.maps.ControlPosition.RIGHT_BOTTOM
+          }
         }
       );
 
