@@ -58,13 +58,13 @@ const ChildMapApp = {
 
     // 奉仕者名（user_master から取得）
     ministerName() {
-      if (!this.childInfo?.Minister) return "-";
+      if (!this.childInfo?.ChildMinister) return "-";
       const m = this.userMaster.find(
-        u => String(u.ID) === String(this.childInfo.Minister)
+        u => String(u.ID) === String(this.childInfo.ChildMinister)
       );
       return m ? m.UserName : "-";
     },
-    
+
     arrengerName() {
       if (!this.childInfo?.ChildArrenger) return "-";
       const u = this.userMaster.find(
