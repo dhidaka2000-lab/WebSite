@@ -216,7 +216,7 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "deleteVisitRecord",
-        id: rec.ID
+        row_id: rec.RowID
       };
 
       const res = await fetch(this.apiEndpoint, {
