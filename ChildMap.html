@@ -431,9 +431,18 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
-          <div class="modal-header">
+          <div class="modal-header d-flex justify-content-between align-items-center">
             <h5 class="modal-title">訪問記録の登録</h5>
-            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+
+            <div>
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
+                閉じる
+              </button>
+
+              <button type="button" class="btn btn-primary btn-sm" @click="submitResult">
+                登録
+              </button>
+            </div>
           </div>
 
           <div class="modal-body" v-if="selectedHouse">
