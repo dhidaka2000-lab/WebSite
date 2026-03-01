@@ -266,15 +266,13 @@ const ChildMapApp = {
         return;
       }
 
-      const first = this.houses[0];
-      const center = first?.CSVLat
-        ? { lat: Number(first.CSVLat), lng: Number(first.CSVLng) }
-        : { lat: 34.6937, lng: 135.5023 };
+      // 仮の初期位置（大阪駅）
+      const fallbackPos = { lat: 34.702485, lng: 135.495951 };
 
       this.map = new google.maps.Map(
         document.getElementById("mapContainer"),
         {
-          center,
+          center: fallbackPos,
           zoom: 16,
           mapTypeControl: false,
         }
@@ -282,6 +280,44 @@ const ChildMapApp = {
 
       this.infoWindow = new google.maps.InfoWindow();
 
+      // ★ 親カード KML（フィルタリング済み）
+      if (this.cardInfo.KML) {
+        const parentKmlUrl =
+          `${this.apiEndpoint}/getKml?file=${this.cardInfo.KML}&childNo=${this.childInfo.ChildNo}`;
+
+        const parentLayer = new google.maps.KmlLayer({
+          url: parentKmlUrl,
+          map: this.map,
+          preserveViewport: true
+        });
+
+        // ★ 読み込み完了後に自動フィット
+        google.maps.event.addListenerOnce(parentLayer, "defaultviewport_changed", () => {
+          const bounds = parentLayer.getDefaultViewport();
+          if (bounds) {
+            this.map.fitBounds(bounds);
+          }
+        });
+      }
+
+      // ★ 子カードの緯度経度がある場合は優先
+      if (this.childInfo.ChildLat && this.childInfo.ChildLng) {
+        const pos = {
+          lat: Number(this.childInfo.ChildLat),
+          lng: Number(this.childInfo.ChildLng)
+        };
+
+        new google.maps.Marker({
+          position: pos,
+          map: this.map,
+          title: this.childInfo.Block
+        });
+
+        this.map.setCenter(pos);
+        this.map.setZoom(17);
+      }
+
+      // ★ 住戸マーカー
       this.addAllMarkers(null);
       this.addCurrentLocationButton();
     },
