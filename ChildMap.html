@@ -205,45 +205,34 @@
     <header class="sticky-top bg-white mb-2 py-2 border-bottom">
       <div class="d-flex justify-content-between align-items-center">
 
-        <!-- 左：戻る＋タイトル -->
-        <div class="d-flex align-items-center">
-          <button class="btn btn-link p-0 text-center mr-3" @click="goBackToMyPage">
-            <div><i class="fas fa-arrow-circle-left fa-2x"></i></div>
-            <div class="small">戻る</div>
-          </button>
+        <!-- 左：戻る -->
+        <button class="btn btn-link p-0 text-center" @click="goBackToMyPage">
+          <div><i class="fas fa-arrow-circle-left fa-2x"></i></div>
+          <div class="small">戻る</div>
+        </button>
 
-          <div style="margin-left:36px;">
-            <div class="small text-muted">
-              区域カード {{ childInfo?.CardNo ?? '' }} - {{ childInfo?.ChildNo ?? '' }}
-            </div>
-            <div class="font-weight-bold" style="font-size:20px;">
-              {{ childInfo?.Block || '-' }}
-            </div>
+        <!-- 中央：区域カード情報（フォントサイズそのまま） -->
+        <div class="text-center" style="flex-grow:1;">
+          <div class="small text-muted">
+            区域カード {{ childInfo?.CardNo ?? '' }} - {{ childInfo?.ChildNo ?? '' }}
+          </div>
+          <div class="font-weight-bold" style="font-size:20px;">
+            {{ childInfo?.Block || '-' }}
+          </div>
+          <div style="font-size:16px;">
+            奉仕者名：{{ ministerName }}　
+            返却期日：{{ childInfo?.LimitDate || '-' }}
           </div>
         </div>
 
         <!-- 右：ホーム -->
-        <div>
-          <button class="btn btn-link p-0 text-center" @click="goHome">
-            <div><i class="fas fa-home fa-2x"></i></div>
-            <div class="small">ホーム</div>
-          </button>
-        </div>
+        <button class="btn btn-link p-0 text-center" @click="goHome">
+          <div><i class="fas fa-home fa-2x"></i></div>
+          <div class="small">ホーム</div>
+        </button>
 
       </div>
     </header>
-
-    <!-- 子カード情報 -->
-    <div class="card mb-2">
-      <div class="card-body py-2">
-        <div class="child-info-row">
-          <div><strong>区域カード:</strong> {{ childInfo?.CardNo ?? '' }}-{{ childInfo?.ChildNo ?? '' }}</div>
-          <div><strong>子カード名:</strong> {{ childInfo?.Block || '-' }}</div>
-          <div><strong>奉仕者名:</strong> {{ ministerName }}</div>
-          <div><strong>返却期日:</strong> {{ childInfo?.LimitDate || '-' }}</div>
-        </div>
-      </div>
-    </div>
 
     <!-- 地図アコーディオン -->
     <div class="card mb-2">
@@ -265,6 +254,7 @@
 
     <!-- 検索 -->
     <div class="mb-2">
+      <h5 class="mb-2">住戸一覧（{{ filteredHouses?.length ?? 0 }}件）</h5>
       <input
         v-model="searchQuery"
         class="form-control"
@@ -273,8 +263,6 @@
     </div>
 
     <!-- 住戸一覧 -->
-    <h5 class="mb-2">住戸一覧（{{ filteredHouses?.length ?? 0 }}件）</h5>
-
     <div
       v-for="house in filteredHouses"
       :key="house.HousingNo"
