@@ -142,58 +142,56 @@ createApp({
     };
 
     const initModalMap = (child) => {
-      if (!child.CHILDLAT || !child.CHILDLNG) return;
-
-      const pos = {
-        lat: Number(child.CHILDLAT),
-        lng: Number(child.CHILDLNG)
-      };
-
       const mapEl = document.getElementById("modalMap");
       mapEl.innerHTML = "";
 
+      // 仮の初期位置（大阪駅あたり）
+      const fallbackPos = { lat: 34.702485, lng: 135.495951 };
+
       const map = new google.maps.Map(mapEl, {
-        center: pos,
-        zoom: 17,
+        center: fallbackPos,
+        zoom: 16,
         mapTypeControl: false
       });
 
-      // ★ 親カード KML（GET 版）
+      // ★ 親カード KML（フィルタリング済み）
+      let parentLayer = null;
+
       if (child.KML) {
         const parentKmlUrl =
           `https://ekuikidev.dhidaka2000.workers.dev/getKml?file=${child.KML}&childNo=${child.CHILDNO}`;
 
-        new google.maps.KmlLayer({
+        parentLayer = new google.maps.KmlLayer({
           url: parentKmlUrl,
           map: map,
           preserveViewport: true
         });
-      }
 
-      // ★ 子カード KML（GET 版）
-      /*
-      if (child.CHILDKML) {
-        const childKmlUrl =
-          `https://ekuikidev.dhidaka2000.workers.dev/getKml?file=${child.CHILDKML}`;
-
-        new google.maps.KmlLayer({
-          url: childKmlUrl,
-          map: map,
-          preserveViewport: true
+        // ★ KML 読み込み完了後に範囲を自動調整
+        google.maps.event.addListenerOnce(parentLayer, "defaultviewport_changed", () => {
+          const bounds = parentLayer.getDefaultViewport();
+          if (bounds) {
+            map.fitBounds(bounds);
+          }
         });
       }
-      */
-     
-      new google.maps.Marker({
-        position: pos,
-        map,
-        title: child.CHILDBLOCK
-      });
 
-      setTimeout(() => {
-        google.maps.event.trigger(map, "resize");
+      // ★ 子カードの緯度経度がある場合は優先してピンを置く
+      if (child.CHILDLAT && child.CHILDLNG) {
+        const pos = {
+          lat: Number(child.CHILDLAT),
+          lng: Number(child.CHILDLNG)
+        };
+
+        new google.maps.Marker({
+          position: pos,
+          map,
+          title: child.CHILDBLOCK
+        });
+
         map.setCenter(pos);
-      }, 200);
+        map.setZoom(17);
+      }
     };
 
     const isUpdating = ref(false);
