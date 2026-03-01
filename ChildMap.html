@@ -386,44 +386,43 @@
         </div>
       </div>
 
-      <!-- 訪問履歴 -->
-      <div v-show="isVisitHistoryOpen(house.HousingNo)" class="card-body py-2">
-        <div v-if="house.VRecord && house.VRecord.length > 0" class="visit-record-timeline">
-          <div v-for="rec in sortedVRecord(house.VRecord)" :key="rec.ID" class="visit-record-item">
+    <!-- 訪問履歴 -->
+    <div v-show="isVisitHistoryOpen(house.HousingNo)" class="card-body py-2">
+      <div v-if="house.VRecord && house.VRecord.length > 0" class="visit-record-timeline">
 
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div class="small" style="font-size:18px;">
-                  <strong>{{ rec.VisitDate || '-' }}</strong>
-                  <span v-if="rec.Time">（{{ rec.Time }}）</span>
-                </div>
-                <div class="small" style="font-size:18px;">方法：{{ rec.Field || '-' }}</div>
-                <div class="small" style="font-size:18px;">結果：{{ rec.Result || '-' }}</div>
-                <div class="small text-muted" style="font-size:18px;">メモ：{{ rec.Comment || '-' }}</div>
+        <div
+          v-for="rec in sortedVRecord(house.VRecord)"
+          :key="rec.ID"
+          class="visit-record-item"
+        >
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="small" style="font-size:18px;">
+                <strong>{{ rec.VisitDate || '-' }}</strong>
+                <span v-if="rec.Time">（{{ rec.Time }}）</span>
               </div>
-
-              <!-- ★ 削除ボタン -->
-              <button
-                class="btn btn-sm btn-outline-danger"
-                style="height:36px;"
-                @click="deleteVisitRecord(rec)"
-              >
-                削除
-              </button>
+              <div class="small" style="font-size:18px;">方法：{{ rec.Field || '-' }}</div>
+              <div class="small" style="font-size:18px;">結果：{{ rec.Result || '-' }}</div>
+              <div class="small text-muted" style="font-size:18px;">メモ：{{ rec.Comment || '-' }}</div>
             </div>
 
+            <!-- 削除ボタン -->
+            <button
+              class="btn btn-sm btn-outline-danger"
+              style="height:36px;"
+              @click="deleteVisitRecord(rec)"
+            >
+              削除
+            </button>
           </div>
 
-            <div class="small" style="font-size:18px;">
-              <strong>{{ rec.VisitDate || '-' }}</strong>
-              <span v-if="rec.Time">（{{ rec.Time }}）</span>
-            </div>
-            <div class="small" style="font-size:18px;">方法：{{ rec.Field || '-' }}</div>
-            <div class="small" style="font-size:18px;">結果：{{ rec.Result || '-' }}</div>
-            <div class="small text-muted" style="font-size:18px;">メモ：{{ rec.Comment || '-' }}</div>
-          </div>
         </div>
-        <div v-else class="small text-muted" style="font-size:18px;">訪問履歴はありません。</div>
+
+      </div>
+
+      <div v-else class="small text-muted" style="font-size:18px;">
+        訪問履歴はありません。
       </div>
     </div>
 
