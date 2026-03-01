@@ -64,6 +64,14 @@ const ChildMapApp = {
       );
       return m ? m.UserName : "-";
     },
+    
+    arrengerName() {
+      if (!this.childInfo?.ChildArrenger) return "-";
+      const u = this.userMaster.find(
+        x => String(x.ID) === String(this.childInfo.ChildArrenger)
+      );
+      return u ? u.UserName : "-";
+    },
 
     // 時間帯の選択肢
     timeOptions() {

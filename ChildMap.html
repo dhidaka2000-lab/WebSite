@@ -211,18 +211,27 @@
           <div class="small">戻る</div>
         </button>
 
-        <!-- 中央：区域カード情報（フォントサイズそのまま） -->
+        <!-- 中央：区域カード情報（横並び） -->
         <div class="text-center" style="flex-grow:1;">
-          <div class="small text-muted">
-            区域カード {{ childInfo?.CardNo ?? '' }} - {{ childInfo?.ChildNo ?? '' }}
+
+          <!-- 1行目：区域カード番号 ＋ 子カード名（横並び） -->
+          <div style="display:flex; justify-content:center; gap:12px; align-items:center;">
+            <div class="small text-muted">
+              区域カード {{ childInfo?.CardNo ?? '' }}-{{ childInfo?.ChildNo ?? '' }}
+            </div>
+            <div class="font-weight-bold" style="font-size:20px;">
+              {{ childInfo?.ChildBlock || '-' }}
+            </div>
           </div>
-          <div class="font-weight-bold" style="font-size:20px;">
-            {{ childInfo?.Block || '-' }}
+
+          <!-- 2行目：奉仕者名・貸出責任者名・貸出先グループ名・返却期日 -->
+          <div style="font-size:16px; margin-top:2px; display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+            <div>奉仕者名：{{ ministerName }}</div>
+            <div>貸出責任者：{{ arrengerName }}</div>
+            <div>貸出先グループ：{{ childInfo?.ChildGroup || '-' }}</div>
+            <div>返却期日：{{ childInfo?.ChildLimitDate || '-' }}</div>
           </div>
-          <div style="font-size:16px;">
-            奉仕者名：{{ ministerName }}　
-            返却期日：{{ childInfo?.LimitDate || '-' }}
-          </div>
+
         </div>
 
         <!-- 右：ホーム -->
