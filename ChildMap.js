@@ -221,7 +221,7 @@ const ChildMapApp = {
     getLastMetDate(records) {
       if (!records || records.length === 0) return null;
 
-      const okWords = ["済", "在宅", "会えた"];
+      const okWords = ["済", "済(投函)", "済(留守録)"];
 
       const met = records.filter(r =>
         okWords.some(w => (r.Result || "").includes(w))
@@ -238,8 +238,8 @@ const ChildMapApp = {
     // -----------------------------
     getStatusColor(status) {
       if (!status) return "#999999";
-      if (status.includes("済") || status.includes("在宅")) return "#00AA55";
-      if (status.includes("NG")) return "#CC0000";
+      if (status.includes("済") || status.includes("済(投函)") || status.includes("済(留守録)")) return "#00AA55";
+      if (status.includes("訪問不可")) return "#CC0000";
       if (status.includes("不在")) return "#FFD700";
       return "#999999";
     },
@@ -456,7 +456,7 @@ const ChildMapApp = {
         });
       });
     },
-    
+
     // -----------------------------
     // 方法変更 → 結果をクリア
     // -----------------------------
@@ -497,7 +497,7 @@ const ChildMapApp = {
       let visitStatus = "その他";
       if (this.resultForm.result.includes("済")) visitStatus = "済";
       else if (this.resultForm.result.includes("不在")) visitStatus = "不在";
-      else if (this.resultForm.result.includes("NG")) visitStatus = "NG";
+      else if (this.resultForm.result.includes("不可")) visitStatus = "訪問不可";
       else if (this.resultForm.result.includes("保留")) visitStatus = "保留";
 
       const payload = {
