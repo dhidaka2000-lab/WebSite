@@ -481,18 +481,19 @@
             <div class="form-group">
               <label>時間帯</label>
               <div class="radio-group-inline">
-                <div class="radio-pill" v-for="t in timeOptions" :key="t">
+                <div class="radio-pill" v-for="(t, idx) in timeOptions" :key="idx">
                   <input
                     type="radio"
-                    :id="'time-' + t"
+                    :id="'time-' + idx"
                     name="time"
                     :value="t"
                     v-model="resultForm.time"
                   />
-                  <label class="radio-pill-label" :for="'time-' + t">{{ t }}</label>
+                  <label class="radio-pill-label" :for="'time-' + idx">{{ t }}</label>
                 </div>
               </div>
             </div>
+
 
             <!-- 方法（ラジオ） -->
             <div class="form-group">
