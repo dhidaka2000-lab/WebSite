@@ -435,22 +435,12 @@
           <h5 class="modal-title">訪問記録の登録</h5>
 
           <div class="d-flex gap-2">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-dismiss="modal"
-            >
-              閉じる
+            <button class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+            <button class="btn btn-warning" :disabled="savingResult" @click="submitResult">
+              <span v-if="savingResult"><i class="fas fa-spinner fa-spin mr-1"></i> 登録中…</span>
+              <span v-else>登録</span>
             </button>
-
-            <button
-              type="button"
-              class="btn btn-primary"
-              @click="submitResult"
-            >
-              登録
-            </button>
-          </div>
+          </div>          
         </div>
 
           <div class="modal-body" v-if="selectedHouse">
