@@ -433,7 +433,7 @@ const ChildMapApp = {
       const mm = String(today.getMonth() + 1).padStart(2, "0");
       const dd = String(today.getDate()).padStart(2, "0");
 
-      // 初期値セット
+      // ★ 初期値セット
       this.resultForm.visit_date = `${yyyy}-${mm}-${dd}`;
 
       const hour = today.getHours();
@@ -449,12 +449,14 @@ const ChildMapApp = {
       this.resultForm.note = "";
       this.resultForm.ng_flag = "可";
 
-      // ★ DOM 更新後にモーダルを開く
+      // ★ DOM 更新完了 → モーダル表示（2段階 nextTick）
       this.$nextTick(() => {
-        $("#resultModal").modal("show");
+        this.$nextTick(() => {
+          $("#resultModal").modal("show");
+        });
       });
     },
-
+    
     // -----------------------------
     // 方法変更 → 結果をクリア
     // -----------------------------

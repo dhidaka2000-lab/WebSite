@@ -431,17 +431,17 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
-        <div class="modal-header d-flex justify-content-between align-items-center">
-          <h5 class="modal-title">訪問記録の登録</h5>
+          <div class="modal-header d-flex justify-content-between align-items-center">
+            <h5 class="modal-title">訪問記録の登録</h5>
 
-          <div class="d-flex gap-2">
-            <button class="btn btn-secondary" data-dismiss="modal">閉じる</button>
-            <button class="btn btn-warning" :disabled="savingResult" @click="submitResult">
-              <span v-if="savingResult"><i class="fas fa-spinner fa-spin mr-1"></i> 登録中…</span>
-              <span v-else>登録</span>
-            </button>
-          </div>          
-        </div>
+            <div class="d-flex" style="gap: 8px;">
+              <button class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+              <button class="btn btn-warning" :disabled="savingResult" @click="submitResult">
+                <span v-if="savingResult"><i class="fas fa-spinner fa-spin mr-1"></i> 登録中…</span>
+                <span v-else>登録</span>
+              </button>
+            </div>
+          </div>
 
           <div class="modal-body" v-if="selectedHouse">
 
