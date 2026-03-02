@@ -427,35 +427,35 @@ const ChildMapApp = {
     openResultModal(house) {
       this.selectedHouse = house;
 
-      // 今日の日付
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, "0");
       const dd = String(today.getDate()).padStart(2, "0");
 
-      // ★ 初期値セット
-      this.resultForm.visit_date = `${yyyy}-${mm}-${dd}`;
+      const visitDate = `${yyyy}-${mm}-${dd}`;
 
       const hour = today.getHours();
-      if (hour < 9) this.resultForm.time = this.timeOptions[0];
-      else if (hour < 12) this.resultForm.time = this.timeOptions[1];
-      else if (hour < 13) this.resultForm.time = this.timeOptions[2];
-      else if (hour < 16) this.resultForm.time = this.timeOptions[3];
-      else if (hour < 18) this.resultForm.time = this.timeOptions[4];
-      else this.resultForm.time = this.timeOptions[5];
+      let time = "";
+      if (hour < 9) time = this.timeOptions[0];
+      else if (hour < 12) time = this.timeOptions[1];
+      else if (hour < 13) time = this.timeOptions[2];
+      else if (hour < 16) time = this.timeOptions[3];
+      else if (hour < 18) time = this.timeOptions[4];
+      else time = this.timeOptions[5];
 
-      this.resultForm.field = this.methodOptions[0].value; // "訪問"
-      this.resultForm.result = "不在";
-      this.resultForm.note = "";
-      this.resultForm.ng_flag = "可";
-      
-      console.log("timeOptions:", this.timeOptions, "time:", JSON.stringify(this.resultForm.time));
+      // ★★★ ここが重要：オブジェクトごと置き換える
+      this.resultForm = {
+        visit_date: visitDate,
+        time: time,
+        field: this.methodOptions[0].value, // "訪問"
+        result: "不在",
+        note: "",
+        ng_flag: "可"
+      };
 
-      // ★ DOM 更新完了 → モーダル表示（2段階 nextTick）
+      // ★ DOM が完全に更新された後にモーダルを開く
       this.$nextTick(() => {
-        this.$nextTick(() => {
-          $("#resultModal").modal("show");
-        });
+        $("#resultModal").modal("show");
       });
     },
 
