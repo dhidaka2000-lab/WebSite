@@ -437,17 +437,19 @@ const ChildMapApp = {
       this.resultForm.visit_date = `${yyyy}-${mm}-${dd}`;
 
       const hour = today.getHours();
-      if (hour < 9) this.resultForm.time = "9時以前";
-      else if (hour < 12) this.resultForm.time = "9時〜12時";
-      else if (hour < 13) this.resultForm.time = "12時〜13時";
-      else if (hour < 16) this.resultForm.time = "13時〜16時";
-      else if (hour < 18) this.resultForm.time = "16時〜18時";
-      else this.resultForm.time = "18時以降";
+      if (hour < 9) this.resultForm.time = this.timeOptions[0];
+      else if (hour < 12) this.resultForm.time = this.timeOptions[1];
+      else if (hour < 13) this.resultForm.time = this.timeOptions[2];
+      else if (hour < 16) this.resultForm.time = this.timeOptions[3];
+      else if (hour < 18) this.resultForm.time = this.timeOptions[4];
+      else this.resultForm.time = this.timeOptions[5];
 
-      this.resultForm.field = "訪問";
+      this.resultForm.field = this.methodOptions[0].value; // "訪問"
       this.resultForm.result = "不在";
       this.resultForm.note = "";
       this.resultForm.ng_flag = "可";
+      
+      console.log("timeOptions:", this.timeOptions, "time:", JSON.stringify(this.resultForm.time));
 
       // ★ DOM 更新完了 → モーダル表示（2段階 nextTick）
       this.$nextTick(() => {
