@@ -434,7 +434,7 @@ const ChildMapApp = {
     },
 
     isVisitHistoryOpen(house) {
-      return this.visitHistoryOpen && this.selectedHouse?.housing_no === house.housing_no;
+      return this.visitHistoryOpen && this.selectedHouse?.HousingNo === house.HousingNo;
     },
 
     toggleVisitHistory(id) {
@@ -448,7 +448,7 @@ const ChildMapApp = {
 
     openVisitHistory(house) {
       this.selectedHouse = house;
-      this.openVisitHistoryHouseId = house.housing_no;
+      this.openVisitHistoryHouseId = house.HousingNo;
       this.visitHistoryOpen = true;
     },
 
