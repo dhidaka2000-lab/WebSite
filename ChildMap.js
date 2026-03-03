@@ -431,6 +431,19 @@ const ChildMapApp = {
       });
     },
 
+    isVisitHistoryOpen(id) {
+      return this.openVisitHistoryIds.has(id);
+    },
+
+    toggleVisitHistory(id) {
+      if (this.openVisitHistoryIds.has(id)) {
+        this.openVisitHistoryIds.delete(id);
+      } else {
+        this.openVisitHistoryIds.add(id);
+      }
+      this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
+    },
+
     // -----------------------------
     // モーダル初期値セット
     // -----------------------------
