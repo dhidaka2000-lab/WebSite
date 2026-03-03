@@ -424,22 +424,11 @@ const ChildMapApp = {
         const tb = timeOrder[b.Time] || 0;
         if (ta !== tb) return tb - ta;
 
-        // (3) row_id desc
-        return (b.row_id ?? 0) - (a.row_id ?? 0);
+        // (3) row_id desc（数値化）
+        const ra = Number(a.row_id ?? 0);
+        const rb = Number(b.row_id ?? 0);
+        return rb - ra;
       });
-    },
-
-    isVisitHistoryOpen(id) {
-      return this.openVisitHistoryIds.has(id);
-    },
-
-    toggleVisitHistory(id) {
-      if (this.openVisitHistoryIds.has(id)) {
-        this.openVisitHistoryIds.delete(id);
-      } else {
-        this.openVisitHistoryIds.add(id);
-      }
-      this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
     },
 
     // -----------------------------
