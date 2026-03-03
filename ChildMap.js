@@ -26,6 +26,8 @@ const ChildMapApp = {
       userMaster: [],
 
       openVisitHistoryIds: new Set(),
+      visitHistoryOpen: false,
+      openVisitHistoryHouseId: null,
 
       selectedHouse: null,
       resultForm: {
@@ -431,8 +433,8 @@ const ChildMapApp = {
       });
     },
 
-    isVisitHistoryOpen(id) {
-      return this.openVisitHistoryIds.has(id);
+    isVisitHistoryOpen(house) {
+      return this.visitHistoryOpen && this.selectedHouse?.housing_no === house.housing_no;
     },
 
     toggleVisitHistory(id) {
@@ -442,6 +444,17 @@ const ChildMapApp = {
         this.openVisitHistoryIds.add(id);
       }
       this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
+    },
+
+    openVisitHistory(house) {
+      this.selectedHouse = house;
+      this.openVisitHistoryHouseId = house.housing_no;
+      this.visitHistoryOpen = true;
+    },
+
+    closeVisitHistory() {
+      this.visitHistoryOpen = false;
+      this.openVisitHistoryHouseId = null;
     },
 
     // -----------------------------
