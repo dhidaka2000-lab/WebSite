@@ -433,10 +433,6 @@ const ChildMapApp = {
       });
     },
 
-    isVisitHistoryOpen(house) {
-      return this.visitHistoryOpen && this.selectedHouse?.HousingNo === house.HousingNo;
-    },
-
     toggleVisitHistory(id) {
       if (this.openVisitHistoryIds.has(id)) {
         this.openVisitHistoryIds.delete(id);
@@ -455,6 +451,10 @@ const ChildMapApp = {
     closeVisitHistory() {
       this.visitHistoryOpen = false;
       this.openVisitHistoryHouseId = null;
+    },
+
+    isVisitHistoryOpen(house) {
+      return this.visitHistoryOpen && this.selectedHouse?.HousingNo === house.HousingNo;
     },
 
     // -----------------------------
