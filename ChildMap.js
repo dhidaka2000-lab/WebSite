@@ -403,9 +403,30 @@ const ChildMapApp = {
     // -----------------------------
     sortedVRecord(records) {
       if (!records) return [];
-      return [...records].sort((a, b) =>
-        (b.VisitDate || "").localeCompare(a.VisitDate || "")
-      );
+
+      const timeOrder = {
+        "9時以前": 1,
+        "9時〜12時": 2,
+        "12時〜13時": 3,
+        "13時〜16時": 4,
+        "16時〜18時": 5,
+        "18時以降": 6
+      };
+
+      return [...records].sort((a, b) => {
+        // (1) 日付 desc
+        if (a.VisitDate !== b.VisitDate) {
+          return b.VisitDate.localeCompare(a.VisitDate);
+        }
+
+        // (2) 時間帯 desc
+        const ta = timeOrder[a.Time] || 0;
+        const tb = timeOrder[b.Time] || 0;
+        if (ta !== tb) return tb - ta;
+
+        // (3) row_id desc
+        return (b.row_id ?? 0) - (a.row_id ?? 0);
+      });
     },
 
     isVisitHistoryOpen(id) {
