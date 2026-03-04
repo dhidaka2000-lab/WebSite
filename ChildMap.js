@@ -195,7 +195,7 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "deleteVisitRecord",
-        row_id: rec.RowID   // ← ここが重要（id ではなく row_id）
+        row_id: rec.row_id   // ← ここが重要（id ではなく row_id）
       };
 
       const res = await fetch(this.apiEndpoint, {
@@ -427,23 +427,23 @@ const ChildMapApp = {
         if (ta !== tb) return tb - ta;
 
         // (3) row_id desc（数値化）
-        const ra = Number(a.RowID ?? 0);
-        const rb = Number(b.RowID ?? 0);
+        const ra = Number(a.row_id ?? 0);
+        const rb = Number(b.row_id ?? 0);
         return rb - ra;
       });
     },
 
-    toggleVisitHistory(RowID) {
-      if (this.openVisitHistoryIds.has(RowID)) {
-        this.openVisitHistoryIds.delete(RowID);
+    toggleVisitHistory(row_id) {
+      if (this.openVisitHistoryIds.has(row_id)) {
+        this.openVisitHistoryIds.delete(row_id);
       } else {
-        this.openVisitHistoryIds.add(RowID);
+        this.openVisitHistoryIds.add(row_id);
       }
       this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
     },
 
     openVisitHistory(house) {
-      this.selectedHouse = RowID;
+      this.selectedHouse = row_id;
       this.openVisitHistoryHouseId = house.HousingNo;
       this.visitHistoryOpen = true;
     },
@@ -454,7 +454,7 @@ const ChildMapApp = {
     },
 
     isVisitHistoryOpen(house) {
-      return this.visitHistoryOpen && this.selectedHouse?.RowID === house.RowID;
+      return this.visitHistoryOpen && this.selectedHouse?.row_id === house.row_id;
     },
 
     // -----------------------------
