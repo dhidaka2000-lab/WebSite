@@ -416,34 +416,33 @@ const ChildMapApp = {
       };
 
       return [...records].sort((a, b) => {
-        // (1) 日付 desc
         if (a.VisitDate !== b.VisitDate) {
           return b.VisitDate.localeCompare(a.VisitDate);
         }
 
-        // (2) 時間帯 desc
         const ta = timeOrder[a.Time] || 0;
         const tb = timeOrder[b.Time] || 0;
         if (ta !== tb) return tb - ta;
 
-        // (3) row_id desc（数値化）
-        const ra = Number(a.HousingNo ?? 0);
-        const rb = Number(b.HousingNo ?? 0);
+        // ★ RowID で比較（登録順）
+        const ra = Number(a.RowID ?? 0);
+        const rb = Number(b.RowID ?? 0);
         return rb - ra;
       });
     },
 
-    toggleVisitHistory(HousingNo) {
-      if (this.openVisitHistoryIds.has(HousingNo)) {
-        this.openVisitHistoryIds.delete(HousingNo);
+    // アコーディオン開閉（HousingNo をキーにする）
+    toggleVisitHistory(housingNo) {
+      if (this.openVisitHistoryIds.has(housingNo)) {
+        this.openVisitHistoryIds.delete(housingNo);
       } else {
-        this.openVisitHistoryIds.add(HousingNo);
+        this.openVisitHistoryIds.add(housingNo);
       }
       this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
     },
 
     openVisitHistory(house) {
-      this.selectedHouse = HousingNo;
+      this.selectedHouse = house;                 // ★ house オブジェクトを保持
       this.openVisitHistoryHouseId = house.HousingNo;
       this.visitHistoryOpen = true;
     },
@@ -451,10 +450,12 @@ const ChildMapApp = {
     closeVisitHistory() {
       this.visitHistoryOpen = false;
       this.openVisitHistoryHouseId = null;
+      this.selectedHouse = null;
     },
 
-    isVisitHistoryOpen(house) {
-      return this.visitHistoryOpen && this.selectedHouse?.HousingNo === house.HousingNo;
+    isVisitHistoryOpen(housingNo) {
+      return this.visitHistoryOpen &&
+            this.openVisitHistoryHouseId === housingNo;   // ★ number 同士で比較
     },
 
     // -----------------------------
