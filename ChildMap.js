@@ -427,23 +427,23 @@ const ChildMapApp = {
         if (ta !== tb) return tb - ta;
 
         // (3) row_id desc（数値化）
-        const ra = Number(a.row_id ?? 0);
-        const rb = Number(b.row_id ?? 0);
+        const ra = Number(a.HousingNo ?? 0);
+        const rb = Number(b.HousingNo ?? 0);
         return rb - ra;
       });
     },
 
-    toggleVisitHistory(row_id) {
-      if (this.openVisitHistoryIds.has(row_id)) {
-        this.openVisitHistoryIds.delete(row_id);
+    toggleVisitHistory(HousingNo) {
+      if (this.openVisitHistoryIds.has(HousingNo)) {
+        this.openVisitHistoryIds.delete(HousingNo);
       } else {
-        this.openVisitHistoryIds.add(row_id);
+        this.openVisitHistoryIds.add(HousingNo);
       }
       this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
     },
 
     openVisitHistory(house) {
-      this.selectedHouse = row_id;
+      this.selectedHouse = HousingNo;
       this.openVisitHistoryHouseId = house.HousingNo;
       this.visitHistoryOpen = true;
     },
@@ -454,7 +454,7 @@ const ChildMapApp = {
     },
 
     isVisitHistoryOpen(house) {
-      return this.visitHistoryOpen && this.selectedHouse?.row_id === house.row_id;
+      return this.visitHistoryOpen && this.selectedHouse?.HousingNo === house.HousingNo;
     },
 
     // -----------------------------
