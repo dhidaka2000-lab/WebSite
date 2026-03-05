@@ -441,6 +441,11 @@ const ChildMapApp = {
       this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
     },
 
+    isVisitHistoryOpen(housingNo) {
+      return this.openVisitHistoryIds.has(housingNo);
+    },
+
+    /*
     openVisitHistory(house) {
       this.selectedHouse = house;                 // ★ house オブジェクトを保持
       this.openVisitHistoryHouseId = house.HousingNo;
@@ -452,12 +457,8 @@ const ChildMapApp = {
       this.openVisitHistoryHouseId = null;
       this.selectedHouse = null;
     },
-
-    isVisitHistoryOpen(housingNo) {
-      return this.visitHistoryOpen &&
-            this.openVisitHistoryHouseId === housingNo;   // ★ number 同士で比較
-    },
-
+    */
+   
     // -----------------------------
     // モーダル初期値セット
     // -----------------------------
