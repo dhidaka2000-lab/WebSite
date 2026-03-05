@@ -185,7 +185,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // ★ 訪問履歴の削除（row_id 対応）
+    // ★ 訪問履歴の削除（RowID 対応）
     // -----------------------------
     async deleteVisitRecord(rec) {
       if (!confirm("訪問履歴を削除してもよろしいですか？")) return;
@@ -195,7 +195,7 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "deleteVisitRecord",
-        row_id: rec.row_id   // ← ここが重要（id ではなく row_id）
+        row_id: rec.RowID   // ← ここが重要（id ではなく RowID）
       };
 
       const res = await fetch(this.apiEndpoint, {
