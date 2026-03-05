@@ -531,35 +531,22 @@ const ChildMapApp = {
       const user = firebase.auth().currentUser;
       const idToken = await user.getIdToken(true);
 
-      let visitStatus = "その他";
-      if (this.resultForm.result.includes("済")) visitStatus = "済";
-      else if (this.resultForm.result.includes("不在")) visitStatus = "不在";
-      else if (this.resultForm.result.includes("不可")) visitStatus = "訪問不可";
-      else if (this.resultForm.result.includes("保留")) visitStatus = "保留";
-
       const payload = {
         funcName: "upsertVisitRecord",
 
         card_no: this.cardInfo.CardNo,
         child_no: this.childInfo.ChildNo,
         housing_no: this.selectedHouse.HousingNo,
-        id: this.selectedHouse.HousingNo,
+        id: this.selectedHouse.RowID,
 
         visit_date: this.resultForm.visit_date,
-
         time: this.resultForm.time,
         field: this.resultForm.field,
         result: this.resultForm.result,
         note: this.resultForm.note,
         minister: this.ministerName,
         comment: "",
-        term: this.childInfo.ChildTerm,
-
-        detailUpdate: {
-          row_id: this.selectedHouse.row_id,
-          ng_flag: this.resultForm.ng_flag,
-          visit_status: visitStatus
-        }
+        term: this.childInfo.ChildTerm
       };
 
       const res = await fetch(this.apiEndpoint, {
