@@ -162,8 +162,8 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "getChildDetail",
-        cardNo: this.cardNo,
-        childNo: this.childNo,
+        card_no: this.cardNo,
+        child_no: this.childNo
       };
 
       const res = await fetch(this.apiEndpoint, {
@@ -176,11 +176,26 @@ const ChildMapApp = {
       });
 
       const data = await res.json();
-      if (data.status === "success") {
-        this.cardInfo = data.cardInfo;
-        this.childInfo = data.childInfo;
-        this.houses = data.houses;
-        this.userMaster = data.userMaster || [];
+
+      if (data.status !== "success") {
+        alert("データ取得に失敗しました");
+        return;
+      }
+
+      // ★ Worker から返ってくるデータをそのままセット
+      this.cardInfo = data.cardInfo;
+      this.childInfo = data.childInfo;
+      this.houses = data.houses;
+
+      // ★ userMaster はもう返ってこないので削除
+      // this.userMaster = data.userMaster; ← 不要
+
+      // ★ visitRecord は houses[].VRecord に含まれるので不要
+      // this.visitRecord = data.visitRecord; ← 不要
+
+      // マーカー再描画
+      if (this.map) {
+        this.addAllMarkers(null);
       }
     },
 
@@ -217,7 +232,7 @@ const ChildMapApp = {
       await this.fetchChildDetail();
     },
 
-        // -----------------------------
+    // -----------------------------
     // 最後に会えた日付（在宅系）
     // -----------------------------
     getLastMetDate(records) {
@@ -226,13 +241,13 @@ const ChildMapApp = {
       const okWords = ["済", "済(投函)", "済(留守録)"];
 
       const met = records.filter(r =>
-        okWords.some(w => (r.Result || "").includes(w))
+        okWords.some(w => (r.result || "").includes(w))
       );
 
       if (met.length === 0) return null;
 
-      met.sort((a, b) => (b.VisitDate || "").localeCompare(a.VisitDate || ""));
-      return met[0].VisitDate;
+      met.sort((a, b) => (b.visit_date || "").localeCompare(a.visit_date || ""));
+      return met[0].visit_date;
     },
 
     // -----------------------------
@@ -311,8 +326,8 @@ const ChildMapApp = {
           ${
             lastMet
               ? `<div style="font-size:13px; color:#007bff; margin-top:6px;">
-                   <strong>最新在宅日：</strong>${lastMet}
-                 </div>`
+                  <strong>最新在宅日：</strong>${lastMet}
+                </div>`
               : ""
           }
 
