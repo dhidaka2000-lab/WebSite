@@ -1,6 +1,4 @@
-// ChildMap.js（完全版・1/2）
-// ★ 訪問履歴削除 row_id 対応済み
-// ★ VRecord に RowID を追加済み（Worker 側と整合）
+// ChildMap.js（完全版・1/3）
 
 const ChildMapApp = {
   data() {
@@ -23,7 +21,6 @@ const ChildMapApp = {
       cardInfo: {},
       childInfo: {},
       houses: [],
-      userMaster: [],
 
       openVisitHistoryIds: new Set(),
       visitHistoryOpen: false,
@@ -40,7 +37,6 @@ const ChildMapApp = {
       },
 
       searchQuery: "",
-
       apiEndpoint: "https://ekuikidev.dhidaka2000.workers.dev",
     };
   },
@@ -54,22 +50,6 @@ const ChildMapApp = {
         (h.BuildingName || "").toLowerCase().includes(q) ||
         this.getDisplayAddress(h).toLowerCase().includes(q)
       );
-    },
-
-    ministerName() {
-      if (!this.childInfo?.ChildMinister) return "-";
-      const u = this.userMaster.find(
-        x => String(x.ID) === String(this.childInfo.ChildMinister)
-      );
-      return u ? u.UserName : "-";
-    },
-
-    arrengerName() {
-      if (!this.childInfo?.ChildArrenger) return "-";
-      const u = this.userMaster.find(
-        x => String(x.ID) === String(this.childInfo.ChildArrenger)
-      );
-      return u ? u.UserName : "-";
     },
 
     timeOptions() {
@@ -182,25 +162,16 @@ const ChildMapApp = {
         return;
       }
 
-      // ★ Worker から返ってくるデータをそのままセット
       this.cardInfo = data.cardInfo;
       this.childInfo = data.childInfo;
       this.houses = data.houses;
 
-      // ★ userMaster はもう返ってこないので削除
-      // this.userMaster = data.userMaster; ← 不要
-
-      // ★ visitRecord は houses[].VRecord に含まれるので不要
-      // this.visitRecord = data.visitRecord; ← 不要
-
-      // マーカー再描画
       if (this.map) {
         this.addAllMarkers(null);
       }
     },
-
     // -----------------------------
-    // ★ 訪問履歴の削除（RowID 対応）
+    // 訪問履歴削除（row_id 使用）
     // -----------------------------
     async deleteVisitRecord(rec) {
       if (!confirm("訪問履歴を削除してもよろしいですか？")) return;
@@ -210,7 +181,7 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "deleteVisitRecord",
-        row_id: rec.RowID   // ← ここが重要（id ではなく RowID）
+        row_id: rec.row_id   // ← snake_case に統一
       };
 
       const res = await fetch(this.apiEndpoint, {
@@ -251,11 +222,11 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // ステータス色（住戸カードと整合）
+    // ステータス色
     // -----------------------------
     getStatusColor(status) {
       if (!status) return "#999999";
-      if (status.includes("済") || status.includes("済(投函)") || status.includes("済(留守録)")) return "#00AA55";
+      if (status.includes("済")) return "#00AA55";
       if (status.includes("訪問不可")) return "#CC0000";
       if (status.includes("不在")) return "#FFD700";
       return "#999999";
@@ -386,6 +357,34 @@ const ChildMapApp = {
     },
 
     // -----------------------------
+    // 訪問履歴ソート（snake_case 対応）
+    // -----------------------------
+    sortedVRecord(records) {
+      if (!records) return [];
+
+      const timeOrder = {
+        "9時以前": 1,
+        "9時〜12時": 2,
+        "12時〜13時": 3,
+        "13時〜16時": 4,
+        "16時〜18時": 5,
+        "18時以降": 6
+      };
+
+      return [...records].sort((a, b) => {
+        if (a.visit_date !== b.visit_date) {
+          return b.visit_date.localeCompare(a.visit_date);
+        }
+
+        const ta = timeOrder[a.time] || 0;
+        const tb = timeOrder[b.time] || 0;
+        if (ta !== tb) return tb - ta;
+
+        return (b.row_id ?? 0) - (a.row_id ?? 0);
+      });
+    },
+
+    // -----------------------------
     // ID ボタン → 地図へスクロール → ピン表示
     // -----------------------------
     scrollToMapAndFocus(house) {
@@ -418,35 +417,6 @@ const ChildMapApp = {
     // -----------------------------
     // 訪問履歴アコーディオン
     // -----------------------------
-    sortedVRecord(records) {
-      if (!records) return [];
-
-      const timeOrder = {
-        "9時以前": 1,
-        "9時〜12時": 2,
-        "12時〜13時": 3,
-        "13時〜16時": 4,
-        "16時〜18時": 5,
-        "18時以降": 6
-      };
-
-      return [...records].sort((a, b) => {
-        if (a.VisitDate !== b.VisitDate) {
-          return b.VisitDate.localeCompare(a.VisitDate);
-        }
-
-        const ta = timeOrder[a.Time] || 0;
-        const tb = timeOrder[b.Time] || 0;
-        if (ta !== tb) return tb - ta;
-
-        // ★ RowID で比較（登録順）
-        const ra = Number(a.RowID ?? 0);
-        const rb = Number(b.RowID ?? 0);
-        return rb - ra;
-      });
-    },
-
-    // アコーディオン開閉（HousingNo をキーにする）
     toggleVisitHistory(housingNo) {
       if (this.openVisitHistoryIds.has(housingNo)) {
         this.openVisitHistoryIds.delete(housingNo);
@@ -460,20 +430,6 @@ const ChildMapApp = {
       return this.openVisitHistoryIds.has(housingNo);
     },
 
-    /*
-    openVisitHistory(house) {
-      this.selectedHouse = house;                 // ★ house オブジェクトを保持
-      this.openVisitHistoryHouseId = house.HousingNo;
-      this.visitHistoryOpen = true;
-    },
-
-    closeVisitHistory() {
-      this.visitHistoryOpen = false;
-      this.openVisitHistoryHouseId = null;
-      this.selectedHouse = null;
-    },
-    */
-   
     // -----------------------------
     // モーダル初期値セット
     // -----------------------------
@@ -491,7 +447,6 @@ const ChildMapApp = {
         hour < 9 ? 0 : hour < 12 ? 1 : hour < 13 ? 2 : hour < 16 ? 3 : hour < 18 ? 4 : 5
       ];
 
-      // ★ resultForm を丸ごと置き換える（Vue が確実に再描画する）
       this.resultForm = {
         visit_date: visitDate,
         time,
@@ -501,7 +456,6 @@ const ChildMapApp = {
         ng_flag: "可"
       };
 
-      // ★ Vue の描画完了 → さらに 200ms 待ってからモーダルを開く
       this.$nextTick(() => {
         setTimeout(() => {
           $("#resultModal").modal("show");
@@ -509,35 +463,20 @@ const ChildMapApp = {
       });
     },
 
-    // -----------------------------
-    // 方法変更 → 結果をクリア
-    // -----------------------------
     onFieldChange() {
       this.resultForm.result = "";
     },
 
     // -----------------------------
-    // visit_record INSERT + detail UPDATE
+    // visit_record INSERT
     // -----------------------------
     async submitResult() {
-      if (!this.resultForm.visit_date) {
-        alert("訪問日を入力してください。");
-        return;
-      }
-      if (!this.resultForm.time) {
-        alert("時間帯を選択してください。");
-        return;
-      }
-      if (!this.resultForm.field) {
-        alert("方法を選択してください。");
-        return;
-      }
-      if (!this.resultForm.result) {
-        alert("結果を選択してください。");
-        return;
-      }
-      if (!this.resultForm.ng_flag) {
-        alert("訪問可否を選択してください。");
+      if (!this.resultForm.visit_date ||
+          !this.resultForm.time ||
+          !this.resultForm.field ||
+          !this.resultForm.result ||
+          !this.resultForm.ng_flag) {
+        alert("入力内容を確認してください。");
         return;
       }
 
@@ -552,14 +491,16 @@ const ChildMapApp = {
         card_no: this.cardInfo.CardNo,
         child_no: this.childInfo.ChildNo,
         housing_no: this.selectedHouse.HousingNo,
-        id: this.selectedHouse.RowID,
 
         visit_date: this.resultForm.visit_date,
         time: this.resultForm.time,
         field: this.resultForm.field,
         result: this.resultForm.result,
         note: this.resultForm.note,
-        minister: this.ministerName,
+
+        // ★ minister は UI から完全排除 → null を送る
+        minister: null,
+
         comment: "",
         term: this.childInfo.ChildTerm
       };
