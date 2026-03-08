@@ -498,10 +498,8 @@ const ChildMapApp = {
         Field: this.resultForm.Field,
         Result: this.resultForm.Result,
         Note: this.resultForm.Note,
-
-        // ★ minister は UI から完全排除 → null を送る
-        Minister: null,
-
+        NGFlag: this.resultForm.NGFlag,
+        Minister: null,  // ★ minister は UI から完全排除 → null を送る
         Comment: "",
         Term: this.childInfo.ChildTerm
       };
