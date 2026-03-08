@@ -182,7 +182,9 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "deleteVisitRecord",
-        VisitID: rec.row_id
+        row_id: rec.RowID   // ★ ここを RowID にする（大文字 R）
+        // もし Worker を VisitID で受けるようにしたなら:
+        // VisitID: rec.RowID
       };
 
       const res = await fetch(this.apiEndpoint, {
