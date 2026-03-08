@@ -142,8 +142,8 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "getChildDetail",
-        card_no: this.cardNo,
-        child_no: this.childNo
+        CardNo: this.cardNo,
+        ChildNo: this.childNo
       };
 
       const res = await fetch(this.apiEndpoint, {
@@ -170,6 +170,7 @@ const ChildMapApp = {
         this.addAllMarkers(null);
       }
     },
+
     // -----------------------------
     // 訪問履歴削除（row_id 使用）
     // -----------------------------
@@ -181,7 +182,7 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "deleteVisitRecord",
-        row_id: rec.row_id   // ← snake_case に統一
+        VisitID: rec.row_id
       };
 
       const res = await fetch(this.apiEndpoint, {
@@ -403,9 +404,9 @@ const ChildMapApp = {
     // -----------------------------
     // カードへスクロール
     // -----------------------------
-    scrollToHouse(id) {
+    scrollToHouse(ID) {
       this.$nextTick(() => {
-        const el = document.getElementById(`house-${id}`);
+        const el = document.getElementById(`house-${ID}`);
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
           el.classList.add("focused-house");
@@ -417,11 +418,11 @@ const ChildMapApp = {
     // -----------------------------
     // 訪問履歴アコーディオン
     // -----------------------------
-    toggleVisitHistory(housingNo) {
-      if (this.openVisitHistoryIds.has(housingNo)) {
-        this.openVisitHistoryIds.delete(housingNo);
+    toggleVisitHistory(HousingNo) {
+      if (this.openVisitHistoryIds.has(HousingNo)) {
+        this.openVisitHistoryIds.delete(HousingNo);
       } else {
-        this.openVisitHistoryIds.add(housingNo);
+        this.openVisitHistoryIds.add(HousingNo);
       }
       this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
     },
@@ -441,19 +442,19 @@ const ChildMapApp = {
       const mm = String(today.getMonth() + 1).padStart(2, "0");
       const dd = String(today.getDate()).padStart(2, "0");
 
-      const visitDate = `${yyyy}-${mm}-${dd}`;
+      const VisitDate = `${yyyy}-${mm}-${dd}`;
       const hour = today.getHours();
-      const time = this.timeOptions[
+      const Time = this.timeOptions[
         hour < 9 ? 0 : hour < 12 ? 1 : hour < 13 ? 2 : hour < 16 ? 3 : hour < 18 ? 4 : 5
       ];
 
       this.resultForm = {
-        visit_date: visitDate,
-        time,
-        field: this.methodOptions[0].value,
-        result: "不在",
-        note: "",
-        ng_flag: "可"
+        VisitDate,
+        Time,
+        Field: this.methodOptions[0].value,
+        Result: "不在",
+        Note: "",
+        NgFlag: "可"
       };
 
       this.$nextTick(() => {
@@ -471,11 +472,11 @@ const ChildMapApp = {
     // visit_record INSERT
     // -----------------------------
     async submitResult() {
-      if (!this.resultForm.visit_date ||
-          !this.resultForm.time ||
-          !this.resultForm.field ||
-          !this.resultForm.result ||
-          !this.resultForm.ng_flag) {
+      if (!this.resultForm.VisitDate ||
+          !this.resultForm.Time ||
+          !this.resultForm.Field ||
+          !this.resultForm.Result ||
+          !this.resultForm.NgFlag) {
         alert("入力内容を確認してください。");
         return;
       }
@@ -488,21 +489,21 @@ const ChildMapApp = {
       const payload = {
         funcName: "upsertVisitRecord",
 
-        card_no: this.cardInfo.CardNo,
-        child_no: this.childInfo.ChildNo,
-        housing_no: this.selectedHouse.HousingNo,
+        CardNo: this.cardInfo.CardNo,
+        ChildNo: this.childInfo.ChildNo,
+        HousingNo: this.selectedHouse.HousingNo,
 
-        visit_date: this.resultForm.visit_date,
-        time: this.resultForm.time,
-        field: this.resultForm.field,
-        result: this.resultForm.result,
-        note: this.resultForm.note,
+        VisitDate: this.resultForm.VisitDate,
+        Time: this.resultForm.Time,
+        Field: this.resultForm.Field,
+        Result: this.resultForm.Result,
+        Note: this.resultForm.Note,
 
         // ★ minister は UI から完全排除 → null を送る
-        minister: null,
+        Minister: null,
 
-        comment: "",
-        term: this.childInfo.ChildTerm
+        Comment: "",
+        Term: this.childInfo.ChildTerm
       };
 
       const res = await fetch(this.apiEndpoint, {
