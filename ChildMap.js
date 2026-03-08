@@ -14,8 +14,8 @@ const ChildMapApp = {
       mapOpen: false,
       focusedId: null,
 
-      cardNo: null,
-      childNo: null,
+      CardNo: null,
+      ChildNo: null,
       loginUser: null,
 
       cardInfo: {},
@@ -28,12 +28,12 @@ const ChildMapApp = {
 
       selectedHouse: null,
       resultForm: {
-        visit_date: "",
-        time: "",
-        field: "訪問",
-        result: "",
-        note: "",
-        ng_flag: "可"
+        VisitDate: "",
+        Time: "",
+        Field: "訪問",
+        Result: "",
+        Note: "",
+        NGFlag: "可"
       },
 
       searchQuery: "",
@@ -74,7 +74,7 @@ const ChildMapApp = {
     },
 
     resultOptions() {
-      const f = this.resultForm.field;
+      const f = this.resultForm.Field;
       if (f === "訪問") return ["不在", "済"];
       if (f === "ｷｬﾝﾍﾟｰﾝ") return ["不在", "済", "済(投函)", "済(留守録)", "その他"];
       if (f === "手紙") return ["不在", "済(投函)"];
@@ -465,7 +465,7 @@ const ChildMapApp = {
     },
 
     onFieldChange() {
-      this.resultForm.result = "";
+      this.resultForm.Result = "";
     },
 
     // -----------------------------
