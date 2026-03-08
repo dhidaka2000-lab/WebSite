@@ -454,7 +454,7 @@ const ChildMapApp = {
         Field: this.methodOptions[0].value,
         Result: "不在",
         Note: "",
-        NgFlag: "可"
+        NGFlag: "可"
       };
 
       this.$nextTick(() => {
@@ -476,7 +476,7 @@ const ChildMapApp = {
           !this.resultForm.Time ||
           !this.resultForm.Field ||
           !this.resultForm.Result ||
-          !this.resultForm.NgFlag) {
+          !this.resultForm.NGFlag) {
         alert("入力内容を確認してください。");
         return;
       }
