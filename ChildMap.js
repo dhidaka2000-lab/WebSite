@@ -1,4 +1,4 @@
-// ChildMap.js（完全版・1/3）
+// ChildMap.js（PascalCase 完全統一版・1/3）
 
 const ChildMapApp = {
   data() {
@@ -14,8 +14,8 @@ const ChildMapApp = {
       mapOpen: false,
       focusedId: null,
 
-      CardNo: null,
-      ChildNo: null,
+      cardNo: null,
+      childNo: null,
       loginUser: null,
 
       cardInfo: {},
@@ -27,13 +27,15 @@ const ChildMapApp = {
       openVisitHistoryHouseId: null,
 
       selectedHouse: null,
+
+      // ★ PascalCase に完全統一
       resultForm: {
         VisitDate: "",
         Time: "",
-        Field: "訪問",
+        Field: "",
         Result: "",
         Note: "",
-        NGFlag: "可"
+        NGFlag: ""
       },
 
       searchQuery: "",
@@ -135,8 +137,7 @@ const ChildMapApp = {
       const a = this.getAddressLines(house);
       return a.line1 + (a.line2 ? " " + a.line2 : "");
     },
-
-    async fetchChildDetail() {
+        async fetchChildDetail() {
       const user = firebase.auth().currentUser;
       const idToken = await user.getIdToken(true);
 
@@ -172,7 +173,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 訪問履歴削除（row_id 使用）
+    // 訪問履歴削除（VisitID 使用）
     // -----------------------------
     async deleteVisitRecord(rec) {
       if (!confirm("訪問履歴を削除してもよろしいですか？")) return;
@@ -182,7 +183,7 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "deleteVisitRecord",
-        VisitID: rec.VisitID
+        VisitID: rec.VisitID   // ★ PascalCase
       };
 
       const res = await fetch(this.apiEndpoint, {
@@ -205,7 +206,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 最後に会えた日付（在宅系）
+    // 最新在宅日
     // -----------------------------
     getLastMetDate(records) {
       if (!records || records.length === 0) return null;
@@ -213,13 +214,13 @@ const ChildMapApp = {
       const okWords = ["済", "済(投函)", "済(留守録)"];
 
       const met = records.filter(r =>
-        okWords.some(w => (r.result || "").includes(w))
+        okWords.some(w => (r.Result || "").includes(w))
       );
 
       if (met.length === 0) return null;
 
-      met.sort((a, b) => (b.visit_date || "").localeCompare(a.visit_date || ""));
-      return met[0].visit_date;
+      met.sort((a, b) => (b.VisitDate || "").localeCompare(a.VisitDate || ""));
+      return met[0].VisitDate;
     },
 
     // -----------------------------
@@ -234,7 +235,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // InfoWindow（レイアウト調整版）
+    // 地図フォーカス
     // -----------------------------
     async focusOnMap(house) {
       this.focusedId = house.HousingNo;
@@ -358,7 +359,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 訪問履歴ソート（snake_case 対応）
+    // 訪問履歴ソート（PascalCase）
     // -----------------------------
     sortedVRecord(records) {
       if (!records) return [];
@@ -373,113 +374,53 @@ const ChildMapApp = {
       };
 
       return [...records].sort((a, b) => {
-        if (a.visit_date !== b.visit_date) {
-          return b.visit_date.localeCompare(a.visit_date);
+        if (a.VisitDate !== b.VisitDate) {
+          return b.VisitDate.localeCompare(a.VisitDate);
         }
 
-        const ta = timeOrder[a.time] || 0;
-        const tb = timeOrder[b.time] || 0;
+        const ta = timeOrder[a.Time] || 0;
+        const tb = timeOrder[b.Time] || 0;
         if (ta !== tb) return tb - ta;
 
-        return (b.row_id ?? 0) - (a.row_id ?? 0);
+        return (b.VisitID ?? 0) - (a.VisitID ?? 0);
       });
     },
-
-    // -----------------------------
-    // ID ボタン → 地図へスクロール → ピン表示
-    // -----------------------------
-    scrollToMapAndFocus(house) {
-      if (!this.mapOpen) this.mapOpen = true;
-
-      this.$nextTick(() => {
-        const mapEl = document.getElementById("mapContainer");
-        mapEl.scrollIntoView({ behavior: "smooth", block: "start" });
-
-        setTimeout(() => {
-          this.focusOnMap(house);
-        }, 400);
-      });
-    },
-
-    // -----------------------------
-    // カードへスクロール
-    // -----------------------------
-    scrollToHouse(ID) {
-      this.$nextTick(() => {
-        const el = document.getElementById(`house-${ID}`);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-          el.classList.add("focused-house");
-          setTimeout(() => el.classList.remove("focused-house"), 1500);
-        }
-      });
-    },
-
-    // -----------------------------
-    // 訪問履歴アコーディオン
-    // -----------------------------
-    toggleVisitHistory(HousingNo) {
-      if (this.openVisitHistoryIds.has(HousingNo)) {
-        this.openVisitHistoryIds.delete(HousingNo);
-      } else {
-        this.openVisitHistoryIds.add(HousingNo);
-      }
-      this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
-    },
-
-    isVisitHistoryOpen(housingNo) {
-      return this.openVisitHistoryIds.has(housingNo);
-    },
-
-    // -----------------------------
-    // モーダル初期値セット
+        // -----------------------------
+    // モーダルを開く（初期値セット）
     // -----------------------------
     openResultModal(house) {
       this.selectedHouse = house;
 
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, "0");
-      const dd = String(today.getDate()).padStart(2, "0");
-
-      const VisitDate = `${yyyy}-${mm}-${dd}`;
-      const hour = today.getHours();
-      const Time = this.timeOptions[
-        hour < 9 ? 0 : hour < 12 ? 1 : hour < 13 ? 2 : hour < 16 ? 3 : hour < 18 ? 4 : 5
-      ];
+      const today = new Date().toISOString().slice(0, 10);
 
       this.resultForm = {
-        VisitDate,
-        Time,
+        VisitDate: today,
+        Time: "13時〜16時",
         Field: this.methodOptions[0].value,
         Result: "不在",
         Note: "",
         NGFlag: "可"
       };
 
-      this.$nextTick(() => {
-        setTimeout(() => {
-          $("#resultModal").modal("show");
-        }, 200);
-      });
-    },
-
-    onFieldChange() {
-      this.resultForm.Result = "";
+      $("#resultModal").modal("show");
     },
 
     // -----------------------------
-    // visit_record INSERT
+    // 方法変更時の動的結果リセット
+    // -----------------------------
+    onFieldChange() {
+      const f = this.resultForm.Field;
+      if (f === "訪問") this.resultForm.Result = "不在";
+      else if (f === "手紙") this.resultForm.Result = "不在";
+      else if (f === "電話") this.resultForm.Result = "不在";
+      else this.resultForm.Result = "不在";
+    },
+
+    // -----------------------------
+    // 訪問結果登録（PascalCase）
     // -----------------------------
     async submitResult() {
-      if (!this.resultForm.VisitDate ||
-          !this.resultForm.Time ||
-          !this.resultForm.Field ||
-          !this.resultForm.Result ||
-          !this.resultForm.NGFlag) {
-        alert("入力内容を確認してください。");
-        return;
-      }
+      if (!this.selectedHouse) return;
 
       this.savingResult = true;
 
@@ -488,9 +429,8 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "upsertVisitRecord",
-
-        CardNo: this.cardInfo.CardNo,
-        ChildNo: this.childInfo.ChildNo,
+        CardNo: this.cardNo,
+        ChildNo: this.childNo,
         HousingNo: this.selectedHouse.HousingNo,
 
         VisitDate: this.resultForm.VisitDate,
@@ -499,9 +439,8 @@ const ChildMapApp = {
         Result: this.resultForm.Result,
         Note: this.resultForm.Note,
         NGFlag: this.resultForm.NGFlag,
-        Minister: null,  // ★ minister は UI から完全排除 → null を送る
-        Comment: "",
-        Term: this.childInfo.ChildTerm
+
+        Operator: this.loginUser
       };
 
       const res = await fetch(this.apiEndpoint, {
@@ -514,43 +453,82 @@ const ChildMapApp = {
       });
 
       const data = await res.json();
+      this.savingResult = false;
 
       if (data.status !== "success") {
-        console.error("保存エラー:", data);
-        alert("保存中にエラーが発生しました。");
-        this.savingResult = false;
+        alert("登録中にエラーが発生しました。");
         return;
       }
 
       $("#resultModal").modal("hide");
-      this.savingResult = false;
-
       await this.fetchChildDetail();
-      if (this.map) {
-        this.addAllMarkers(null);
-      }
     },
 
     // -----------------------------
-    // ページ遷移
+    // 住戸カードへスクロール
     // -----------------------------
-    goBackToMyPage() {
-      window.location.href = "./AssignmentList.html";
+    scrollToHouse(housingNo) {
+      const el = document.getElementById("house-" + housingNo);
+      if (!el) return;
+
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
     },
 
-    goHome() {
-      window.location.href = "./mainMenu.html";
+    // -----------------------------
+    // Google Map 初期化
+    // -----------------------------
+    async ensureMapInitialized() {
+      if (this.googleMapsLoaded) return;
+
+      await new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src =
+          "https://maps.googleapis.com/maps/api/js?key=AIzaSyCq9t-0o5x1Yp3J0tQ0x0x0x0x0x0x&callback=initMap";
+        script.async = true;
+        window.initMap = () => resolve();
+        document.head.appendChild(script);
+      });
+
+      this.googleMapsLoaded = true;
+
+      this.map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 34.75, lng: 135.63 },
+        zoom: 15,
+      });
+
+      this.infoWindow = new google.maps.InfoWindow();
+      this.addAllMarkers(null);
     },
 
-    async logout() {
-      try {
-        await firebase.auth().signOut();
-      } catch (e) {
-        console.error(e);
+    // -----------------------------
+    // マーカー追加
+    // -----------------------------
+    addAllMarkers(focusId) {
+      if (!this.map) return;
+
+      this.markers.forEach((m) => m.setMap(null));
+      this.markers = [];
+
+      for (const h of this.houses) {
+        if (!h.CSVLat || !h.CSVLng) continue;
+
+        const pos = { lat: Number(h.CSVLat), lng: Number(h.CSVLng) };
+
+        const marker = new google.maps.Marker({
+          position: pos,
+          map: this.map,
+          title: h.FamilyName || "（表札名なし）",
+          icon:
+            h.HousingNo === focusId
+              ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+              : "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+        });
+
+        marker.addListener("click", () => this.focusOnMap(h));
+        this.markers.push(marker);
       }
-      window.location.href = "./index.html";
     },
   },
 };
 
-window.childMapApp = Vue.createApp(ChildMapApp).mount("#childMapApp");
+window.childMapApp = Vue.createApp(ChildMapApp).mount("#app");
