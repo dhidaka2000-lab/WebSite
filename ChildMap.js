@@ -31,7 +31,7 @@ const ChildMapApp = {
         VisitDate: "",
         Time: "",
         Field: "訪問",
-        Result: "",
+        Result: "不在",
         Note: "",
         NGFlag: "可"
       },
@@ -213,13 +213,13 @@ const ChildMapApp = {
       const okWords = ["済", "済(投函)", "済(留守録)"];
 
       const met = records.filter(r =>
-        okWords.some(w => (r.result || "").includes(w))
+        okWords.some(w => (r.Result || "").includes(w))
       );
 
       if (met.length === 0) return null;
 
-      met.sort((a, b) => (b.visit_date || "").localeCompare(a.visit_date || ""));
-      return met[0].visit_date;
+      met.sort((a, b) => (b.VisitDate || "").localeCompare(a.VisitDate || ""));
+      return met[0].VisitDate;
     },
 
     // -----------------------------
@@ -373,15 +373,15 @@ const ChildMapApp = {
       };
 
       return [...records].sort((a, b) => {
-        if (a.visit_date !== b.visit_date) {
-          return b.visit_date.localeCompare(a.visit_date);
+        if (a.VisitDate !== b.VisitDate) {
+          return b.visit_date.localeCompare(a.VisitDate);
         }
 
-        const ta = timeOrder[a.time] || 0;
-        const tb = timeOrder[b.time] || 0;
+        const ta = timeOrder[a.Time] || 0;
+        const tb = timeOrder[b.Time] || 0;
         if (ta !== tb) return tb - ta;
 
-        return (b.row_id ?? 0) - (a.row_id ?? 0);
+        return (b.VisitID  ?? 0) - (a.VisitID  ?? 0);
       });
     },
 
