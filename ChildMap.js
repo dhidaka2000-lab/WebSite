@@ -374,7 +374,7 @@ const ChildMapApp = {
 
       return [...records].sort((a, b) => {
         if (a.VisitDate !== b.VisitDate) {
-          return b.visit_date.localeCompare(a.VisitDate);
+          return b.VisitDate.localeCompare(a.VisitDate);
         }
 
         const ta = timeOrder[a.Time] || 0;
