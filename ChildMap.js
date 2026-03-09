@@ -101,8 +101,8 @@ const ChildMapApp = {
   methods: {
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
-      this.cardNo = params.get("cardNo");
-      this.childNo = params.get("childNo");
+      this.cardNo = params.get("CardNo");
+      this.childNo = params.get("ChildNo");
       this.loginUser = params.get("loginUser");
     },
 
@@ -142,8 +142,8 @@ const ChildMapApp = {
 
       const payload = {
         funcName: "getChildDetail",
-        CardNo: this.cardNo,
-        ChildNo: this.childNo
+        CardNo: this.CardNo,
+        ChildNo: this.ChildNo
       };
 
       const res = await fetch(this.apiEndpoint, {
