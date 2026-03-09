@@ -427,8 +427,8 @@ const ChildMapApp = {
       this.openVisitHistoryIds = new Set(this.openVisitHistoryIds);
     },
 
-    isVisitHistoryOpen(housingNo) {
-      return this.openVisitHistoryIds.has(housingNo);
+    isVisitHistoryOpen(HousingNo) {
+      return this.openVisitHistoryIds.has(HousingNo);
     },
 
     // -----------------------------
