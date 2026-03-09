@@ -101,8 +101,8 @@ const ChildMapApp = {
   methods: {
     parseQuery() {
       const params = new URLSearchParams(window.location.search);
-      this.cardNo = params.get("CardNo");
-      this.childNo = params.get("ChildNo");
+      this.CardNo = params.get("cardNo");
+      this.ChildNo = params.get("childNo");
       this.loginUser = params.get("loginUser");
     },
 
