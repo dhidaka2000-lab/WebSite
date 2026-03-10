@@ -525,8 +525,36 @@ const ChildMapApp = {
         return;
       }
 
-      // ★ ローカルの house にも即反映（リアクティブなので一覧が即更新される）
+      // ★ Worker が note を加工して保存するので、
+      //   フロント側でも即時反映する
+      let finalNote = this.resultForm.Note || "";
+      if (this.resultForm.NGFlag === "不可") {
+        finalNote = `訪問不可入力。${finalNote}`;
+      }
+
+      // 住戸の VisitStatus も Worker と同じロジックで更新
+      let newStatus = "未訪問";
+      if (this.resultForm.NGFlag === "不可") {
+        newStatus = "訪問不可";
+      } else if (this.resultForm.Result.includes("済")) {
+        newStatus = "済";
+      } else if (this.resultForm.Result.includes("不在")) {
+        newStatus = "不在";
+      }
+
+      // ★ Vue の house オブジェクトを即時更新
       this.selectedHouse.NGFlag = this.resultForm.NGFlag;
+      this.selectedHouse.VisitStatus = newStatus;
+
+      // ★ VRecord に新しい履歴を push（即時反映）
+      this.selectedHouse.VRecord.push({
+        VisitID: res.inserted?.row_id ?? null,
+        VisitDate: this.resultForm.VisitDate,
+        Time: this.resultForm.Time,
+        Field: this.resultForm.Field,
+        Result: this.resultForm.Result,
+        Note: finalNote
+      });
 
       $("#resultModal").modal("hide");
       this.savingResult = false;
