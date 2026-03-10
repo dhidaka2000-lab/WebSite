@@ -192,8 +192,6 @@
     <div id="childMapApp" v-cloak class="container-fluid py-2">
 
     <!-- 結果入力モーダル（ここから） -->
-
-    <!-- ★★★ モーダルを Vue アプリの外に移動 ★★★ -->
     <div class="modal fade" id="resultModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -212,120 +210,120 @@
 
           <div class="modal-body" v-if="selectedHouse">
 
-          <!-- 住戸情報ヘッダー -->
-          <div class="mb-3">
-            <div style="font-size:22px; font-weight:bold;">
-              ID {{ selectedHouse.HousingNo }}
-              {{ selectedHouse.FamilyName ? selectedHouse.FamilyName + 'さん' : '（表札名なし）' }}
-            </div>
+            <!-- 住戸情報ヘッダー -->
+            <div class="mb-3">
+              <div style="font-size:22px; font-weight:bold;">
+                ID {{ selectedHouse.HousingNo }}
+                {{ selectedHouse.FamilyName ? selectedHouse.FamilyName + 'さん' : '（表札名なし）' }}
+              </div>
 
-            <div style="font-size:18px; color:#555;">
-              {{ getAddressLines(selectedHouse).line1 }}
-            </div>
-            <div v-if="getAddressLines(selectedHouse).line2"
-                  style="font-size:18px; color:#555;">
-              {{ getAddressLines(selectedHouse).line2 }}
-            </div>
-          </div>
-
-          <!-- 訪問日 -->
-          <div class="form-group">
-            <label>訪問日</label>
-            <input
-              type="date"
-              class="form-control"
-              v-model="resultForm.VisitDate"
-            />
-          </div>
-
-          <!-- 時間帯（ラジオ） -->
-          <div class="form-group">
-            <label>時間帯</label>
-            <div class="radio-group-inline">
-              <div class="radio-pill" v-for="(t, idx) in timeOptions" :key="idx">
-                <input
-                  type="radio"
-                  :id="'time-' + idx"
-                  name="Time"
-                  :value="t"
-                  v-model="resultForm.Time"
-                />
-                <label class="radio-pill-label" :for="'time-' + idx">{{ t }}</label>
+              <div style="font-size:18px; color:#555;">
+                {{ getAddressLines(selectedHouse).line1 }}
+              </div>
+              <div v-if="getAddressLines(selectedHouse).line2"
+                    style="font-size:18px; color:#555;">
+                {{ getAddressLines(selectedHouse).line2 }}
               </div>
             </div>
-          </div>
 
+            <!-- 訪問日 -->
+            <div class="form-group">
+              <label>訪問日</label>
+              <input
+                type="date"
+                class="form-control"
+                v-model="resultForm.VisitDate"
+              />
+            </div>
 
-          <!-- 方法（ラジオ） -->
-          <div class="form-group">
-            <label>方法</label>
-            <div class="radio-group-inline">
-              <div class="radio-pill" v-for="m in methodOptions" :key="m.value">
-                <input
-                  type="radio"
-                  :id="'field-' + m.value"
-                  name="Field"
-                  :value="m.value"
-                  v-model="resultForm.Field"
-                  @change="onFieldChange"
-                />
-                <label class="radio-pill-label" :for="'field-' + m.value">{{ m.label }}</label>
+            <!-- 時間帯（ラジオ） -->
+            <div class="form-group">
+              <label>時間帯</label>
+              <div class="radio-group-inline">
+                <div class="radio-pill" v-for="(t, idx) in timeOptions" :key="idx">
+                  <input
+                    type="radio"
+                    :id="'time-' + idx"
+                    name="Time"
+                    :value="t"
+                    v-model="resultForm.Time"
+                  />
+                  <label class="radio-pill-label" :for="'time-' + idx">{{ t }}</label>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- 結果（ラジオ：動的） -->
-          <div class="form-group">
-            <label>結果</label>
-            <div class="radio-group-inline">
-              <div class="radio-pill" v-for="r in resultOptions" :key="r">
-                <input
-                  type="radio"
-                  :id="'result-' + r"
-                  name="Result"
-                  :value="r"
-                  v-model="resultForm.Result"
-                />
-                <label class="radio-pill-label" :for="'result-' + r">{{ r }}</label>
+            <!-- 方法（ラジオ） -->
+            <div class="form-group">
+              <label>方法</label>
+              <div class="radio-group-inline">
+                <div class="radio-pill" v-for="m in methodOptions" :key="m.value">
+                  <input
+                    type="radio"
+                    :id="'field-' + m.value"
+                    name="Field"
+                    :value="m.value"
+                    v-model="resultForm.Field"
+                    @change="onFieldChange"
+                  />
+                  <label class="radio-pill-label" :for="'field-' + m.value">{{ m.label }}</label>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- メモ -->
-          <div class="form-group">
-            <label>メモ</label>
-            <textarea
-              v-model="resultForm.Note"
-              class="form-control"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <!-- 訪問可否（ラジオ） -->
-          <div class="form-group">
-            <label>訪問可否</label>
-            <div class="radio-group-inline">
-              <div class="radio-pill">
-                <input type="radio" id="ng-ok" name="NGFlag" value="可" v-model="resultForm.NGFlag" />
-                <label class="radio-pill-label" for="ng-ok">可</label>
-              </div>
-              <div class="radio-pill">
-                <input type="radio" id="ng-ng" name="NGFlag" value="不可" v-model="resultForm.NGFlag" />
-                <label class="radio-pill-label" for="ng-ng">不可</label>
+            <!-- 結果（ラジオ：動的） -->
+            <div class="form-group">
+              <label>結果</label>
+              <div class="radio-group-inline">
+                <div class="radio-pill" v-for="r in resultOptions" :key="r">
+                  <input
+                    type="radio"
+                    :id="'result-' + r"
+                    name="Result"
+                    :value="r"
+                    v-model="resultForm.Result"
+                  />
+                  <label class="radio-pill-label" :for="'result-' + r">{{ r }}</label>
+                </div>
               </div>
             </div>
+
+            <!-- メモ -->
+            <div class="form-group">
+              <label>メモ</label>
+              <textarea
+                v-model="resultForm.Note"
+                class="form-control"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <!-- 訪問可否（ラジオ） -->
+            <div class="form-group">
+              <label>訪問可否</label>
+              <div class="radio-group-inline">
+                <div class="radio-pill">
+                  <input type="radio" id="ng-ok" name="NGFlag" value="可" v-model="resultForm.NGFlag" />
+                  <label class="radio-pill-label" for="ng-ok">可</label>
+                </div>
+                <div class="radio-pill">
+                  <input type="radio" id="ng-ng" name="NGFlag" value="不可" v-model="resultForm.NGFlag" />
+                  <label class="radio-pill-label" for="ng-ng">不可</label>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+            <button class="btn btn-warning" :disabled="savingResult" @click="submitResult">
+              <span v-if="savingResult"><i class="fas fa-spinner fa-spin mr-1"></i> 登録中…</span>
+              <span v-else>登録</span>
+            </button>
           </div>
 
         </div>
-
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-dismiss="modal">閉じる</button>
-          <button class="btn btn-warning" :disabled="savingResult" @click="submitResult">
-            <span v-if="savingResult"><i class="fas fa-spinner fa-spin mr-1"></i> 登録中…</span>
-            <span v-else>登録</span>
-          </button>
-        </div>
-
       </div>
     </div>
 
