@@ -191,238 +191,6 @@
 
     <div id="childMapApp" v-cloak class="container-fluid py-2">
 
-      <!-- ローディング -->
-      <div v-if="loading" class="loading-overlay">
-        <i class="fas fa-spinner fa-4x fa-spin text-secondary"></i>
-      </div>
-
-      <!-- ヘッダー -->
-      <header class="sticky-top bg-white mb-2 py-2 border-bottom">
-        <div class="d-flex justify-content-between align-items-center">
-
-          <!-- 左：戻る -->
-          <button class="btn btn-link p-0 text-center" @click="goBackToMyPage">
-            <div><i class="fas fa-arrow-circle-left fa-2x"></i></div>
-            <div class="small">戻る</div>
-          </button>
-
-          <!-- 中央：区域カード番号（黄色）＋ 子カード名 -->
-          <div class="text-center" style="flex-grow:1;">
-
-            <div style="display:flex; justify-content:center; align-items:center; gap:12px;">
-              <!-- 黄色のカード番号 -->
-              <div style="
-                background:#ffeb3b;
-                padding:4px 10px;
-                border-radius:6px;
-                font-weight:bold;
-                font-size:20px;
-                border:1px solid #d4c000;
-              ">
-                {{ childInfo?.CardNo ?? '' }}-{{ childInfo?.ChildNo ?? '' }}
-              </div>
-
-              <!-- 子カード名 -->
-              <div style="font-size:20px; font-weight:bold;">
-                {{ childInfo?.ChildBlock || '-' }}
-              </div>
-            </div>
-
-            <!-- 奉仕者名・貸出責任者名・グループ名・返却期日 -->
-            <div style="font-size:16px; margin-top:4px; display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
-              <div>奉仕者名：{{ ministerName }}</div>
-              <div>貸出責任者：{{ arrengerName }}</div>
-              <div>グループ：{{ childInfo?.ChildGroup || '-' }}</div>
-              <div>返却期日：{{ childInfo?.ChildLimitDate || '-' }}</div>
-            </div>
-
-          </div>
-
-          <!-- 右：ホーム -->
-          <button class="btn btn-link p-0 text-center" @click="goHome">
-            <div><i class="fas fa-home fa-2x"></i></div>
-            <div class="small">ホーム</div>
-          </button>
-
-        </div>
-      </header>
-
-      <!-- 地図アコーディオン -->
-      <div class="card mb-2">
-        <div class="card-header p-2">
-          <button class="btn btn-link" @click="toggleMap">
-            {{ mapOpen ? "▲ 地図を隠す" : "▼ 地図を表示する" }}
-          </button>
-        </div>
-        <div v-show="mapOpen" class="p-0" style="overflow:hidden;">
-          <div id="mapContainer"></div>
-
-          <div class="btn-group m-2" role="group">
-            <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('small')">小</button>
-            <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('medium')">中</button>
-            <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('large')">大</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 検索 -->
-      <div class="mb-2">
-        <h5 class="mb-2">住戸一覧（{{ filteredHouses?.length ?? 0 }}件）</h5>
-        <input
-          v-model="searchQuery"
-          class="form-control"
-          placeholder="住所・世帯名・建物名で検索"
-        />
-      </div>
-
-      <!-- 住戸一覧 -->
-      <div
-        v-for="house in filteredHouses"
-        :key="house.HousingNo"
-        :id="`house-${house.HousingNo}`"
-        class="card card-house"
-        :class="{ 'focused-house': focusedId === house.HousingNo }"
-      >
-
-        <div class="card-header py-2">
-
-          <div class="house-row">
-
-            <div class="col-id">
-              <button class="house-no-btn" @click="scrollToMapAndFocus(house)">
-                {{ house.HousingNo }}
-              </button>
-            </div>
-
-            <div class="col-young">
-              <i
-                class="fas fa-user icon-8"
-                :style="{ color: (house.YoungerGENFlag === '若い世代に会えた' || house.YoungerGENFlag === '若い世代と推定') ? '#00aa55' : '#999' }"
-              ></i>
-            </div>
-
-            <div class="col-name">
-              <span class="family-name">
-                {{ house.FamilyName ? house.FamilyName + 'さん' : '（表札名なし）' }}
-              </span>
-            </div>
-
-            <div class="col-tel">
-              <i
-                :class="house.TEL ? 'fas fa-phone icon-8' : 'fas fa-phone-slash icon-8'"
-                :style="{ color: house.TEL ? '#00aa55' : '#999' }"
-              ></i>
-            </div>
-
-            <div class="col-bld">
-              <i
-                class="icon-8"
-                :class="{
-                  'fas fa-home': house.BuildingCategory === '一戸建て',
-                  'fas fa-building': house.BuildingCategory === 'ビル',
-                  'fas fa-store': house.BuildingCategory === '店舗',
-                  'fas fa-city': house.BuildingCategory === '集合住宅' || house.BuildingCategory === '文化住宅'
-                }"
-                style="color:#777;"
-              ></i>
-            </div>
-
-            <div class="col-status">
-              <span
-                class="pill-status"
-                :style="{
-                  background:
-                    house.VisitStatus?.includes('済') || house.VisitStatus?.includes('在宅')
-                      ? '#00aa55'
-                      : house.VisitStatus?.includes('NG')
-                      ? '#cc0000'
-                      : house.VisitStatus?.includes('不在')
-                      ? '#ffd700'
-                      : '#999',
-                  color: house.VisitStatus?.includes('不在') ? '#333' : 'white'
-                }"
-              >
-                {{ house.VisitStatus || '未訪問' }}
-              </span>
-            </div>
-
-            <div class="col-ng">
-              <i v-if="house.NGFlag === '不可'" class="fas fa-ban icon-8" style="color:#cc0000;"></i>
-            </div>
-
-            <div class="col-address">
-              <span class="address-text">{{ getAddressLines(house).line1 }}</span>
-              <span class="address-text" v-if="getAddressLines(house).line2">
-                {{ getAddressLines(house).line2 }}
-              </span>
-            </div>
-
-            <div class="col-bad">
-              <i v-if="house.BadFlag === 'Good'" class="fas fa-check-circle" style="color:#00aa55; font-size:20px;"></i>
-              <i v-if="house.BadFlag === 'Bad'" class="fas fa-exclamation-triangle" style="color:#cc0000; font-size:20px;"></i>
-            </div>
-
-            <div class="col-result">
-              <button
-                class="btn btn-sm btn-warning"
-                style="font-size:20px; color:#000; font-weight:bold;"
-                @click="openResultModal(house)"
-              >
-                結果入力
-              </button>
-            </div>
-
-            <div class="col-history">
-              <button class="btn-history" @click="toggleVisitHistory(house.HousingNo)">
-                {{ isVisitHistoryOpen(house.HousingNo) ? '▲' : '▼' }}
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-      <!-- 訪問履歴 -->
-      <div v-show="isVisitHistoryOpen(house.HousingNo)" class="card-body py-2">
-        <div v-if="house.VRecord && house.VRecord.length > 0" class="visit-record-timeline">
-
-          <div
-            v-for="rec in sortedVRecord(house.VRecord)"
-            :key="rec.RowID"
-            class="visit-record-item"
-          >
-
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div class="small" style="font-size:18px;">
-                  <strong>{{ rec.VisitDate || '-' }}</strong>
-                  <span v-if="rec.Time">（{{ rec.Time }}）</span>
-                </div>
-                <div class="small" style="font-size:18px;">方法：{{ rec.Field || '-' }}</div>
-                <div class="small" style="font-size:18px;">結果：{{ rec.Result || '-' }}</div>
-                <div class="small text-muted" style="font-size:18px;">メモ：{{ rec.Comment || '-' }}</div>
-              </div>
-
-              <!-- 削除ボタン -->
-              <button
-                class="btn btn-sm btn-outline-danger"
-                style="height:36px;"
-                @click="deleteVisitRecord(rec)"
-              >
-                削除
-              </button>
-            </div>
-
-          </div>
-
-        </div>
-
-        <div v-else class="small text-muted" style="font-size:18px;">
-          訪問履歴はありません。
-        </div>
-      </div>
-
-    </div>
-
     <!-- 結果入力モーダル（ここから） -->
 
     <!-- ★★★ モーダルを Vue アプリの外に移動 ★★★ -->
@@ -466,7 +234,7 @@
             <input
               type="date"
               class="form-control"
-              v-model="resultForm.visit_date"
+              v-model="resultForm.VisitDate"
             />
           </div>
 
@@ -478,9 +246,9 @@
                 <input
                   type="radio"
                   :id="'time-' + idx"
-                  name="time"
+                  name="Time"
                   :value="t"
-                  v-model="resultForm.time"
+                  v-model="resultForm.Time"
                 />
                 <label class="radio-pill-label" :for="'time-' + idx">{{ t }}</label>
               </div>
@@ -496,9 +264,9 @@
                 <input
                   type="radio"
                   :id="'field-' + m.value"
-                  name="field"
+                  name="Field"
                   :value="m.value"
-                  v-model="resultForm.field"
+                  v-model="resultForm.Field"
                   @change="onFieldChange"
                 />
                 <label class="radio-pill-label" :for="'field-' + m.value">{{ m.label }}</label>
@@ -514,9 +282,9 @@
                 <input
                   type="radio"
                   :id="'result-' + r"
-                  name="result"
+                  name="Result"
                   :value="r"
-                  v-model="resultForm.result"
+                  v-model="resultForm.Result"
                 />
                 <label class="radio-pill-label" :for="'result-' + r">{{ r }}</label>
               </div>
@@ -527,7 +295,7 @@
           <div class="form-group">
             <label>メモ</label>
             <textarea
-              v-model="resultForm.note"
+              v-model="resultForm.Note"
               class="form-control"
               rows="3"
             ></textarea>
@@ -538,11 +306,11 @@
             <label>訪問可否</label>
             <div class="radio-group-inline">
               <div class="radio-pill">
-                <input type="radio" id="ng-ok" name="ng_flag" value="可" v-model="resultForm.ng_flag" />
+                <input type="radio" id="ng-ok" name="NGFlag" value="可" v-model="resultForm.NGFlag" />
                 <label class="radio-pill-label" for="ng-ok">可</label>
               </div>
               <div class="radio-pill">
-                <input type="radio" id="ng-ng" name="ng_flag" value="不可" v-model="resultForm.ng_flag" />
+                <input type="radio" id="ng-ng" name="NGFlag" value="不可" v-model="resultForm.NGFlag" />
                 <label class="radio-pill-label" for="ng-ng">不可</label>
               </div>
             </div>
@@ -559,6 +327,238 @@
         </div>
 
       </div>
+    </div>
+
+    <!-- ローディング -->
+    <div v-if="loading" class="loading-overlay">
+      <i class="fas fa-spinner fa-4x fa-spin text-secondary"></i>
+    </div>
+
+    <!-- ヘッダー -->
+    <header class="sticky-top bg-white mb-2 py-2 border-bottom">
+      <div class="d-flex justify-content-between align-items-center">
+
+        <!-- 左：戻る -->
+        <button class="btn btn-link p-0 text-center" @click="goBackToMyPage">
+          <div><i class="fas fa-arrow-circle-left fa-2x"></i></div>
+          <div class="small">戻る</div>
+        </button>
+
+        <!-- 中央：区域カード番号（黄色）＋ 子カード名 -->
+        <div class="text-center" style="flex-grow:1;">
+
+          <div style="display:flex; justify-content:center; align-items:center; gap:12px;">
+            <!-- 黄色のカード番号 -->
+            <div style="
+              background:#ffeb3b;
+              padding:4px 10px;
+              border-radius:6px;
+              font-weight:bold;
+              font-size:20px;
+              border:1px solid #d4c000;
+            ">
+              {{ childInfo?.CardNo ?? '' }}-{{ childInfo?.ChildNo ?? '' }}
+            </div>
+
+            <!-- 子カード名 -->
+            <div style="font-size:20px; font-weight:bold;">
+              {{ childInfo?.ChildBlock || '-' }}
+            </div>
+          </div>
+
+          <!-- 奉仕者名・貸出責任者名・グループ名・返却期日 -->
+          <div style="font-size:16px; margin-top:4px; display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+            <div>奉仕者名：{{ ministerName }}</div>
+            <div>貸出責任者：{{ arrengerName }}</div>
+            <div>グループ：{{ childInfo?.ChildGroup || '-' }}</div>
+            <div>返却期日：{{ childInfo?.ChildLimitDate || '-' }}</div>
+          </div>
+
+        </div>
+
+        <!-- 右：ホーム -->
+        <button class="btn btn-link p-0 text-center" @click="goHome">
+          <div><i class="fas fa-home fa-2x"></i></div>
+          <div class="small">ホーム</div>
+        </button>
+
+      </div>
+    </header>
+
+    <!-- 地図アコーディオン -->
+    <div class="card mb-2">
+      <div class="card-header p-2">
+        <button class="btn btn-link" @click="toggleMap">
+          {{ mapOpen ? "▲ 地図を隠す" : "▼ 地図を表示する" }}
+        </button>
+      </div>
+      <div v-show="mapOpen" class="p-0" style="overflow:hidden;">
+        <div id="mapContainer"></div>
+
+        <div class="btn-group m-2" role="group">
+          <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('small')">小</button>
+          <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('medium')">中</button>
+          <button class="btn btn-sm btn-outline-secondary" @click="setMapHeight('large')">大</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 検索 -->
+    <div class="mb-2">
+      <h5 class="mb-2">住戸一覧（{{ filteredHouses?.length ?? 0 }}件）</h5>
+      <input
+        v-model="searchQuery"
+        class="form-control"
+        placeholder="住所・世帯名・建物名で検索"
+      />
+    </div>
+
+    <!-- 住戸一覧 -->
+    <div
+      v-for="house in filteredHouses"
+      :key="house.HousingNo"
+      :id="`house-${house.HousingNo}`"
+      class="card card-house"
+      :class="{ 'focused-house': focusedId === house.HousingNo }"
+    >
+
+      <div class="card-header py-2">
+
+        <div class="house-row">
+
+          <div class="col-id">
+            <button class="house-no-btn" @click="scrollToMapAndFocus(house)">
+              {{ house.HousingNo }}
+            </button>
+          </div>
+
+          <div class="col-young">
+            <i
+              class="fas fa-user icon-8"
+              :style="{ color: (house.YoungerGENFlag === '若い世代に会えた' || house.YoungerGENFlag === '若い世代と推定') ? '#00aa55' : '#999' }"
+            ></i>
+          </div>
+
+          <div class="col-name">
+            <span class="family-name">
+              {{ house.FamilyName ? house.FamilyName + 'さん' : '（表札名なし）' }}
+            </span>
+          </div>
+
+          <div class="col-tel">
+            <i
+              :class="house.TEL ? 'fas fa-phone icon-8' : 'fas fa-phone-slash icon-8'"
+              :style="{ color: house.TEL ? '#00aa55' : '#999' }"
+            ></i>
+          </div>
+
+          <div class="col-bld">
+            <i
+              class="icon-8"
+              :class="{
+                'fas fa-home': house.BuildingCategory === '一戸建て',
+                'fas fa-building': house.BuildingCategory === 'ビル',
+                'fas fa-store': house.BuildingCategory === '店舗',
+                'fas fa-city': house.BuildingCategory === '集合住宅' || house.BuildingCategory === '文化住宅'
+              }"
+              style="color:#777;"
+            ></i>
+          </div>
+
+          <div class="col-status">
+            <span
+              class="pill-status"
+              :style="{
+                background:
+                  house.VisitStatus?.includes('済') || house.VisitStatus?.includes('在宅')
+                    ? '#00aa55'
+                    : house.VisitStatus?.includes('NG')
+                    ? '#cc0000'
+                    : house.VisitStatus?.includes('不在')
+                    ? '#ffd700'
+                    : '#999',
+                color: house.VisitStatus?.includes('不在') ? '#333' : 'white'
+              }"
+            >
+              {{ house.VisitStatus || '未訪問' }}
+            </span>
+          </div>
+
+          <div class="col-ng">
+            <i v-if="house.NGFlag === '不可'" class="fas fa-ban icon-8" style="color:#cc0000;"></i>
+          </div>
+
+          <div class="col-address">
+            <span class="address-text">{{ getAddressLines(house).line1 }}</span>
+            <span class="address-text" v-if="getAddressLines(house).line2">
+              {{ getAddressLines(house).line2 }}
+            </span>
+          </div>
+
+          <div class="col-bad">
+            <i v-if="house.BadFlag === 'Good'" class="fas fa-check-circle" style="color:#00aa55; font-size:20px;"></i>
+            <i v-if="house.BadFlag === 'Bad'" class="fas fa-exclamation-triangle" style="color:#cc0000; font-size:20px;"></i>
+          </div>
+
+          <div class="col-result">
+            <button
+              class="btn btn-sm btn-warning"
+              style="font-size:20px; color:#000; font-weight:bold;"
+              @click="openResultModal(house)"
+            >
+              結果入力
+            </button>
+          </div>
+
+          <div class="col-history">
+            <button class="btn-history" @click="toggleVisitHistory(house.HousingNo)">
+              {{ isVisitHistoryOpen(house.HousingNo) ? '▲' : '▼' }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 訪問履歴 -->
+      <div v-show="isVisitHistoryOpen(house.HousingNo)" class="card-body py-2">
+        <div v-if="house.VRecord && house.VRecord.length > 0" class="visit-record-timeline">
+
+          <div
+            v-for="rec in sortedVRecord(house.VRecord)"
+            :key="rec.VisitID"
+            class="visit-record-item"
+          >
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div class="small" style="font-size:18px;">
+                  <strong>{{ rec.VisitDate || '-' }}</strong>
+                  <span v-if="rec.Time">（{{ rec.Time }}）</span>
+                </div>
+                <div class="small" style="font-size:18px;">方法：{{ rec.Field || '-' }}</div>
+                <div class="small" style="font-size:18px;">結果：{{ rec.Result || '-' }}</div>
+                <div class="small text-muted" style="font-size:18px;">メモ：{{ rec.Comment || '-' }}</div>
+              </div>
+
+              <!-- 削除ボタン -->
+              <button
+                class="btn btn-sm btn-outline-danger"
+                style="height:36px;"
+                @click="deleteVisitRecord(rec)"
+              >
+                削除
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div v-else class="small text-muted" style="font-size:18px;">
+          訪問履歴はありません。
+        </div>
+      </div>
+
     </div>
 
     <!-- Vue -->
