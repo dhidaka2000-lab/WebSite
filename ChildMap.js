@@ -457,7 +457,7 @@ const ChildMapApp = {
         Field: this.methodOptions[0].value,
         Result: "不在",
         Note: "",
-        NGFlag: "可"
+        NGFlag: house.NGFlag || "可",
       };
 
       this.$nextTick(() => {
@@ -524,6 +524,9 @@ const ChildMapApp = {
         this.savingResult = false;
         return;
       }
+
+      // ★ ローカルの house にも即反映（リアクティブなので一覧が即更新される）
+      this.selectedHouse.NGFlag = this.resultForm.NGFlag;
 
       $("#resultModal").modal("hide");
       this.savingResult = false;
