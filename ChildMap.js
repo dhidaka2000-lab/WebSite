@@ -525,6 +525,14 @@ const ChildMapApp = {
         return;
       }
 
+      $("#resultModal").modal("hide");
+      this.savingResult = false;
+
+      await this.fetchChildDetail();
+      if (this.map) {
+        this.addAllMarkers(null);
+      }
+
       // ★ Worker が note を加工して保存するので、
       //   フロント側でも即時反映する
       let finalNote = this.resultForm.Note || "";
@@ -556,13 +564,6 @@ const ChildMapApp = {
         Note: finalNote
       });
 
-      $("#resultModal").modal("hide");
-      this.savingResult = false;
-
-      await this.fetchChildDetail();
-      if (this.map) {
-        this.addAllMarkers(null);
-      }
     },
 
     // -----------------------------
