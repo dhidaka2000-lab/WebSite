@@ -537,7 +537,7 @@ const ChildMapApp = {
       //   フロント側でも即時反映する
       let finalNote = this.resultForm.Note || "";
       if (this.resultForm.NGFlag === "不可") {
-        finalNote = `訪問不可入力。${finalNote}`;
+        finalNote = `訪問不可が入力された。${finalNote}`;
       }
 
       // 住戸の VisitStatus も Worker と同じロジックで更新
