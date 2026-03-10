@@ -87,6 +87,9 @@ const ChildMapApp = {
   mounted() {
     this.parseQuery();
 
+    // ★ モーダルを Vue 管理下に固定する
+    $('#resultModal').appendTo('#childMapApp');
+
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         alert("ログイン情報が失われました。ログインし直してください。");
