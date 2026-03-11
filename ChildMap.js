@@ -17,6 +17,7 @@ const ChildMapApp = {
       CardNo: null,
       ChildNo: null,
       loginUser: null,
+      loginUserName: "",
 
       cardInfo: {},
       childInfo: {},
@@ -85,6 +86,8 @@ const ChildMapApp = {
   },
 
   mounted() {
+    
+    this.mapOpen = false;
     this.parseQuery();
 
     // ★ モーダルを Vue 管理下に固定する
@@ -97,6 +100,9 @@ const ChildMapApp = {
         return;
       }
       await this.fetchChildDetail();
+
+      // ★ childInfo が揃ってから開閉可能にする
+      this.mapOpen = true;
       this.loading = false;
     });
   },
@@ -502,7 +508,7 @@ const ChildMapApp = {
         Result: this.resultForm.Result,
         Note: this.resultForm.Note,
         NGFlag: this.resultForm.NGFlag,
-        Minister: null,  // ★ minister は UI から完全排除 → null を送る
+        Minister: this.loginUserName,
         Comment: "",
         Term: this.childInfo.ChildTerm
       };
@@ -561,6 +567,7 @@ const ChildMapApp = {
         Time: this.resultForm.Time,
         Field: this.resultForm.Field,
         Result: this.resultForm.Result,
+        Minister: this.loginUserName,
         Note: finalNote
       });
 
