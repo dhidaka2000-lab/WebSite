@@ -116,6 +116,8 @@ const ChildMapApp = {
 
       this.mapOpen = false; // 初期は閉じた状態
       this.loading = false;
+
+      await this.ensureMapInitialized();  // ★ Map初期ロード
     });
   },
 
@@ -222,11 +224,13 @@ const ChildMapApp = {
     // -----------------------------
     async toggleMap() {
       this.mapOpen = !this.mapOpen;
+
       if (this.mapOpen) {
-        await this.ensureMapInitialized();
-        this.addAllMarkers(null);
+        await this.ensureMapInitialized();  // ★ Google Maps 読み込み完了まで待つ
+        this.addAllMarkers(null);           // ★ 初期マーカー描画
       }
     },
+
 
     setMapHeight(size) {
       const el = document.getElementById("mapContainer");
