@@ -1,4 +1,5 @@
 // ChildMap.js（完全版・1/3）
+// ChildMap.js（修正版）
 
 const ChildMapApp = {
   data() {
@@ -17,6 +18,7 @@ const ChildMapApp = {
       CardNo: null,
       ChildNo: null,
       loginUser: null,
+      loginUserId: null,
       loginUserName: "",
 
       cardInfo: {},
@@ -83,14 +85,21 @@ const ChildMapApp = {
       if (f === "その他") return ["不在", "済", "済(投函)", "済(留守録)", "その他"];
       return [];
     },
+
+    // ヘッダー表示用
+    ministerName() {
+      return this.childInfo?.ChildMinister || this.loginUserName || "-";
+    },
+    arrengerName() {
+      return this.childInfo?.ChildArrenger || "-";
+    },
   },
 
-  mounted() {
-    
+  async mounted() {
     this.mapOpen = false;
     this.parseQuery();
 
-    // ★ モーダルを Vue 管理下に固定する
+    // モーダルを Vue 管理下に固定
     $('#resultModal').appendTo('#childMapApp');
 
     firebase.auth().onAuthStateChanged(async (user) => {
@@ -99,10 +108,13 @@ const ChildMapApp = {
         window.location.href = "./index.html";
         return;
       }
+
+      // ① ログインユーザー情報（ID＋名前）取得
+      await this.fetchLoginUser();
+      // ② 子カード詳細取得
       await this.fetchChildDetail();
 
-      // ★ childInfo が揃ってから開閉可能にする
-      this.mapOpen = true;
+      this.mapOpen = false; // 初期は閉じた状態
       this.loading = false;
     });
   },
@@ -113,6 +125,31 @@ const ChildMapApp = {
       this.CardNo = params.get("cardNo");
       this.ChildNo = params.get("childNo");
       this.loginUser = params.get("loginUser");
+    },
+
+    async fetchLoginUser() {
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
+
+      const payload = {
+        funcName: "getLoginUserInformation"
+      };
+
+      const res = await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (data.status === "success") {
+        this.loginUserId = data.uid;        // visit_record.minister に保存する値
+        this.loginUserName = data.userName; // 画面表示用
+      }
     },
 
     getAddressLines(house) {
@@ -177,6 +214,129 @@ const ChildMapApp = {
 
       if (this.map) {
         this.addAllMarkers(null);
+      }
+    },
+
+    // -----------------------------
+    // 地図アコーディオン
+    // -----------------------------
+    async toggleMap() {
+      this.mapOpen = !this.mapOpen;
+      if (this.mapOpen) {
+        await this.ensureMapInitialized();
+        this.addAllMarkers(null);
+      }
+    },
+
+    setMapHeight(size) {
+      const el = document.getElementById("mapContainer");
+      if (!el) return;
+      if (size === "small") el.style.height = "260px";
+      else if (size === "large") el.style.height = "520px";
+      else el.style.height = "360px";
+
+      if (this.map) {
+        google.maps.event.trigger(this.map, "resize");
+      }
+    },
+
+    async ensureMapInitialized() {
+      if (this.googleMapsLoaded && this.map) return;
+
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
+
+      const payload = { funcName: "getGoogleMapsUrl" };
+
+      const res = await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      const mapUrl = data.mapUrl;
+
+      await this.loadGoogleMaps(mapUrl);
+      this.initMap();
+    },
+
+    loadGoogleMaps(src) {
+      return new Promise((resolve, reject) => {
+        if (this.googleMapsLoaded) {
+          resolve();
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          this.googleMapsLoaded = true;
+          resolve();
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    },
+
+    initMap() {
+      const el = document.getElementById("mapContainer");
+      if (!el) return;
+
+      const center = { lat: 34.75, lng: 135.6 }; // 適当な初期値（大阪近辺）
+
+      this.map = new google.maps.Map(el, {
+        center,
+        zoom: 14,
+      });
+
+      this.infoWindow = new google.maps.InfoWindow();
+    },
+
+    addAllMarkers(focusHousingNo) {
+      if (!this.map) return;
+
+      // 既存マーカー削除
+      this.markers.forEach(m => m.setMap(null));
+      this.markers = [];
+
+      const bounds = new google.maps.LatLngBounds();
+      let hasPoint = false;
+
+      for (const h of this.houses || []) {
+        if (!h.CSVLat || !h.CSVLng) continue;
+
+        const pos = { lat: Number(h.CSVLat), lng: Number(h.CSVLng) };
+        const marker = new google.maps.Marker({
+          position: pos,
+          map: this.map,
+          title: (h.FamilyName || "") + (h.FamilyName ? "さん" : ""),
+        });
+
+        marker.addListener("click", () => {
+          this.focusOnMap(h);
+        });
+
+        this.markers.push(marker);
+        bounds.extend(pos);
+        hasPoint = true;
+      }
+
+      if (hasPoint) {
+        this.map.fitBounds(bounds);
+      }
+
+      if (focusHousingNo) {
+        const target = (this.houses || []).find(h => h.HousingNo === focusHousingNo);
+        if (target && target.CSVLat && target.CSVLng) {
+          const pos = { lat: Number(target.CSVLat), lng: Number(target.CSVLng) };
+          this.map.setCenter(pos);
+          this.map.setZoom(17);
+        }
       }
     },
 
@@ -367,7 +527,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // 訪問履歴ソート（snake_case 対応）
+    // 訪問履歴ソート
     // -----------------------------
     sortedVRecord(records) {
       if (!records) return [];
@@ -478,7 +638,7 @@ const ChildMapApp = {
     },
 
     // -----------------------------
-    // visit_record INSERT
+    // visit_record INSERT / UPDATE
     // -----------------------------
     async submitResult() {
       if (!this.resultForm.VisitDate ||
@@ -508,7 +668,7 @@ const ChildMapApp = {
         Result: this.resultForm.Result,
         Note: this.resultForm.Note,
         NGFlag: this.resultForm.NGFlag,
-        Minister: this.loginUserName,
+        Minister: this.loginUserId,      // ★ ID を保存
         Comment: "",
         Term: this.childInfo.ChildTerm
       };
@@ -539,8 +699,7 @@ const ChildMapApp = {
         this.addAllMarkers(null);
       }
 
-      // ★ Worker が note を加工して保存するので、
-      //   フロント側でも即時反映する
+      // Worker が note を加工して保存するので、フロント側でも即時反映
       let finalNote = this.resultForm.Note || "";
       if (this.resultForm.NGFlag === "不可") {
         finalNote = `訪問不可が入力された。${finalNote}`;
@@ -556,21 +715,19 @@ const ChildMapApp = {
         newStatus = "不在";
       }
 
-      // ★ Vue の house オブジェクトを即時更新
       this.selectedHouse.NGFlag = this.resultForm.NGFlag;
       this.selectedHouse.VisitStatus = newStatus;
 
-      // ★ VRecord に新しい履歴を push（即時反映）
+      // VRecord に新しい履歴を push（即時反映）
       this.selectedHouse.VRecord.push({
-        VisitID: res.inserted?.row_id ?? null,
+        VisitID: data.inserted?.row_id ?? null,
         VisitDate: this.resultForm.VisitDate,
         Time: this.resultForm.Time,
         Field: this.resultForm.Field,
         Result: this.resultForm.Result,
-        Minister: this.loginUserName,
+        Minister: this.loginUserName,  // 表示用は名前
         Note: finalNote
       });
-
     },
 
     // -----------------------------
