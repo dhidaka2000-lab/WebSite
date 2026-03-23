@@ -284,7 +284,11 @@ const ChildMapApp = {
         script.async = true;
         script.defer = true;
 
-        script.onload = () => resolve();
+        script.onload = () => {
+          this.googleMapsLoaded = true;
+          resolve();  // ★ ロード完了を待つ
+        };
+
         script.onerror = reject;
 
         document.head.appendChild(script);
