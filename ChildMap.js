@@ -247,7 +247,7 @@ const ChildMapApp = {
     },
 
     async ensureMapInitialized() {
-      if (this.googleMapsLoaded && this.map) return;
+      if (this.googleMapsLoaded) return;
 
       const user = firebase.auth().currentUser;
       const idToken = await user.getIdToken(true);
@@ -264,10 +264,12 @@ const ChildMapApp = {
       });
 
       const data = await res.json();
-      const mapUrl = data.mapUrl;
+      const mapUrl = data.mapUrl + "&loading=async";  // ★ async を強制
 
       await this.loadGoogleMaps(mapUrl);
       this.initMap();
+
+      this.googleMapsLoaded = true;  // ★ ここでフラグを立てる
     },
 
     loadGoogleMaps(src) {
@@ -276,15 +278,15 @@ const ChildMapApp = {
           resolve();
           return;
         }
+
         const script = document.createElement("script");
         script.src = src;
         script.async = true;
         script.defer = true;
-        script.onload = () => {
-          this.googleMapsLoaded = true;
-          resolve();
-        };
+
+        script.onload = () => resolve();
         script.onerror = reject;
+
         document.head.appendChild(script);
       });
     },
