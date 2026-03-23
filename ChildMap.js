@@ -118,6 +118,7 @@ const ChildMapApp = {
       this.loading = false;
 
       await this.ensureMapInitialized();  // ★ Map初期ロード
+      
     });
   },
 
@@ -227,6 +228,7 @@ const ChildMapApp = {
 
       if (this.mapOpen) {
         await this.ensureMapInitialized();  // ★ Google Maps 読み込み完了まで待つ
+        await this.loadKmlLayer();
         this.addAllMarkers(null);           // ★ 初期マーカー描画
       }
     },
@@ -342,6 +344,42 @@ const ChildMapApp = {
           this.map.setZoom(17);
         }
       }
+    },
+
+    async loadKmlLayer() {
+      if (!this.map) return;
+
+      const user = firebase.auth().currentUser;
+      const idToken = await user.getIdToken(true);
+
+      const payload = {
+        funcName: "getKml",
+        file: this.cardInfo.KML
+      };
+
+      const res = await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const kmlText = await res.text();
+
+      const blob = new Blob([kmlText], { type: "application/vnd.google-earth.kml+xml" });
+      const url = URL.createObjectURL(blob);
+
+      if (this.kmlLayer) {
+        this.kmlLayer.setMap(null);
+      }
+
+      this.kmlLayer = new google.maps.KmlLayer({
+        url,
+        map: this.map,
+        preserveViewport: true,
+      });
     },
 
     // -----------------------------
