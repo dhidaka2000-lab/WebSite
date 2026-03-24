@@ -219,7 +219,7 @@ const ChildMapApp = {
       if (!this.map) return;
 
       // 既存マーカー削除
-      this.markers.forEach(m => m.setMap(null));
+      this.markers.forEach(m => m.map = null);
       this.markers = [];
 
       const bounds = new google.maps.LatLngBounds();
@@ -230,7 +230,7 @@ const ChildMapApp = {
 
         const pos = { lat: Number(h.CSVLat), lng: Number(h.CSVLng) };
 
-        const marker = new google.maps.Marker({
+        const marker = new google.maps.marker.AdvancedMarkerElement({
           position: pos,
           map: this.map,
           title: (h.FamilyName || "") + (h.FamilyName ? "さん" : ""),
