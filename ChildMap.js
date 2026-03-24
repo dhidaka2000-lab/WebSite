@@ -138,6 +138,11 @@ const ChildMapApp = {
           return;
         }
 
+        if (!src) {
+          reject(new Error("Google Maps URLが指定されていません"));
+          return;
+        }
+
         const script = document.createElement("script");
         script.src = src;
         script.async = true;
@@ -145,10 +150,14 @@ const ChildMapApp = {
 
         script.onload = () => {
           this.googleMapsLoaded = true;   // ★ ロード完了
+          console.log("Google Maps APIロード完了");
           resolve();
         };
 
-        script.onerror = reject;
+        script.onerror = (err) => {
+          console.error("Google Maps APIロード失敗:", src, err);
+          reject(new Error(`Google Maps API ロードエラー: ${src}`));
+        };
 
         document.head.appendChild(script);
       });
@@ -160,28 +169,46 @@ const ChildMapApp = {
     async ensureMapInitialized() {
       if (this.googleMapsLoaded && this.map) return;
 
-      const user = firebase.auth().currentUser;
-      const idToken = await user.getIdToken(true);
+      try {
+        const user = firebase.auth().currentUser;
+        const idToken = await user.getIdToken(true);
 
-      const payload = { funcName: "getGoogleMapsUrl" };
+        const payload = { funcName: "getGoogleMapsUrl" };
 
-      const res = await fetch(this.apiEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + idToken,
-        },
-        body: JSON.stringify(payload),
-      });
+        const res = await fetch(this.apiEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + idToken,
+          },
+          body: JSON.stringify(payload),
+        });
 
-      const data = await res.json();
-      const mapUrl = data.mapUrl;
+        if (!res.ok) {
+          console.error("Google Maps URL取得エラー:", res.status, res.statusText);
+          alert("Google Maps API設定エラー");
+          return;
+        }
 
-      // ★ script.onload を確実に待つ
-      await this.loadGoogleMaps(mapUrl);
+        const data = await res.json();
+        const mapUrl = data.mapUrl;
 
-      // ★ ロード完了後に初期化
-      this.initMap();
+        if (!mapUrl) {
+          console.error("Google Maps URLが取得できません:", data);
+          alert("Google Maps API URLが設定されていません");
+          return;
+        }
+
+        // ★ script.onload を確実に待つ
+        await this.loadGoogleMaps(mapUrl);
+
+        // ★ ロード完了後に初期化
+        this.initMap();
+
+      } catch (err) {
+        console.error("Google Maps初期化エラー:", err);
+        alert("Google Maps初期化に失敗しました");
+      }
     },
 
     initMap() {
