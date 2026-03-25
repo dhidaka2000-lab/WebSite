@@ -244,9 +244,9 @@ const ChildMapApp = {
       } catch (err) {
         console.error("地図初期化時のエラー:", err);
         throw err;
-      }
+      };
     },
-    },
+    
     // -----------------------------
     // 地図アコーディオン
     // -----------------------------
@@ -256,7 +256,7 @@ const ChildMapApp = {
       if (this.mapOpen) {
         await this.ensureMapInitialized();
         this.addAllMarkers(null);
-      }
+      };
     },
 
     // -----------------------------
@@ -290,11 +290,11 @@ const ChildMapApp = {
         this.markers.push(marker);
         bounds.extend(pos);
         hasPoint = true;
-      }
+      };
 
       if (hasPoint) {
         this.map.fitBounds(bounds);
-      }
+      };
 
       if (focusHousingNo) {
         const target = (this.houses || []).find(h => h.HousingNo === focusHousingNo);
@@ -302,8 +302,8 @@ const ChildMapApp = {
           const pos = { lat: Number(target.CSVLat), lng: Number(target.CSVLng) };
           this.map.setCenter(pos);
           this.map.setZoom(17);
-        }
-      }
+        };
+      };
     },
 
     // -----------------------------
@@ -508,7 +508,7 @@ const ChildMapApp = {
         console.error("保存エラー:", data);
         alert("保存に失敗しました");
         return;
-      }
+      };
 
       $("#resultModal").modal("hide");
 
