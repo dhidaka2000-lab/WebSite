@@ -128,9 +128,7 @@ const ChildMapApp = {
       this.houses = data.houses;
     },
 
-    // -----------------------------
-    // ★ Google Maps を確実に1回だけロード
-    // -----------------------------
+    // ★ Google Maps を確実に1回だけロード - loading=async 対応
     loadGoogleMaps(src) {
       return new Promise((resolve, reject) => {
         if (this.googleMapsLoaded) {
@@ -146,12 +144,24 @@ const ChildMapApp = {
         const script = document.createElement("script");
         script.src = src;
         script.async = true;
-        script.defer = true;
+        // script.defer = true; // 削除 - async での読み込みで十分
+        // loading=async での読み込みでは defer を使わない
+
+        const checkGoogleMapsReady = () => {
+          if (window.google?.maps) {
+            this.googleMapsLoaded = true;
+            console.log("Google Maps API初期化完了");
+            resolve();
+          } else {
+            // Google Maps API の初期化を待つ
+            setTimeout(checkGoogleMapsReady, 100);
+          }
+        };
 
         script.onload = () => {
-          this.googleMapsLoaded = true;   // ★ ロード完了
-          console.log("Google Maps APIロード完了");
-          resolve();
+          console.log("Google Maps スクリプトロード完了、APIの初期化を待機中...");
+          // 少し待ってから google.maps の確認を開始
+          setTimeout(checkGoogleMapsReady, 50);
         };
 
         script.onerror = (err) => {
@@ -212,20 +222,30 @@ const ChildMapApp = {
     },
 
     initMap() {
-      if (!window.google || !google.maps) {
-        console.error("Google Maps API がまだロードされていません");
-        return;
+      if (!window.google?.maps?.Map) {
+        console.error("Google Maps API がまだロードされていません: window.google.maps.Map =", window.google?.maps?.Map);
+        throw new Error("Google Maps API Map コンストラクタが利用できません");
       }
 
       const el = document.getElementById("mapContainer");
-      if (!el) return;
+      if (!el) {
+        console.error("mapContainer 要素が見つかりません");
+        return;
+      }
 
-      this.map = new google.maps.Map(el, {
-        center: { lat: 34.75, lng: 135.6 },
-        zoom: 14,
-      });
+      try {
+        this.map = new google.maps.Map(el, {
+          center: { lat: 34.75, lng: 135.6 },
+          zoom: 14,
+        });
 
-      this.infoWindow = new google.maps.InfoWindow();
+        this.infoWindow = new google.maps.InfoWindow();
+        console.log("地図の初期化に成功しました");
+      } catch (err) {
+        console.error("地図初期化時のエラー:", err);
+        throw err;
+      }
+    },
     },
     // -----------------------------
     // 地図アコーディオン
